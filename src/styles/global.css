@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-sand-50 font-sans text-sand-900 antialiased;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(217, 196, 160, 0.6), transparent 55%),
+      radial-gradient(circle at 80% 0%, rgba(230, 209, 180, 0.65), transparent 50%),
+      linear-gradient(135deg, rgba(20, 20, 20, 0.08) 0%, rgba(255, 255, 255, 0) 45%),
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320" fill="none"><path d="M0 160L160 0L320 160L160 320L0 160Z" fill="rgba(255,255,255,0.05)"/></svg>');
+    background-size: 100%, 120%, 100%, 320px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-charcoal-900 tracking-tight;
+  }
+
+  p {
+    @apply text-base leading-relaxed text-sand-900/90;
+  }
+}
+
+@layer components {
+  .container-premium {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-12;
+  }
+
+  .section-shell {
+    @apply relative overflow-hidden rounded-[2.75rem] border border-sand-200/70 bg-white/80 p-section shadow-luxe backdrop-blur-md;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-gradient-to-r from-gold-500 via-gold-400 to-gold-300 px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-charcoal-900 transition-all duration-300 hover:from-gold-400 hover:via-gold-300 hover:to-gold-200 hover:shadow-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-200 md:px-10 md:py-4 lg:text-base;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-charcoal-900/30 bg-white/70 px-6 py-2 text-sm font-medium text-charcoal-900 transition duration-300 hover:border-gold-400 hover:text-gold-500 hover:shadow-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal-800 md:px-8 md:py-3;
+  }
+
+  .card-luxe {
+    @apply relative flex h-full flex-col gap-6 overflow-hidden rounded-[2rem] border border-sand-200/60 bg-white/90 p-8 shadow-luxe transition duration-300 hover:-translate-y-1 hover:shadow-luxe-strong focus-within:-translate-y-1 focus-within:shadow-luxe-strong md:p-10;
+  }
+
+  .card-accent {
+    @apply absolute inset-0 -z-10 bg-gradient-to-br from-gold-200/40 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100;
+  }
+
+  .badge-premium {
+    @apply inline-flex items-center gap-2 rounded-full border border-gold-200/70 bg-gold-50/90 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-charcoal-900;
+  }
+
+  .eyebrow {
+    @apply mb-4 inline-flex items-center gap-3 text-[0.75rem] font-semibold uppercase tracking-[0.5em] text-gold-500;
+  }
+}
+
+@layer utilities {
+  .shadow-luxe {
+    box-shadow: 0 25px 50px -20px rgba(17, 17, 17, 0.18);
+  }
+
+  .shadow-luxe-strong {
+    box-shadow: 0 40px 80px -30px rgba(17, 17, 17, 0.24);
+  }
+
+  .shadow-amber {
+    box-shadow: 0 20px 40px -25px rgba(198, 166, 100, 0.45);
+  }
+
+  .text-gradient-luxe {
+    background-image: linear-gradient(120deg, #f5e5c3 0%, #c6a664 50%, #b0894f 100%);
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .bg-noise {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><filter id="n" x="0" y="0"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="400" height="400" filter="url(%23n)" opacity="0.12"/></svg>');
+  }
+}
