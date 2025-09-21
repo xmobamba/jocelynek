@@ -1,0 +1,358 @@
+:root {
+  color-scheme: light;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top right, #fde68a, #f8fafc 40%);
+}
+
+a {
+  color: inherit;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.hero {
+  display: grid;
+  gap: 3rem;
+  padding: 4rem clamp(1.5rem, 4vw, 5rem) 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: center;
+}
+
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hero__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.85rem;
+  color: #f97316;
+  font-weight: 600;
+}
+
+.hero__title {
+  margin: 0;
+  font-size: clamp(2.5rem, 5vw, 3.75rem);
+  line-height: 1.05;
+  font-weight: 700;
+}
+
+.hero__subtitle {
+  margin: 0;
+  color: #334155;
+  max-width: 540px;
+  font-size: 1.05rem;
+}
+
+.hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.85rem 1.75rem;
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -12px rgba(15, 23, 42, 0.6);
+}
+
+.hero__visual {
+  position: relative;
+  min-height: 280px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(244, 114, 182, 0.25));
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+}
+
+.hero__badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+main {
+  flex: 1;
+}
+
+.cta {
+  padding: 0 1.5rem 5rem;
+}
+
+.cta__content {
+  margin: 0 auto;
+  max-width: 720px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: clamp(2rem, 5vw, 3rem);
+  box-shadow: 0 32px 80px -40px rgba(15, 23, 42, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cta__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.2;
+}
+
+.cta__description {
+  margin: 0;
+  color: #475569;
+}
+
+.cta__security {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.12), rgba(244, 114, 182, 0.12));
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+}
+
+.footer {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 3rem 1.5rem;
+}
+
+.footer__content {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.footer__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.footer__text {
+  margin: 0;
+  color: #cbd5f5;
+  max-width: 520px;
+}
+
+.footer__security-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.footer__security-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #cbd5f5;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.footer__legal {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding-top: 3rem;
+  }
+
+  .hero__visual {
+    min-height: 220px;
+  }
+}
+
+.newsletter {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.newsletter__row {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.newsletter__label {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.newsletter__input {
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.newsletter__input:focus {
+  outline: none;
+  border-color: rgba(14, 165, 233, 0.6);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
+}
+
+.newsletter__input:disabled {
+  background: rgba(226, 232, 240, 0.35);
+  cursor: not-allowed;
+}
+
+.newsletter__checkbox {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: flex-start;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.newsletter__checkbox input[type='checkbox'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.newsletter__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.95rem 1.75rem;
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #f8fafc;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.newsletter__submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.newsletter__submit:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.75);
+}
+
+.newsletter__spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.newsletter__spinner svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.newsletter__spinner-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 4;
+}
+
+.newsletter__spinner-indicator {
+  fill: none;
+  stroke: #f8fafc;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: spinner 1.2s ease-in-out infinite;
+}
+
+@keyframes spinner {
+  0% {
+    stroke-dashoffset: 60;
+  }
+  50% {
+    stroke-dashoffset: 15;
+  }
+  100% {
+    stroke-dashoffset: 60;
+  }
+}
+
+.newsletter__error {
+  color: #ef4444;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.newsletter__success {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #166534;
+  font-weight: 500;
+}
+
+.newsletter__feedback {
+  min-height: 1.5rem;
+}
+
+.newsletter__reset {
+  justify-self: start;
+  padding: 0.65rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.newsletter__reset:hover {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 600px) {
+  .newsletter__checkbox {
+    grid-template-columns: 1fr;
+  }
+
+  .newsletter__checkbox input[type='checkbox'] {
+    margin-top: 0;
+  }
+}
