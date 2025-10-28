@@ -219,6 +219,30 @@ button.ghost:hover,
   gap: 0.75rem;
 }
 
+.toolbar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.toolbar-group input[type='date'] {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  background: var(--color-background);
+  min-width: 170px;
+  transition: border var(--transition), box-shadow var(--transition);
+}
+
+.toolbar-group input[type='date']:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.2);
+}
+
 .filter {
   display: flex;
   align-items: center;
@@ -274,6 +298,17 @@ table tbody td {
 
 table tbody tr:hover {
   background: rgba(255, 165, 0, 0.08);
+}
+
+.table-title {
+  font-weight: 600;
+}
+
+.table-subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-top: 0.15rem;
 }
 
 form {
@@ -441,27 +476,163 @@ form {
   color: var(--color-muted);
 }
 
-.receipt {
+.invoice {
   font-family: 'Inter', sans-serif;
-  padding: 1.5rem;
-  max-width: 480px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 2.5rem;
+  max-width: 720px;
   margin: 0 auto;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
-.receipt header {
-  text-align: center;
-  margin-bottom: 1.25rem;
+.invoice__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.receipt h1 {
+.invoice__brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.invoice__logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: rgba(255, 165, 0, 0.12);
+  padding: 0.35rem;
+}
+
+.invoice__brand h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.invoice__brand p {
+  margin: 0.2rem 0 0;
+  color: var(--color-muted);
+}
+
+.invoice__meta {
+  text-align: right;
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
+.invoice__meta p {
+  margin: 0.2rem 0;
+}
+
+.invoice__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.invoice__details h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.invoice__table-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.invoice__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.invoice__table th,
+.invoice__table td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.invoice__table th {
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.invoice__table td:last-child {
+  font-weight: 700;
+}
+
+.invoice__summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.invoice__notes {
+  flex: 1 1 320px;
+}
+
+.invoice__notes h3 {
   margin: 0 0 0.5rem;
-  font-size: 1.5rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
 }
 
-.receipt footer {
+.invoice__totals {
+  flex: 0 1 240px;
+  background: rgba(255, 165, 0, 0.06);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.invoice__totals dl {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.invoice__totals dt {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+}
+
+.invoice__totals dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.invoice__footer {
   margin-top: 2rem;
   text-align: center;
   font-size: 0.85rem;
+  color: var(--color-muted);
+  border-top: 1px dashed rgba(15, 23, 42, 0.2);
+  padding-top: 1rem;
+}
+
+.invoice__footer-meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
 }
 
 @media (max-width: 1100px) {

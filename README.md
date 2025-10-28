@@ -9,12 +9,14 @@ Application web responsive permettant de gérer les ventes, le stock et les avan
 - Numérotation automatique des ventes (`VENT0001`, `VENT0002`, ...)
 - Mise à jour automatique du stock lors des ventes
 - Prix unitaires ajustables, saisie d'avances et calcul du reste à payer par vente
-- Impression de reçus (A4 ou ticket thermique)
+- Facture professionnelle imprimable (A4 ou ticket thermique) avec avances et soldes
 - Modification, réimpression et export des ventes existantes
 - Recherche en temps réel dans les tables
 - Export CSV des ventes
 - Statistiques visuelles : chiffre d'affaires, top produits, top vendeuses
 - Personnalisation des paramètres (devise, seuil de stock, format de reçu)
+- Impression d'un rapport de clôture quotidien (totaux, avances, restes à payer)
+- Tableau de bord détaillant stocks actuels et quantités vendues du jour
 
 ## 🗂 Structure du projet
 

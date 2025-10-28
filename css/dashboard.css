@@ -87,6 +87,20 @@
   align-self: flex-end;
 }
 
+.inventory-table tbody td:nth-child(2) {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.inventory-table tbody td:nth-child(3) {
+  font-weight: 600;
+  color: var(--color-secondary);
+}
+
+.inventory-table tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.02);
+}
+
 .chart {
   height: 220px;
   display: grid;

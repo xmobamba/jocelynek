@@ -78,6 +78,22 @@
                 </div>
                 <ul id="lowStockList" class="stock-alerts"></ul>
               </section>
+              <section class="panel panel-full" aria-labelledby="inventorySummaryTitle">
+                <div class="panel-header">
+                  <h3 id="inventorySummaryTitle">Inventaire &amp; ventes du jour</h3>
+                  <span>Vue par produit</span>
+                </div>
+                <table class="inventory-table">
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Stock actuel</th>
+                      <th>Vendu aujourd'hui</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inventorySummaryTable"></tbody>
+                </table>
+              </section>
               <section class="panel panel-full" aria-labelledby="categorySalesTitle">
                 <div class="panel-header">
                   <h3 id="categorySalesTitle">Catégories de vente</h3>
@@ -244,6 +260,11 @@
               </div>
               <div class="toolbar">
                 <input type="search" id="salesSearch" placeholder="Rechercher une vente" />
+                <label class="toolbar-group" for="dailyReportDate">
+                  <span>Résumé du jour</span>
+                  <input type="date" id="dailyReportDate" />
+                </label>
+                <button type="button" class="ghost" id="printDailyReport">Imprimer la journée</button>
                 <button class="primary" data-action="add-sale">Nouvelle vente</button>
               </div>
             </header>
@@ -455,29 +476,75 @@
     </div>
 
     <template id="receiptTemplate">
-      <div class="receipt">
-        <header>
-          <h1>Reçu de vente</h1>
-          <p id="receiptShop"></p>
-          <p id="receiptDate"></p>
+      <article class="invoice">
+        <header class="invoice__header">
+          <div class="invoice__brand">
+            <img src="assets/logo.png" alt="Logo Jocelyne K" class="invoice__logo" />
+            <div>
+              <h1>Jocelyne K</h1>
+              <p>Gestionnaire de ventes &amp; stocks</p>
+            </div>
+          </div>
+          <div class="invoice__meta">
+            <p><strong>Facture :</strong> <span id="receiptNumber"></span></p>
+            <p><strong>Date :</strong> <span id="receiptDate"></span></p>
+          </div>
         </header>
-        <section>
-          <p><strong>Numéro :</strong> <span id="receiptNumber"></span></p>
-          <p><strong>Produit :</strong> <span id="receiptProduct"></span></p>
-          <p><strong>Quantité :</strong> <span id="receiptQuantity"></span></p>
-          <p><strong>Prix unitaire :</strong> <span id="receiptUnit"></span></p>
-          <p><strong>Remise :</strong> <span id="receiptDiscount"></span></p>
-          <p><strong>Total :</strong> <span id="receiptTotal"></span></p>
-          <p><strong>Avance :</strong> <span id="receiptAdvance"></span></p>
-          <p><strong>Reste à payer :</strong> <span id="receiptBalance"></span></p>
-          <p><strong>Vendeuse :</strong> <span id="receiptSeller"></span></p>
-          <p><strong>Notes :</strong></p>
-          <p id="receiptNotes"></p>
+        <section class="invoice__details">
+          <div>
+            <h2>Boutique</h2>
+            <p id="receiptShop"></p>
+          </div>
+          <div>
+            <h2>Vendeuse</h2>
+            <p id="receiptSeller"></p>
+          </div>
         </section>
-        <footer>
-          <p>Merci pour votre achat !</p>
+        <section class="invoice__table-wrapper">
+          <table class="invoice__table">
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+                <th>Remise</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="receiptProduct"></td>
+                <td id="receiptQuantity"></td>
+                <td id="receiptUnit"></td>
+                <td id="receiptDiscount"></td>
+                <td id="receiptTotal"></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+        <section class="invoice__summary">
+          <div class="invoice__notes">
+            <h3>Notes</h3>
+            <p id="receiptNotes"></p>
+          </div>
+          <div class="invoice__totals">
+            <dl>
+              <div>
+                <dt>Avance</dt>
+                <dd id="receiptAdvance"></dd>
+              </div>
+              <div>
+                <dt>Reste à payer</dt>
+                <dd id="receiptBalance"></dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+        <footer class="invoice__footer">
+          <p>Merci pour votre confiance. Veuillez conserver cette facture.</p>
+          <p class="invoice__footer-meta">Contact : +225 00 00 00 00 · Abidjan, Côte d'Ivoire</p>
         </footer>
-      </div>
+      </article>
     </template>
 
     <script type="module" src="js/main.js"></script>

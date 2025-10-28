@@ -144,6 +144,7 @@ function renderDashboard() {
 
   renderDailySalesTable(salesToday, data);
   renderLowStock(data);
+  renderInventorySummary(data, salesToday);
   renderCategorySales(currentMonthSales, data, now);
 }
 
@@ -174,6 +175,10 @@ function renderLowStock(data) {
   const list = document.getElementById('lowStockList');
   if (!list) return;
   const threshold = Number(data.settings.lowStockThreshold || 5);
+  const label = list.closest('.panel')?.querySelector('.panel-header span');
+  if (label) {
+    label.textContent = `Seuil ≤ ${threshold}`;
+  }
   const lowStock = data.products.filter((product) => Number(product.stock || 0) <= threshold);
   if (lowStock.length === 0) {
     list.innerHTML = '<li>Aucun stock critique \u2728</li>';
@@ -187,6 +192,50 @@ function renderLowStock(data) {
           <span>${product.name} (${shop ? shop.name : '—'})</span>
           <span class="badge danger">${product.stock} en stock</span>
         </li>
+      `;
+    })
+    .join('');
+}
+
+function renderInventorySummary(data, salesToday) {
+  const tbody = document.getElementById('inventorySummaryTable');
+  if (!tbody) return;
+
+  if (!data.products.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Aucun produit enregistré.</td></tr>';
+    return;
+  }
+
+  const summary = data.products.map((product) => {
+    const soldToday = salesToday
+      .filter((sale) => sale.productId === product.id)
+      .reduce((total, sale) => total + Number(sale.quantity || 0), 0);
+    return {
+      product,
+      soldToday
+    };
+  });
+
+  summary.sort((a, b) => {
+    if (b.soldToday !== a.soldToday) {
+      return b.soldToday - a.soldToday;
+    }
+    return Number(b.product.stock || 0) - Number(a.product.stock || 0);
+  });
+
+  tbody.innerHTML = summary
+    .map((item) => {
+      const shop = data.shops.find((shopItem) => shopItem.id === item.product.shopId);
+      const stockLabel = `${Number(item.product.stock || 0)} ${item.product.unit || ''}`.trim();
+      return `
+        <tr>
+          <td>
+            <div class="table-title">${item.product.name}</div>
+            <small class="table-subtitle">${shop ? shop.name : '—'}</small>
+          </td>
+          <td>${stockLabel || '0'}</td>
+          <td>${item.soldToday}</td>
+        </tr>
       `;
     })
     .join('');
