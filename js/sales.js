@@ -14,6 +14,7 @@ export function initSales(context) {
   const discountInput = document.getElementById('saleDiscount');
   const advanceInput = document.getElementById('saleAdvance');
   const dateInput = document.getElementById('saleDate');
+  const customerInput = document.getElementById('saleCustomer');
   const notesInput = document.getElementById('saleNotes');
   const unitPriceDisplay = document.getElementById('saleUnitPrice');
   const totalDisplay = document.getElementById('saleTotal');
@@ -74,6 +75,7 @@ export function initSales(context) {
       quantityInput.value = Number(sale.quantity || 1);
       discountInput.value = Number(sale.discount || 0);
       dateInput.value = sale.date || todayISO();
+      customerInput.value = sale.customer || sale.customerName || sale.client || '';
       notesInput.value = sale.notes || '';
       const presetUnit =
         sale.unitPrice !== undefined && sale.unitPrice !== null && sale.unitPrice !== ''
@@ -100,6 +102,7 @@ export function initSales(context) {
       discountInput.value = 0;
       advanceInput.value = 0;
       dateInput.value = todayISO();
+      customerInput.value = '';
       notesInput.value = '';
       productSelect.value = firstProduct ? firstProduct.id : '';
       unitPriceInput.value = firstProduct ? Number(firstProduct.price) || 0 : 0;
@@ -229,6 +232,7 @@ export function initSales(context) {
       unitPrice = getProductPrice(productId);
     }
     const notes = (formData.get('notes') || '').trim();
+    const customer = (formData.get('customer') || '').trim();
     const date = formData.get('date') || todayISO();
     const rawAdvance = formData.get('advance');
     let advance = Number(rawAdvance);
@@ -266,6 +270,7 @@ export function initSales(context) {
         sale.advance = advance;
         sale.date = date;
         sale.notes = notes;
+        sale.customer = customer;
         affectedSaleId = sale.id;
         return;
       }
@@ -285,6 +290,7 @@ export function initSales(context) {
         unitPrice,
         advance,
         date,
+        customer,
         notes
       });
       affectedSaleId = id;
@@ -313,7 +319,7 @@ export function initSales(context) {
     const filtered = sales.filter((sale) => {
       const product = products.find((prod) => prod.id === sale.productId);
       const seller = sellers.find((sel) => sel.id === sale.sellerId);
-      const haystack = `${sale.number} ${sale.date} ${product?.name || ''} ${seller?.name || ''}`.toLowerCase();
+      const haystack = `${sale.number} ${sale.date} ${product?.name || ''} ${seller?.name || ''} ${sale.customer || ''}`.toLowerCase();
       const matchesQuery = haystack.includes(query);
       const matchesDate = !selectedDate || isSameDay(sale.date, selectedDate);
       return matchesQuery && matchesDate;
@@ -399,20 +405,64 @@ function printReceipt(sale, data, formatCurrency) {
 
   const brandNameEl = receipt.getElementById('receiptBrandName');
   if (brandNameEl) brandNameEl.textContent = companyName;
+  const companyNameEl = receipt.getElementById('receiptCompanyName');
+  if (companyNameEl) companyNameEl.textContent = companyName;
   const brandTaglineEl = receipt.getElementById('receiptBrandTagline');
-  if (brandTaglineEl) brandTaglineEl.textContent = tagline;
-  receipt.getElementById('receiptShop').textContent = shop ? shop.name : '';
-  receipt.getElementById('receiptDate').textContent = new Date(sale.date).toLocaleString('fr-FR');
-  receipt.getElementById('receiptNumber').textContent = sale.number;
-  receipt.getElementById('receiptProduct').textContent = product ? product.name : '';
-  receipt.getElementById('receiptQuantity').textContent = sale.quantity;
-  receipt.getElementById('receiptUnit').textContent = formatCurrency(amounts.unit, settings.currency);
-  receipt.getElementById('receiptDiscount').textContent = formatCurrency(amounts.discount, settings.currency);
-  receipt.getElementById('receiptTotal').textContent = formatCurrency(amounts.total, settings.currency);
-  receipt.getElementById('receiptAdvance').textContent = formatCurrency(amounts.advance, settings.currency);
-  receipt.getElementById('receiptBalance').textContent = formatCurrency(amounts.balance, settings.currency);
-  receipt.getElementById('receiptSeller').textContent = seller ? seller.name : '';
-  receipt.getElementById('receiptNotes').textContent = sale.notes || '—';
+  if (brandTaglineEl) {
+    brandTaglineEl.textContent = tagline;
+    brandTaglineEl.style.display = tagline ? 'block' : 'none';
+  }
+  const vendorEl = receipt.getElementById('receiptVendor');
+  if (vendorEl) {
+    const vendorLines = [];
+    if (settings.companyAddress) vendorLines.push(settings.companyAddress);
+    if (contactParts.length) vendorLines.push(contactParts.join(' · '));
+    if (!vendorLines.length && shopSummary) vendorLines.push(shopSummary);
+    vendorEl.innerHTML = vendorLines.join('<br />');
+    vendorEl.style.display = vendorLines.length ? 'block' : 'none';
+  }
+  const currencyLabel = settings.currency || 'FCFA';
+  const paymentTerm =
+    sale.paymentTerm ||
+    settings.paymentTerms ||
+    settings.paymentTerm ||
+    settings.defaultPaymentTerm ||
+    'Comptant';
+  const currencyEl = receipt.getElementById('receiptCurrency');
+  if (currencyEl) currencyEl.textContent = currencyLabel;
+  const paymentTermEl = receipt.getElementById('receiptPaymentTerm');
+  if (paymentTermEl) paymentTermEl.textContent = paymentTerm;
+  const customerEl = receipt.getElementById('receiptCustomer');
+  if (customerEl) {
+    const customerName = sale.customer || sale.customerName || sale.client || '';
+    customerEl.textContent = customerName || 'Client non renseigné';
+  }
+  const shopName = shop ? shop.name : '—';
+  const sellerName = seller ? seller.name : '—';
+  const shopEl = receipt.getElementById('receiptShop');
+  if (shopEl) shopEl.textContent = shopName;
+  const sellerEl = receipt.getElementById('receiptSeller');
+  if (sellerEl) sellerEl.textContent = sellerName;
+  const dateEl = receipt.getElementById('receiptDate');
+  if (dateEl) dateEl.textContent = new Date(sale.date).toLocaleString('fr-FR');
+  const numberEl = receipt.getElementById('receiptNumber');
+  if (numberEl) numberEl.textContent = sale.number;
+  const productEl = receipt.getElementById('receiptProduct');
+  if (productEl) productEl.textContent = product ? product.name : '—';
+  const quantityEl = receipt.getElementById('receiptQuantity');
+  if (quantityEl) quantityEl.textContent = sale.quantity;
+  const unitEl = receipt.getElementById('receiptUnit');
+  if (unitEl) unitEl.textContent = formatCurrency(amounts.unit, settings.currency);
+  const discountEl = receipt.getElementById('receiptDiscount');
+  if (discountEl) discountEl.textContent = formatCurrency(amounts.discount, settings.currency);
+  const totalEl = receipt.getElementById('receiptTotal');
+  if (totalEl) totalEl.textContent = formatCurrency(amounts.total, settings.currency);
+  const advanceEl = receipt.getElementById('receiptAdvance');
+  if (advanceEl) advanceEl.textContent = formatCurrency(amounts.advance, settings.currency);
+  const balanceEl = receipt.getElementById('receiptBalance');
+  if (balanceEl) balanceEl.textContent = formatCurrency(amounts.balance, settings.currency);
+  const notesEl = receipt.getElementById('receiptNotes');
+  if (notesEl) notesEl.textContent = sale.notes || '—';
   const footerMessageEl = receipt.getElementById('receiptFooterMessage');
   if (footerMessageEl) footerMessageEl.textContent = receiptMessage;
   const footerMetaEl = receipt.getElementById('receiptFooterMeta');
@@ -426,145 +476,228 @@ function printReceipt(sale, data, formatCurrency) {
         <title>${companyName} – Reçu ${sale.number}</title>
         <style>
           :root { color-scheme: light; }
+          * {
+            box-sizing: border-box;
+          }
           body {
             margin: 0;
             padding: 32px;
             font-family: 'Inter', sans-serif;
-            background: #f5f7fb;
+            background: #f1f5f9;
             color: #1f2933;
           }
           .invoice {
-            font-family: inherit;
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 2.5rem;
-            max-width: 720px;
+            max-width: 780px;
             margin: 0 auto;
-            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
-            border: 1px solid rgba(15, 23, 42, 0.06);
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 32px 64px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
           }
-          .invoice__header {
+          .invoice__head {
             display: flex;
             justify-content: space-between;
-            gap: 1.5rem;
+            align-items: flex-start;
+            gap: 2.5rem;
+            padding: 2.75rem 2.75rem 2.25rem;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .invoice__title {
+            max-width: 60%;
+          }
+          .invoice__label {
+            display: inline-flex;
             align-items: center;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-            padding-bottom: 1.5rem;
-            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            background: rgba(0, 168, 107, 0.12);
+            color: #00794f;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.78rem;
+            border-radius: 999px;
+            margin-bottom: 1rem;
+          }
+          .invoice__title h1 {
+            margin: 0;
+            font-size: 2rem;
+          }
+          .invoice__tagline {
+            margin: 0.5rem 0 0;
+            color: #64748b;
+            font-size: 0.95rem;
           }
           .invoice__brand {
             display: flex;
-            align-items: center;
-            gap: 1rem;
+            gap: 1.25rem;
+            align-items: flex-start;
+            text-align: left;
+          }
+          .invoice__logo-wrap {
+            border: 1px solid rgba(0, 168, 107, 0.2);
+            border-radius: 18px;
+            padding: 0.65rem;
+            background: rgba(0, 168, 107, 0.08);
           }
           .invoice__logo {
-            width: 56px;
-            height: 56px;
+            width: 70px;
+            height: 70px;
             object-fit: contain;
-            border-radius: 14px;
-            background: rgba(255, 165, 0, 0.12);
-            padding: 0.35rem;
           }
-          .invoice__brand h1 {
+          .invoice__brand-info {
+            font-size: 0.9rem;
+            color: #4b5563;
+          }
+          .invoice__brand-info strong {
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+            color: #1f2933;
+          }
+          .invoice__brand-info address {
             margin: 0;
-            font-size: 1.6rem;
-          }
-          .invoice__brand p {
-            margin: 0.2rem 0 0;
-            color: #6b7280;
+            font-style: normal;
+            line-height: 1.5;
           }
           .invoice__meta {
-            text-align: right;
-            font-size: 0.95rem;
-            color: #6b7280;
+            padding: 1.75rem 2.75rem;
+            border-bottom: 1px solid #e5e7eb;
           }
-          .invoice__meta p {
-            margin: 0.2rem 0;
-          }
-          .invoice__details {
+          .invoice__meta dl {
+            margin: 0;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1.5rem;
           }
-          .invoice__details h2 {
-            margin: 0 0 0.35rem;
-            font-size: 1rem;
-            color: #6b7280;
+          .invoice__meta dt {
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 0.35rem;
+          }
+          .invoice__meta dd {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #1f2933;
+          }
+          .invoice__parties {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 2rem;
+            padding: 1.75rem 2.75rem;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          .invoice__party h2 {
+            margin: 0 0 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.9rem;
+            color: #64748b;
+          }
+          .invoice__party p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #1f2933;
+            line-height: 1.6;
+          }
+          .invoice__party small {
+            font-size: 0.85rem;
+            color: #4b5563;
+          }
+          .invoice__table-wrapper {
+            padding: 0 2.75rem 2.25rem;
           }
           .invoice__table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.95rem;
-            margin-bottom: 1.5rem;
           }
-          .invoice__table th,
-          .invoice__table td {
-            padding: 0.75rem 0.5rem;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-          }
-          .invoice__table th {
-            text-align: left;
+          .invoice__table thead th {
+            background: #00a86b;
+            color: #ffffff;
+            padding: 0.75rem 0.85rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-size: 0.75rem;
-            color: #6b7280;
+            letter-spacing: 0.08em;
+            text-align: left;
           }
-          .invoice__table td:last-child {
-            font-weight: 700;
+          .invoice__table tbody td {
+            padding: 0.85rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+            color: #1f2933;
+          }
+          .invoice__table tbody tr:last-child td {
+            border-bottom: none;
           }
           .invoice__summary {
+            padding: 0 2.75rem 2.75rem;
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
             gap: 2rem;
-            align-items: flex-start;
-            flex-wrap: wrap;
           }
           .invoice__notes {
             flex: 1 1 320px;
           }
           .invoice__notes h3 {
-            margin: 0 0 0.5rem;
-            font-size: 1rem;
+            margin: 0 0 0.75rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #6b7280;
+            color: #64748b;
+          }
+          .invoice__notes p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #1f2933;
           }
           .invoice__totals {
-            flex: 0 1 240px;
-            background: rgba(255, 165, 0, 0.06);
-            border-radius: 14px;
-            padding: 1rem 1.25rem;
+            flex: 0 0 260px;
+            border: 1px solid rgba(0, 168, 107, 0.25);
+            border-radius: 18px;
+            padding: 1.5rem 1.75rem;
+            background: rgba(0, 168, 107, 0.08);
           }
           .invoice__totals dl {
             margin: 0;
             display: grid;
-            gap: 0.75rem;
+            gap: 1.25rem;
+          }
+          .invoice__totals div {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
           }
           .invoice__totals dt {
-            font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #6b7280;
+            letter-spacing: 0.08em;
+            font-size: 0.78rem;
+            color: #64748b;
           }
           .invoice__totals dd {
-            margin: 0.1rem 0 0;
-            font-size: 1.1rem;
+            margin: 0;
             font-weight: 700;
+            font-size: 1.1rem;
+            color: #0f172a;
           }
           .invoice__footer {
-            margin-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+            background: #f8fafc;
             text-align: center;
+            padding: 2rem 2.75rem;
             font-size: 0.85rem;
-            color: #6b7280;
-            border-top: 1px dashed rgba(15, 23, 42, 0.2);
-            padding-top: 1rem;
+            color: #64748b;
           }
           .invoice__footer-meta {
-            margin: 0.5rem 0 0;
+            margin-top: 0.6rem;
             font-size: 0.8rem;
+            color: #4b5563;
           }
           @media print {
             body {
@@ -572,9 +705,13 @@ function printReceipt(sale, data, formatCurrency) {
               background: #ffffff;
             }
             .invoice {
+              border-radius: 0;
               box-shadow: none;
               border: none;
-              border-radius: 0;
+            }
+            .invoice__label {
+              background: none;
+              padding-left: 0;
             }
           }
         </style>

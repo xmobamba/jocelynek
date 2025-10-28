@@ -333,8 +333,12 @@
                     <input id="saleDate" name="date" type="date" required />
                   </div>
                   <div class="form-row">
+                    <label for="saleCustomer">Client</label>
+                    <input id="saleCustomer" name="customer" type="text" placeholder="Nom du client" />
+                  </div>
+                  <div class="form-row">
                     <label for="saleNotes">Notes</label>
-                    <textarea id="saleNotes" name="notes" rows="2" placeholder="Notes ou description" ></textarea>
+                    <textarea id="saleNotes" name="notes" rows="2" placeholder="Notes ou description"></textarea>
                   </div>
                 </div>
                 <div class="form-summary">
@@ -579,34 +583,60 @@
 
     <template id="receiptTemplate">
       <article class="invoice">
-        <header class="invoice__header">
+        <header class="invoice__head">
+          <div class="invoice__title">
+            <span class="invoice__label">Facture</span>
+            <h1 id="receiptBrandName">Jocelyne K</h1>
+            <p id="receiptBrandTagline" class="invoice__tagline">Gestionnaire de ventes &amp; stocks</p>
+          </div>
           <div class="invoice__brand">
-            <img src="assets/logo.png" alt="Logo Jocelyne K" class="invoice__logo" />
-            <div>
-              <h1 id="receiptBrandName">Jocelyne K</h1>
-              <p id="receiptBrandTagline">Gestionnaire de ventes &amp; stocks</p>
+            <div class="invoice__logo-wrap">
+              <img src="assets/logo.png" alt="Logo Jocelyne K" class="invoice__logo" />
+            </div>
+            <div class="invoice__brand-info">
+              <strong id="receiptCompanyName">Jocelyne K</strong>
+              <address id="receiptVendor"></address>
             </div>
           </div>
-          <div class="invoice__meta">
-            <p><strong>Facture :</strong> <span id="receiptNumber"></span></p>
-            <p><strong>Date :</strong> <span id="receiptDate"></span></p>
-          </div>
         </header>
-        <section class="invoice__details">
-          <div>
-            <h2>Boutique</h2>
-            <p id="receiptShop"></p>
+        <section class="invoice__meta">
+          <dl>
+            <div>
+              <dt>Numéro</dt>
+              <dd id="receiptNumber"></dd>
+            </div>
+            <div>
+              <dt>Date</dt>
+              <dd id="receiptDate"></dd>
+            </div>
+            <div>
+              <dt>Devise</dt>
+              <dd id="receiptCurrency">FCFA</dd>
+            </div>
+            <div>
+              <dt>Paiement</dt>
+              <dd id="receiptPaymentTerm">Comptant</dd>
+            </div>
+          </dl>
+        </section>
+        <section class="invoice__parties">
+          <div class="invoice__party">
+            <h2>Client</h2>
+            <p id="receiptCustomer">Client non renseigné</p>
           </div>
-          <div>
-            <h2>Vendeuse</h2>
-            <p id="receiptSeller"></p>
+          <div class="invoice__party">
+            <h2>Point de vente</h2>
+            <p>
+              <span id="receiptShop"></span><br />
+              <small id="receiptSeller"></small>
+            </p>
           </div>
         </section>
         <section class="invoice__table-wrapper">
           <table class="invoice__table">
             <thead>
               <tr>
-                <th>Produit</th>
+                <th>Description</th>
                 <th>Quantité</th>
                 <th>Prix unitaire</th>
                 <th>Remise</th>
@@ -626,7 +656,7 @@
         </section>
         <section class="invoice__summary">
           <div class="invoice__notes">
-            <h3>Notes</h3>
+            <h3>Informations additionnelles</h3>
             <p id="receiptNotes"></p>
           </div>
           <div class="invoice__totals">
