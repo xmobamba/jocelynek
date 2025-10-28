@@ -16,35 +16,55 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div class="brand">
-          <div class="brand-logo" aria-hidden="true">JK</div>
-          <div>
-            <h1>Gestionnaire de ventes</h1>
-            <p>Jocelyne K &amp; Jocelyne K 2</p>
+        <div class="topbar-left">
+          <div class="brand">
+            <div class="brand-logo" aria-hidden="true">JK</div>
+            <div>
+              <h1>Gestionnaire de ventes</h1>
+              <p>Jocelyne K &amp; Jocelyne K 2</p>
+            </div>
+          </div>
+          <div class="topbar-search">
+            <input
+              type="search"
+              id="globalSearch"
+              placeholder="Rechercher (produits, ventes, vendeuses...)"
+              aria-label="Recherche globale"
+            />
           </div>
         </div>
-        <div class="topbar-actions">
-          <input
-            type="search"
-            id="globalSearch"
-            placeholder="Rechercher (produits, ventes, vendeuses...)"
-            aria-label="Recherche globale"
-          />
+        <div class="topbar-right">
           <button id="exportCsvBtn" class="ghost-button" type="button">
             Exporter les ventes
           </button>
+          <div class="user-card" aria-label="Profil">
+            <div class="user-avatar" aria-hidden="true">JK</div>
+            <div class="user-details">
+              <strong>Jocelyne K</strong>
+              <span>Administratrice</span>
+            </div>
+          </div>
         </div>
       </header>
       <div class="layout">
         <nav class="sidebar" aria-label="Navigation principale">
-          <button class="nav-link active" data-target="dashboard">Tableau de bord</button>
-          <button class="nav-link" data-target="shops">Boutiques</button>
-          <button class="nav-link" data-target="sellers">Vendeuses</button>
-          <button class="nav-link" data-target="products">Produits</button>
-          <button class="nav-link" data-target="sales">Ventes</button>
-          <button class="nav-link" data-target="advances">Avances &amp; paiements</button>
-          <button class="nav-link" data-target="stats">Statistiques</button>
-          <button class="nav-link" data-target="settings">Paramètres</button>
+          <div class="sidebar-header">
+            <div class="sidebar-logo" aria-hidden="true">JK</div>
+            <div>
+              <h2>Jocelyne K</h2>
+              <p>Gestionnaire multi-boutiques</p>
+            </div>
+          </div>
+          <div class="sidebar-menu">
+            <button class="nav-link active" data-target="dashboard">Tableau de bord</button>
+            <button class="nav-link" data-target="shops">Boutiques</button>
+            <button class="nav-link" data-target="sellers">Vendeuses</button>
+            <button class="nav-link" data-target="products">Produits</button>
+            <button class="nav-link" data-target="sales">Ventes</button>
+            <button class="nav-link" data-target="advances">Avances &amp; paiements</button>
+            <button class="nav-link" data-target="stats">Statistiques</button>
+            <button class="nav-link" data-target="settings">Paramètres</button>
+          </div>
         </nav>
         <main class="content" id="content">
           <section id="dashboard" class="view active" aria-labelledby="dashboardTitle">
