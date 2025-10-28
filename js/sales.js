@@ -42,6 +42,12 @@ export function initSales(context) {
     });
   }
 
+  if (reportDateInput) {
+    reportDateInput.addEventListener('change', () => {
+      render();
+    });
+  }
+
   function toggleForm(show = true, sale = null) {
     formWrapper.hidden = !show;
     if (!show) {
@@ -283,6 +289,7 @@ export function initSales(context) {
 
   function render() {
     const { sales, products, sellers, shops, settings } = context.getData();
+    const selectedDate = reportDateInput?.value;
     populateSelects();
     updateSummary();
     const query = searchInput.value.toLowerCase();
@@ -291,11 +298,16 @@ export function initSales(context) {
       const product = products.find((prod) => prod.id === sale.productId);
       const seller = sellers.find((sel) => sel.id === sale.sellerId);
       const haystack = `${sale.number} ${sale.date} ${product?.name || ''} ${seller?.name || ''}`.toLowerCase();
-      return haystack.includes(query);
+      const matchesQuery = haystack.includes(query);
+      const matchesDate = !selectedDate || sale.date === selectedDate;
+      return matchesQuery && matchesDate;
     });
 
     if (!filtered.length) {
-      table.innerHTML = '<tr><td colspan="10" class="empty-state">Aucune vente enregistrée.</td></tr>';
+      const emptyMessage = selectedDate
+        ? 'Aucune vente pour la date sélectionnée.'
+        : 'Aucune vente enregistrée.';
+      table.innerHTML = `<tr><td colspan="10" class="empty-state">${emptyMessage}</td></tr>`;
       return;
     }
 
@@ -592,25 +604,27 @@ function printDailyReport(date, data, formatCurrency) {
     )
     .join('');
 
-  const rows = detailed
-    .sort((a, b) => a.sale.number.localeCompare(b.sale.number))
-    .map(
-      (item) => `
-        <tr>
-          <td>${item.sale.number}</td>
-          <td>${item.productName}</td>
-          <td>${item.sale.quantity}</td>
-          <td>${formatCurrency(item.amounts.unit, data.settings.currency)}</td>
-          <td>${formatCurrency(item.amounts.discount, data.settings.currency)}</td>
-          <td>${formatCurrency(item.amounts.total, data.settings.currency)}</td>
-          <td>${formatCurrency(item.amounts.advance, data.settings.currency)}</td>
-          <td>${formatCurrency(item.amounts.balance, data.settings.currency)}</td>
-          <td>${item.sellerName}</td>
-          <td>${item.shopName}</td>
-        </tr>
-      `
-    )
-    .join('');
+  const rows = detailed.length
+    ? detailed
+        .sort((a, b) => a.sale.number.localeCompare(b.sale.number))
+        .map(
+          (item) => `
+            <tr>
+              <td>${item.sale.number}</td>
+              <td>${item.productName}</td>
+              <td>${item.sale.quantity}</td>
+              <td>${formatCurrency(item.amounts.unit, data.settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.discount, data.settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.total, data.settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.advance, data.settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.balance, data.settings.currency)}</td>
+              <td>${item.sellerName}</td>
+              <td>${item.shopName}</td>
+            </tr>
+          `
+        )
+        .join('')
+    : `<tr><td colspan="10" class="empty-state">Aucune vente enregistrée pour cette date.</td></tr>`;
 
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
@@ -738,6 +752,11 @@ function printDailyReport(date, data, formatCurrency) {
             padding: 2rem 1rem;
             color: #6b7280;
             font-style: italic;
+          }
+          .empty-state {
+            text-align: center;
+            font-style: italic;
+            color: #6b7280;
           }
           @media print {
             body {
