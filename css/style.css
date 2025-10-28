@@ -415,6 +415,16 @@ form {
   font-weight: 500;
 }
 
+.table-card button.small.edit {
+  background: rgba(0, 168, 107, 0.18);
+  border: 1px solid rgba(0, 168, 107, 0.35);
+  color: #047857;
+}
+
+.table-card button.small.edit:hover {
+  background: rgba(0, 168, 107, 0.3);
+}
+
 .table-card button.small.print {
   background: rgba(255, 165, 0, 0.18);
   border: 1px solid rgba(255, 165, 0, 0.35);

@@ -1,3 +1,5 @@
+import { calculateSaleAmounts } from './utils.js';
+
 export function initSellers(context) {
   const table = document.getElementById('sellersTable');
   const formWrapper = document.getElementById('sellerFormWrapper');
@@ -56,8 +58,8 @@ export function initSellers(context) {
         const sellerSales = sales.filter((sale) => sale.sellerId === seller.id);
         const total = sellerSales.reduce((sum, sale) => {
           const product = products.find((prod) => prod.id === sale.productId);
-          const unit = product ? Number(product.price) : 0;
-          return sum + unit * sale.quantity - (sale.discount || 0);
+          const amounts = calculateSaleAmounts(sale, product);
+          return sum + amounts.total;
         }, 0);
         const shop = shops.find((shop) => shop.id === seller.shopId);
         return `

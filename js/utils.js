@@ -82,6 +82,20 @@ export function formatNumber(value) {
   return new Intl.NumberFormat('fr-FR').format(Number(value) || 0);
 }
 
+export function calculateSaleAmounts(sale, product) {
+  const unit =
+    sale && sale.unitPrice !== undefined && sale.unitPrice !== null && sale.unitPrice !== ''
+      ? Number(sale.unitPrice) || 0
+      : Number(product?.price) || 0;
+  const quantity = Number(sale?.quantity || 0);
+  const discount = Number(sale?.discount || 0);
+  const total = Math.max(unit * quantity - discount, 0);
+  const advanceRaw = Number(sale?.advance || 0);
+  const advance = Math.min(Math.max(advanceRaw, 0), total);
+  const balance = Math.max(total - advance, 0);
+  return { unit, quantity, discount, total, advance, balance };
+}
+
 export function generateIncrementalCode(prefix, counter) {
   return `${prefix}${String(counter).padStart(4, '0')}`;
 }
@@ -119,9 +133,8 @@ export function groupBy(array, selector) {
 export function computeSaleTotals(products, sales) {
   return sales.map((sale) => {
     const product = products.find((prod) => prod.id === sale.productId) || {};
-    const unitPrice = Number(product.price) || 0;
-    const total = unitPrice * Number(sale.quantity || 0) - Number(sale.discount || 0);
-    return { ...sale, unitPrice, total };
+    const amounts = calculateSaleAmounts(sale, product);
+    return { ...sale, unitPrice: amounts.unit, total: amounts.total, advance: amounts.advance, balance: amounts.balance };
   });
 }
 
@@ -134,6 +147,8 @@ export function exportSalesToCsv({ sales, products, sellers, shops, settings }) 
       'Quantité',
       'Prix unitaire',
       'Remise',
+      'Avance',
+      'Reste à payer',
       'Total',
       'Vendeuse',
       'Boutique'
@@ -144,16 +159,17 @@ export function exportSalesToCsv({ sales, products, sellers, shops, settings }) 
     const product = products.find((p) => p.id === sale.productId);
     const seller = sellers.find((s) => s.id === sale.sellerId);
     const shop = shops.find((s) => s.id === sale.shopId);
-    const unit = product ? Number(product.price) : 0;
-    const total = unit * sale.quantity - (sale.discount || 0);
+    const amounts = calculateSaleAmounts(sale, product);
     rows.push([
       sale.number,
       sale.date,
       product ? product.name : '—',
       sale.quantity,
-      unit,
-      sale.discount || 0,
-      total,
+      amounts.unit,
+      amounts.discount,
+      amounts.advance,
+      amounts.balance,
+      amounts.total,
       seller ? seller.name : '—',
       shop ? shop.name : '—'
     ]);

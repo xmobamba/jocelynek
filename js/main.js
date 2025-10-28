@@ -3,6 +3,7 @@ import {
   saveData,
   resetData,
   formatCurrency,
+  calculateSaleAmounts,
   generateIncrementalCode,
   todayISO,
   exportSalesToCsv,
@@ -94,13 +95,13 @@ function renderDashboard() {
   });
   const totalToday = salesToday.reduce((sum, sale) => {
     const product = data.products.find((prod) => prod.id === sale.productId);
-    const unit = product ? Number(product.price) : 0;
-    return sum + unit * sale.quantity - (sale.discount || 0);
+    const amounts = calculateSaleAmounts(sale, product);
+    return sum + amounts.total;
   }, 0);
   const totalMonth = currentMonthSales.reduce((sum, sale) => {
     const product = data.products.find((prod) => prod.id === sale.productId);
-    const unit = product ? Number(product.price) : 0;
-    return sum + unit * sale.quantity - (sale.discount || 0);
+    const amounts = calculateSaleAmounts(sale, product);
+    return sum + amounts.total;
   }, 0);
   const totalSales = data.sales.length;
   const inventory = data.products.reduce((acc, product) => acc + Number(product.stock || 0), 0);
@@ -156,13 +157,13 @@ function renderDailySalesTable(salesToday, data) {
   tbody.innerHTML = salesToday
     .map((sale) => {
       const product = data.products.find((prod) => prod.id === sale.productId);
-      const total = (product ? Number(product.price) : 0) * sale.quantity - (sale.discount || 0);
+      const amounts = calculateSaleAmounts(sale, product);
       return `
         <tr>
           <td>${sale.number}</td>
           <td>${product ? product.name : '—'}</td>
           <td>${sale.quantity}</td>
-          <td>${context.formatCurrency(total, data.settings.currency)}</td>
+          <td>${context.formatCurrency(amounts.total, data.settings.currency)}</td>
         </tr>
       `;
     })
@@ -211,8 +212,8 @@ function renderCategorySales(monthSales, data, now) {
     if (!acc[category]) {
       acc[category] = { name: category, total: 0 };
     }
-    const unit = Number(product.price) || 0;
-    acc[category].total += unit * sale.quantity - (sale.discount || 0);
+    const amounts = calculateSaleAmounts(sale, product);
+    acc[category].total += amounts.total;
     return acc;
   }, {});
 

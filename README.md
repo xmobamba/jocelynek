@@ -8,7 +8,9 @@ Application web responsive permettant de gérer les ventes, le stock et les avan
 - Gestion des boutiques, vendeuses, produits, ventes et avances
 - Numérotation automatique des ventes (`VENT0001`, `VENT0002`, ...)
 - Mise à jour automatique du stock lors des ventes
+- Prix unitaires ajustables, saisie d'avances et calcul du reste à payer par vente
 - Impression de reçus (A4 ou ticket thermique)
+- Modification, réimpression et export des ventes existantes
 - Recherche en temps réel dans les tables
 - Export CSV des ventes
 - Statistiques visuelles : chiffre d'affaires, top produits, top vendeuses

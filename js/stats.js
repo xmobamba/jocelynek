@@ -1,4 +1,4 @@
-import { formatNumber } from './utils.js';
+import { calculateSaleAmounts, formatNumber } from './utils.js';
 
 const PERIODS = {
   week: { days: 7, label: '7 derniers jours' },
@@ -43,8 +43,8 @@ function renderRevenueChart(sales, products, settings, container, startDate, day
       .filter((sale) => sameDay(new Date(sale.date), date))
       .reduce((sum, sale) => {
         const product = products.find((prod) => prod.id === sale.productId);
-        const unit = product ? Number(product.price) : 0;
-        return sum + unit * sale.quantity - (sale.discount || 0);
+        const amounts = calculateSaleAmounts(sale, product);
+        return sum + amounts.total;
       }, 0);
     return { label, total };
   });
@@ -71,7 +71,8 @@ function renderTopProducts(sales, products, settings, container) {
       acc[product.id] = { name: product.name, quantity: 0, total: 0 };
     }
     acc[product.id].quantity += sale.quantity;
-    acc[product.id].total += Number(product.price) * sale.quantity - (sale.discount || 0);
+    const amounts = calculateSaleAmounts(sale, product);
+    acc[product.id].total += amounts.total;
     return acc;
   }, {});
 
@@ -105,7 +106,8 @@ function renderTopSellers(sales, sellers, products, settings, container) {
       acc[seller.id] = { name: seller.name, quantity: 0, total: 0 };
     }
     acc[seller.id].quantity += sale.quantity;
-    acc[seller.id].total += Number(product.price) * sale.quantity - (sale.discount || 0);
+    const amounts = calculateSaleAmounts(sale, product);
+    acc[seller.id].total += amounts.total;
     return acc;
   }, {});
 

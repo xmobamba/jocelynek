@@ -267,8 +267,24 @@
                     <input id="saleQuantity" name="quantity" type="number" min="1" value="1" required />
                   </div>
                   <div class="form-row">
+                    <label for="saleUnitPriceInput">Prix unitaire (FCFA)</label>
+                    <input
+                      id="saleUnitPriceInput"
+                      name="unitPrice"
+                      type="number"
+                      min="0"
+                      step="100"
+                      value="0"
+                      required
+                    />
+                  </div>
+                  <div class="form-row">
                     <label for="saleDiscount">Remise (FCFA)</label>
                     <input id="saleDiscount" name="discount" type="number" min="0" step="100" value="0" />
+                  </div>
+                  <div class="form-row">
+                    <label for="saleAdvance">Avance (FCFA)</label>
+                    <input id="saleAdvance" name="advance" type="number" min="0" step="100" value="0" />
                   </div>
                   <div class="form-row">
                     <label for="saleDate">Date</label>
@@ -282,9 +298,11 @@
                 <div class="form-summary">
                   <p><strong>Prix unitaire :</strong> <span id="saleUnitPrice">0 FCFA</span></p>
                   <p><strong>Total :</strong> <span id="saleTotal">0 FCFA</span></p>
+                  <p><strong>Avance :</strong> <span id="saleAdvanceDisplay">0 FCFA</span></p>
+                  <p><strong>Reste à payer :</strong> <span id="saleBalance">0 FCFA</span></p>
                 </div>
                 <div class="form-actions">
-                  <button type="submit" class="primary">Enregistrer &amp; imprimer</button>
+                  <button type="submit" class="primary" id="saleSubmit">Enregistrer &amp; imprimer</button>
                   <button type="button" class="ghost" data-action="cancel-sale">Annuler</button>
                 </div>
               </form>
@@ -298,6 +316,8 @@
                     <th>Produit</th>
                     <th>Quantité</th>
                     <th>Total</th>
+                    <th>Avance</th>
+                    <th>Reste</th>
                     <th>Vendeuse</th>
                     <th>Boutique</th>
                     <th>Actions</th>
@@ -446,7 +466,10 @@
           <p><strong>Produit :</strong> <span id="receiptProduct"></span></p>
           <p><strong>Quantité :</strong> <span id="receiptQuantity"></span></p>
           <p><strong>Prix unitaire :</strong> <span id="receiptUnit"></span></p>
+          <p><strong>Remise :</strong> <span id="receiptDiscount"></span></p>
           <p><strong>Total :</strong> <span id="receiptTotal"></span></p>
+          <p><strong>Avance :</strong> <span id="receiptAdvance"></span></p>
+          <p><strong>Reste à payer :</strong> <span id="receiptBalance"></span></p>
           <p><strong>Vendeuse :</strong> <span id="receiptSeller"></span></p>
           <p><strong>Notes :</strong></p>
           <p id="receiptNotes"></p>
