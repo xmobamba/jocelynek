@@ -1,4 +1,4 @@
-import { calculateSaleAmounts, todayISO } from './utils.js';
+import { calculateSaleAmounts, todayISO, isSameDay, toISODate } from './utils.js';
 
 export function initSales(context) {
   const table = document.getElementById('salesTable');
@@ -32,11 +32,8 @@ export function initSales(context) {
 
   if (reportButton) {
     reportButton.addEventListener('click', () => {
-      const selectedDate = reportDateInput?.value || todayISO();
-      if (!selectedDate) {
-        alert('Sélectionnez une date à imprimer.');
-        return;
-      }
+      const rawDate = reportDateInput?.value;
+      const selectedDate = toISODate(rawDate) || todayISO();
       const data = context.getData();
       printDailyReport(selectedDate, data, context.formatCurrency.bind(context));
     });
@@ -289,7 +286,8 @@ export function initSales(context) {
 
   function render() {
     const { sales, products, sellers, shops, settings } = context.getData();
-    const selectedDate = reportDateInput?.value;
+    const rawSelectedDate = reportDateInput?.value;
+    const selectedDate = toISODate(rawSelectedDate);
     populateSelects();
     updateSummary();
     const query = searchInput.value.toLowerCase();
@@ -299,7 +297,7 @@ export function initSales(context) {
       const seller = sellers.find((sel) => sel.id === sale.sellerId);
       const haystack = `${sale.number} ${sale.date} ${product?.name || ''} ${seller?.name || ''}`.toLowerCase();
       const matchesQuery = haystack.includes(query);
-      const matchesDate = !selectedDate || sale.date === selectedDate;
+      const matchesDate = !selectedDate || isSameDay(sale.date, selectedDate);
       return matchesQuery && matchesDate;
     });
 
@@ -553,14 +551,15 @@ function printReceipt(sale, data, formatCurrency) {
 }
 
 function printDailyReport(date, data, formatCurrency) {
-  const dateLabel = new Date(date).toLocaleDateString('fr-FR', {
+  const normalizedDate = toISODate(date) || todayISO();
+  const dateLabel = new Date(normalizedDate).toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   });
   const detailed = data.sales
-    .filter((sale) => sale.date === date)
+    .filter((sale) => isSameDay(sale.date, normalizedDate))
     .map((sale) => {
       const product = data.products.find((prod) => prod.id === sale.productId);
       const seller = data.sellers.find((sel) => sel.id === sale.sellerId);

@@ -7,7 +7,8 @@ import {
   generateIncrementalCode,
   todayISO,
   exportSalesToCsv,
-  structuredClone
+  structuredClone,
+  isSameDay
 } from './utils.js';
 import { initShops } from './shops.js';
 import { initSellers } from './sellers.js';
@@ -87,7 +88,7 @@ function renderDashboard() {
   const cards = document.getElementById('dashboardCards');
   if (!cards) return;
   const today = todayISO();
-  const salesToday = data.sales.filter((sale) => sale.date === today);
+  const salesToday = data.sales.filter((sale) => isSameDay(sale.date, today));
   const now = new Date();
   const currentMonthSales = data.sales.filter((sale) => {
     const saleDate = new Date(sale.date);

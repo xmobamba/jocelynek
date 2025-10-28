@@ -104,6 +104,25 @@ export function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+export function toISODate(value) {
+  if (!value && value !== 0) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.toISOString().slice(0, 10);
+}
+
+export function isSameDay(left, right) {
+  const leftIso = toISODate(left);
+  const rightIso = toISODate(right);
+  if (!leftIso || !rightIso) return false;
+  return leftIso === rightIso;
+}
+
 export function dateToLabel(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString('fr-FR', {
