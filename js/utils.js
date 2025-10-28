@@ -12,7 +12,17 @@ const defaultData = {
   settings: {
     currency: 'FCFA',
     lowStockThreshold: 5,
-    receiptFormat: 'a4'
+    receiptFormat: 'a4',
+    defaultShopId: 'shop1',
+    defaultSellerId: '',
+    autoPrintReceipts: true,
+    companyName: 'Jocelyne K',
+    companyTagline: 'Gestionnaire de ventes & stocks',
+    companyPhone: '+225 00 00 00 00',
+    companyEmail: 'contact@jocelynek.ci',
+    companyAddress: "Abidjan, Côte d'Ivoire",
+    receiptMessage: 'Merci pour votre confiance. Veuillez conserver cette facture.',
+    closingNote: 'Clôture journalière validée par la gérance.'
   },
   counters: {
     sale: 0,

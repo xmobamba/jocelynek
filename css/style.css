@@ -433,15 +433,58 @@ form {
   gap: 1rem 1.5rem;
 }
 
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.75rem 0 1.5rem;
+}
+
+.form-section + .form-section {
+  border-top: 1px solid var(--color-border);
+}
+
+.form-section__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.form-section__header p {
+  margin: 0.35rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
 .form-row {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
 }
 
+.form-row.full {
+  grid-column: 1 / -1;
+}
+
 .form-row label {
   font-weight: 500;
   color: var(--color-muted);
+}
+
+.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.checkbox input[type='checkbox'] {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  accent-color: var(--color-tertiary);
 }
 
 .form-row input,

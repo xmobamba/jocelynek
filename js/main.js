@@ -48,7 +48,55 @@ const context = {
 
 const modules = [];
 
+function getInitials(value) {
+  if (!value) return 'JK';
+  const initials = value
+    .split(/[^A-Za-zÀ-ÖØ-öø-ÿ]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase();
+  return initials.slice(0, 2) || 'JK';
+}
+
+function renderBranding() {
+  const { settings, shops } = context.getData();
+  const companyName = (settings.companyName || 'Jocelyne K').trim() || 'Jocelyne K';
+  const shopSummary = shops.length ? shops.map((shop) => shop.name).join(' • ') : companyName;
+  const tagline = (settings.companyTagline || '').trim() || shopSummary;
+  const initials = getInitials(companyName);
+
+  const brandName = document.getElementById('brandName');
+  if (brandName) brandName.textContent = companyName;
+  const brandTagline = document.getElementById('brandTagline');
+  if (brandTagline) brandTagline.textContent = tagline;
+  const brandInitials = document.getElementById('brandInitials');
+  if (brandInitials) brandInitials.textContent = initials;
+
+  const userInitials = document.getElementById('userInitials');
+  if (userInitials) userInitials.textContent = initials;
+  const userName = document.getElementById('userName');
+  if (userName) userName.textContent = companyName;
+
+  const sidebarInitials = document.getElementById('sidebarInitials');
+  if (sidebarInitials) sidebarInitials.textContent = initials;
+  const sidebarName = document.getElementById('sidebarName');
+  if (sidebarName) sidebarName.textContent = companyName;
+  const sidebarTagline = document.getElementById('sidebarTagline');
+  if (sidebarTagline) sidebarTagline.textContent = tagline;
+
+  const dashboardSubtitle = document.getElementById('dashboardSubtitle');
+  if (dashboardSubtitle) {
+    dashboardSubtitle.textContent = shops.length
+      ? `Vue d'ensemble : ${shopSummary}`
+      : `Vue d'ensemble des boutiques ${companyName}.`;
+  }
+
+  document.title = `Gestionnaire de ventes – ${companyName}`;
+}
+
 function notify() {
+  renderBranding();
   modules.forEach((module) => module.render());
   renderDashboard();
 }
@@ -305,10 +353,75 @@ function setupExport() {
 function setupSettings() {
   const form = document.getElementById('settingsForm');
   const resetButton = document.getElementById('resetData');
-  const data = context.getData();
-  form.currency.value = data.settings.currency;
-  form.lowStockThreshold.value = data.settings.lowStockThreshold;
-  form.receiptFormat.value = data.settings.receiptFormat;
+  if (!form) return;
+
+  const fields = {
+    currency: form.querySelector('#currency'),
+    lowStockThreshold: form.querySelector('#lowStockThreshold'),
+    receiptFormat: form.querySelector('#receiptFormat'),
+    defaultShop: form.querySelector('#defaultShop'),
+    defaultSeller: form.querySelector('#defaultSeller'),
+    autoPrint: form.querySelector('#autoPrintReceipts'),
+    companyName: form.querySelector('#companyName'),
+    companyTagline: form.querySelector('#companyTagline'),
+    companyPhone: form.querySelector('#companyPhone'),
+    companyEmail: form.querySelector('#companyEmail'),
+    companyAddress: form.querySelector('#companyAddress'),
+    receiptMessage: form.querySelector('#receiptMessage'),
+    closingNote: form.querySelector('#closingNote')
+  };
+
+  function populateSelect(select, items, selectedValue, emptyLabel) {
+    if (!select) return;
+    if (!items.length) {
+      select.innerHTML = `<option value="">${emptyLabel}</option>`;
+      select.disabled = true;
+      select.value = '';
+      return;
+    }
+
+    select.disabled = false;
+    select.innerHTML = items.map((item) => `<option value="${item.id}">${item.name}</option>`).join('');
+    if (selectedValue && !items.some((item) => item.id === selectedValue)) {
+      const option = document.createElement('option');
+      option.value = selectedValue;
+      option.textContent = 'Enregistrement indisponible';
+      option.dataset.missing = 'true';
+      select.append(option);
+    }
+    if (selectedValue) {
+      select.value = selectedValue;
+    }
+    if (!select.value && items.length) {
+      select.value = items[0].id;
+    }
+  }
+
+  function populateForm() {
+    const data = context.getData();
+    const { settings, shops, sellers } = data;
+
+    if (fields.currency) fields.currency.value = settings.currency || 'FCFA';
+    if (fields.lowStockThreshold)
+      fields.lowStockThreshold.value = Number(settings.lowStockThreshold || 5);
+    if (fields.receiptFormat) fields.receiptFormat.value = settings.receiptFormat || 'a4';
+    if (fields.autoPrint) fields.autoPrint.checked = settings.autoPrintReceipts !== false;
+
+    populateSelect(fields.defaultShop, shops, settings.defaultShopId, 'Aucune boutique enregistrée');
+    populateSelect(fields.defaultSeller, sellers, settings.defaultSellerId, 'Aucune vendeuse enregistrée');
+
+    if (fields.companyName) fields.companyName.value = settings.companyName || 'Jocelyne K';
+    if (fields.companyTagline)
+      fields.companyTagline.value = settings.companyTagline || 'Gestionnaire de ventes & stocks';
+    if (fields.companyPhone) fields.companyPhone.value = settings.companyPhone || '';
+    if (fields.companyEmail) fields.companyEmail.value = settings.companyEmail || '';
+    if (fields.companyAddress) fields.companyAddress.value = settings.companyAddress || '';
+    if (fields.receiptMessage) fields.receiptMessage.value = settings.receiptMessage || '';
+    if (fields.closingNote) fields.closingNote.value = settings.closingNote || '';
+  }
+
+  populateForm();
+  context.register(populateForm);
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -317,15 +430,28 @@ function setupSettings() {
       draft.settings.currency = formData.get('currency') || 'FCFA';
       draft.settings.lowStockThreshold = Number(formData.get('lowStockThreshold')) || 5;
       draft.settings.receiptFormat = formData.get('receiptFormat') || 'a4';
+      draft.settings.defaultShopId = formData.get('defaultShop') || '';
+      draft.settings.defaultSellerId = formData.get('defaultSeller') || '';
+      draft.settings.autoPrintReceipts = formData.get('autoPrintReceipts') !== null;
+      draft.settings.companyName = (formData.get('companyName') || '').trim() || 'Jocelyne K';
+      draft.settings.companyTagline = (formData.get('companyTagline') || '').trim();
+      draft.settings.companyPhone = (formData.get('companyPhone') || '').trim();
+      draft.settings.companyEmail = (formData.get('companyEmail') || '').trim();
+      draft.settings.companyAddress = (formData.get('companyAddress') || '').trim();
+      draft.settings.receiptMessage = (formData.get('receiptMessage') || '').trim();
+      draft.settings.closingNote = (formData.get('closingNote') || '').trim();
     });
   });
 
-  resetButton.addEventListener('click', () => {
-    if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données ?')) {
-      state.data = resetData();
-      notify();
-    }
-  });
+  if (resetButton) {
+    resetButton.addEventListener('click', () => {
+      if (confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données ?')) {
+        state.data = resetData();
+        form.reset();
+        notify();
+      }
+    });
+  }
 }
 
 function init() {

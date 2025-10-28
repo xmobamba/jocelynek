@@ -88,9 +88,14 @@ export function initSales(context) {
       submitBtn.textContent = 'Enregistrer & imprimer';
       form.reset();
       const data = context.getData();
+      const { settings } = data;
       const firstProduct = data.products[0];
-      const firstShop = data.shops[0];
-      const firstSeller = data.sellers[0];
+      const defaultShop =
+        settings.defaultShopId && data.shops.find((shop) => shop.id === settings.defaultShopId);
+      const defaultSeller =
+        settings.defaultSellerId && data.sellers.find((seller) => seller.id === settings.defaultSellerId);
+      const firstShop = defaultShop || data.shops[0];
+      const firstSeller = defaultSeller || data.sellers[0];
       quantityInput.value = 1;
       discountInput.value = 0;
       advanceInput.value = 0;
@@ -107,7 +112,7 @@ export function initSales(context) {
   }
 
   function populateSelects() {
-    const { products, shops, sellers } = context.getData();
+    const { products, shops, sellers, settings } = context.getData();
     const currentProduct = productSelect.value;
     const currentShop = shopSelect.value;
     const currentSeller = sellerSelect.value;
@@ -125,10 +130,22 @@ export function initSales(context) {
       productSelect.value = products[0].id;
     }
     if (currentShop) shopSelect.value = currentShop;
+    if (!shopSelect.value && settings.defaultShopId) {
+      const preferredShop = shops.find((shop) => shop.id === settings.defaultShopId);
+      if (preferredShop) {
+        shopSelect.value = preferredShop.id;
+      }
+    }
     if (!shopSelect.value && shops.length) {
       shopSelect.value = shops[0].id;
     }
     if (currentSeller) sellerSelect.value = currentSeller;
+    if (!sellerSelect.value && settings.defaultSellerId) {
+      const preferredSeller = sellers.find((seller) => seller.id === settings.defaultSellerId);
+      if (preferredSeller) {
+        sellerSelect.value = preferredSeller.id;
+      }
+    }
     if (!sellerSelect.value && sellers.length) {
       sellerSelect.value = sellers[0].id;
     }
@@ -275,7 +292,8 @@ export function initSales(context) {
 
     const data = context.getData();
     const sale = data.sales.find((s) => s.id === affectedSaleId);
-    if (sale) {
+    const shouldPrint = data.settings.autoPrintReceipts !== false;
+    if (sale && shouldPrint) {
       printReceipt(sale, data, context.formatCurrency.bind(context));
     }
 
@@ -363,28 +381,49 @@ function printReceipt(sale, data, formatCurrency) {
   const template = document.getElementById('receiptTemplate');
   if (!template) return;
 
+  const settings = data.settings || {};
+  const shopSummary = (data.shops || []).map((s) => s.name).join(' • ');
+  const companyName = (settings.companyName || 'Jocelyne K').trim() || 'Jocelyne K';
+  const tagline = (settings.companyTagline || '').trim() || shopSummary || 'Gestionnaire de ventes & stocks';
+  const receiptMessage = settings.receiptMessage || 'Merci pour votre confiance. Veuillez conserver cette facture.';
+  const contactParts = [];
+  if (settings.companyPhone) contactParts.push(settings.companyPhone);
+  if (settings.companyEmail) contactParts.push(settings.companyEmail);
+  const contactLine = contactParts.length ? `Contact : ${contactParts.join(' · ')}` : '';
+  const addressLine = settings.companyAddress ? settings.companyAddress : '';
+  const footerMeta = [contactLine, addressLine].filter(Boolean).join(' · ') ||
+    "Contact : +225 00 00 00 00 · Abidjan, Côte d'Ivoire";
+
   const receipt = template.content.cloneNode(true);
   const amounts = calculateSaleAmounts(sale, product);
 
+  const brandNameEl = receipt.getElementById('receiptBrandName');
+  if (brandNameEl) brandNameEl.textContent = companyName;
+  const brandTaglineEl = receipt.getElementById('receiptBrandTagline');
+  if (brandTaglineEl) brandTaglineEl.textContent = tagline;
   receipt.getElementById('receiptShop').textContent = shop ? shop.name : '';
   receipt.getElementById('receiptDate').textContent = new Date(sale.date).toLocaleString('fr-FR');
   receipt.getElementById('receiptNumber').textContent = sale.number;
   receipt.getElementById('receiptProduct').textContent = product ? product.name : '';
   receipt.getElementById('receiptQuantity').textContent = sale.quantity;
-  receipt.getElementById('receiptUnit').textContent = formatCurrency(amounts.unit, data.settings.currency);
-  receipt.getElementById('receiptDiscount').textContent = formatCurrency(amounts.discount, data.settings.currency);
-  receipt.getElementById('receiptTotal').textContent = formatCurrency(amounts.total, data.settings.currency);
-  receipt.getElementById('receiptAdvance').textContent = formatCurrency(amounts.advance, data.settings.currency);
-  receipt.getElementById('receiptBalance').textContent = formatCurrency(amounts.balance, data.settings.currency);
+  receipt.getElementById('receiptUnit').textContent = formatCurrency(amounts.unit, settings.currency);
+  receipt.getElementById('receiptDiscount').textContent = formatCurrency(amounts.discount, settings.currency);
+  receipt.getElementById('receiptTotal').textContent = formatCurrency(amounts.total, settings.currency);
+  receipt.getElementById('receiptAdvance').textContent = formatCurrency(amounts.advance, settings.currency);
+  receipt.getElementById('receiptBalance').textContent = formatCurrency(amounts.balance, settings.currency);
   receipt.getElementById('receiptSeller').textContent = seller ? seller.name : '';
   receipt.getElementById('receiptNotes').textContent = sale.notes || '—';
+  const footerMessageEl = receipt.getElementById('receiptFooterMessage');
+  if (footerMessageEl) footerMessageEl.textContent = receiptMessage;
+  const footerMetaEl = receipt.getElementById('receiptFooterMeta');
+  if (footerMetaEl) footerMetaEl.textContent = footerMeta;
 
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
   printWindow.document.write(`
     <html>
       <head>
-        <title>Reçu ${sale.number}</title>
+        <title>${companyName} – Reçu ${sale.number}</title>
         <style>
           :root { color-scheme: light; }
           body {
@@ -558,6 +597,18 @@ function printDailyReport(date, data, formatCurrency) {
     month: 'long',
     year: 'numeric'
   });
+  const settings = data.settings || {};
+  const shops = data.shops || [];
+  const companyName = (settings.companyName || 'Jocelyne K').trim() || 'Jocelyne K';
+  const shopLabel = shops.length ? shops.map((shop) => shop.name).join(' • ') : companyName;
+  const tagline = (settings.companyTagline || '').trim() || shopLabel;
+  const contactPieces = [];
+  if (settings.companyPhone) contactPieces.push(settings.companyPhone);
+  if (settings.companyEmail) contactPieces.push(settings.companyEmail);
+  const contactLine = contactPieces.length ? `Contact : ${contactPieces.join(' · ')}` : '';
+  const addressLine = settings.companyAddress ? settings.companyAddress : '';
+  const contactBlock = [contactLine, addressLine].filter(Boolean).join(' · ');
+  const closingNote = settings.closingNote || '';
   const detailed = data.sales
     .filter((sale) => isSameDay(sale.date, normalizedDate))
     .map((sale) => {
@@ -596,7 +647,7 @@ function printDailyReport(date, data, formatCurrency) {
       (entry) => `
         <li>
           <span>${entry.name}</span>
-          <strong>${formatCurrency(entry.total, data.settings.currency)}</strong>
+          <strong>${formatCurrency(entry.total, settings.currency)}</strong>
           <small>${entry.count} vente${entry.count > 1 ? 's' : ''}</small>
         </li>
       `
@@ -612,11 +663,11 @@ function printDailyReport(date, data, formatCurrency) {
               <td>${item.sale.number}</td>
               <td>${item.productName}</td>
               <td>${item.sale.quantity}</td>
-              <td>${formatCurrency(item.amounts.unit, data.settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.discount, data.settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.total, data.settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.advance, data.settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.balance, data.settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.unit, settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.discount, settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.total, settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.advance, settings.currency)}</td>
+              <td>${formatCurrency(item.amounts.balance, settings.currency)}</td>
               <td>${item.sellerName}</td>
               <td>${item.shopName}</td>
             </tr>
@@ -630,7 +681,7 @@ function printDailyReport(date, data, formatCurrency) {
   printWindow.document.write(`
     <html>
       <head>
-        <title>Clôture des ventes – ${dateLabel}</title>
+        <title>${companyName} – Clôture des ventes (${dateLabel})</title>
         <style>
           :root { color-scheme: light; }
           body {
@@ -660,11 +711,22 @@ function printDailyReport(date, data, formatCurrency) {
           }
           .report__header h1 {
             margin: 0;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
           }
           .report__header p {
-            margin: 0;
+            margin: 0.2rem 0;
             color: #6b7280;
+          }
+          .report__contact {
+            margin-top: 0.6rem;
+            font-size: 0.85rem;
+            color: #6b7280;
+          }
+          .report__meta {
+            text-align: right;
+          }
+          .report__meta p {
+            margin: 0.2rem 0;
           }
           .report__metrics {
             display: grid;
@@ -757,6 +819,13 @@ function printDailyReport(date, data, formatCurrency) {
             font-style: italic;
             color: #6b7280;
           }
+          .report__footer-note {
+            margin-top: 2rem;
+            text-align: center;
+            color: #475569;
+            font-size: 0.95rem;
+            font-style: italic;
+          }
           @media print {
             body {
               padding: 0;
@@ -774,18 +843,20 @@ function printDailyReport(date, data, formatCurrency) {
         <div class="report">
           <div class="report__header">
             <div>
-              <h1>Clôture de la journée</h1>
-              <p>${dateLabel}</p>
+              <h1>${companyName}</h1>
+              <p>${tagline}</p>
+              ${contactBlock ? `<p class="report__contact">${contactBlock}</p>` : ''}
             </div>
-            <div>
-              <p><strong>Boutiques :</strong> Jocelyne K &amp; Jocelyne K 2</p>
+            <div class="report__meta">
+              <p><strong>Clôture du :</strong> ${dateLabel}</p>
               <p><strong>Rapport généré :</strong> ${new Date().toLocaleString('fr-FR')}</p>
+              ${shopLabel ? `<p><strong>Boutiques :</strong> ${shopLabel}</p>` : ''}
             </div>
           </div>
           <div class="report__metrics">
             <div class="report__metric">
               <span>Chiffre d'affaires</span>
-              <strong>${formatCurrency(totalRevenue, data.settings.currency)}</strong>
+              <strong>${formatCurrency(totalRevenue, settings.currency)}</strong>
               <small>${detailed.length} vente${detailed.length > 1 ? 's' : ''}</small>
             </div>
             <div class="report__metric">
@@ -795,11 +866,11 @@ function printDailyReport(date, data, formatCurrency) {
             </div>
             <div class="report__metric">
               <span>Avances encaissées</span>
-              <strong>${formatCurrency(totalAdvance, data.settings.currency)}</strong>
+              <strong>${formatCurrency(totalAdvance, settings.currency)}</strong>
             </div>
             <div class="report__metric">
               <span>Restes à percevoir</span>
-              <strong>${formatCurrency(totalBalance, data.settings.currency)}</strong>
+              <strong>${formatCurrency(totalBalance, settings.currency)}</strong>
             </div>
           </div>
           <div class="report__breakdown">
@@ -831,14 +902,15 @@ function printDailyReport(date, data, formatCurrency) {
                 <td colspan="2">Totaux</td>
                 <td>${totalQuantity}</td>
                 <td>—</td>
-                <td>${formatCurrency(totalDiscount, data.settings.currency)}</td>
-                <td>${formatCurrency(totalRevenue, data.settings.currency)}</td>
-                <td>${formatCurrency(totalAdvance, data.settings.currency)}</td>
-                <td>${formatCurrency(totalBalance, data.settings.currency)}</td>
+                <td>${formatCurrency(totalDiscount, settings.currency)}</td>
+                <td>${formatCurrency(totalRevenue, settings.currency)}</td>
+                <td>${formatCurrency(totalAdvance, settings.currency)}</td>
+                <td>${formatCurrency(totalBalance, settings.currency)}</td>
                 <td colspan="2"> </td>
               </tr>
             </tfoot>
           </table>
+          ${closingNote ? `<p class="report__footer-note">${closingNote}</p>` : ''}
         </div>
       </body>
     </html>

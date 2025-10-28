@@ -56,8 +56,9 @@ export function initProducts(context) {
   }
 
   function populateShopOptions(selectedId) {
-    const { shops } = context.getData();
-    const desiredValue = selectedId ?? shopSelect.value ?? '';
+    const { shops, settings } = context.getData();
+    const desiredValue =
+      selectedId ?? shopSelect.value ?? settings.defaultShopId ?? '';
 
     if (!shops.length) {
       shopSelect.innerHTML = '';
@@ -68,7 +69,13 @@ export function initProducts(context) {
     shopSelect.innerHTML = shops.map((shop) => `<option value="${shop.id}">${shop.name}</option>`).join('');
 
     const match = shops.find((shop) => shop.id === desiredValue);
-    shopSelect.value = match ? match.id : shops[0].id;
+    if (match) {
+      shopSelect.value = match.id;
+      return;
+    }
+
+    const fallback = settings.defaultShopId && shops.find((shop) => shop.id === settings.defaultShopId);
+    shopSelect.value = fallback ? fallback.id : shops[0].id;
   }
 
   addBtn.addEventListener('click', () => toggleForm(true));

@@ -18,10 +18,10 @@
       <header class="topbar">
         <div class="topbar-left">
           <div class="brand">
-            <div class="brand-logo" aria-hidden="true">JK</div>
+            <div class="brand-logo" id="brandInitials" aria-hidden="true">JK</div>
             <div>
-              <h1>Gestionnaire de ventes</h1>
-              <p>Jocelyne K &amp; Jocelyne K 2</p>
+              <h1 id="brandName">Jocelyne K</h1>
+              <p id="brandTagline">Gestionnaire de ventes &amp; stocks</p>
             </div>
           </div>
           <div class="topbar-search">
@@ -38,9 +38,9 @@
             Exporter les ventes
           </button>
           <div class="user-card" aria-label="Profil">
-            <div class="user-avatar" aria-hidden="true">JK</div>
+            <div class="user-avatar" id="userInitials" aria-hidden="true">JK</div>
             <div class="user-details">
-              <strong>Jocelyne K</strong>
+              <strong id="userName">Jocelyne K</strong>
               <span>Administratrice</span>
             </div>
           </div>
@@ -49,10 +49,10 @@
       <div class="layout">
         <nav class="sidebar" aria-label="Navigation principale">
           <div class="sidebar-header">
-            <div class="sidebar-logo" aria-hidden="true">JK</div>
+            <div class="sidebar-logo" id="sidebarInitials" aria-hidden="true">JK</div>
             <div>
-              <h2>Jocelyne K</h2>
-              <p>Gestionnaire multi-boutiques</p>
+              <h2 id="sidebarName">Jocelyne K</h2>
+              <p id="sidebarTagline">Gestionnaire multi-boutiques</p>
             </div>
           </div>
           <div class="sidebar-menu">
@@ -70,7 +70,7 @@
           <section id="dashboard" class="view active" aria-labelledby="dashboardTitle">
             <header class="view-header">
               <h2 id="dashboardTitle">Tableau de bord</h2>
-              <p>Vue d'ensemble des boutiques Jocelyne K.</p>
+              <p id="dashboardSubtitle">Vue d'ensemble des boutiques Jocelyne K.</p>
             </header>
             <div class="dashboard-grid" id="dashboardCards"></div>
             <div class="dashboard-panels">
@@ -468,23 +468,104 @@
             </header>
             <div class="form-card">
               <form id="settingsForm">
-                <div class="form-grid">
-                  <div class="form-row">
-                    <label for="currency">Devise</label>
-                    <input id="currency" name="currency" placeholder="FCFA" />
+                <section class="form-section">
+                  <header class="form-section__header">
+                    <h3>Préférences générales</h3>
+                    <p>Adaptez les paramètres communs à toutes les boutiques.</p>
+                  </header>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="currency">Devise</label>
+                      <input id="currency" name="currency" placeholder="FCFA" />
+                    </div>
+                    <div class="form-row">
+                      <label for="lowStockThreshold">Seuil de stock faible</label>
+                      <input id="lowStockThreshold" name="lowStockThreshold" type="number" min="1" />
+                    </div>
+                    <div class="form-row">
+                      <label for="receiptFormat">Format de reçu par défaut</label>
+                      <select id="receiptFormat" name="receiptFormat">
+                        <option value="a4">A4</option>
+                        <option value="ticket">Ticket thermique</option>
+                      </select>
+                    </div>
+                    <div class="form-row">
+                      <label for="defaultShop">Boutique sélectionnée par défaut</label>
+                      <select id="defaultShop" name="defaultShop"></select>
+                    </div>
+                    <div class="form-row">
+                      <label for="defaultSeller">Vendeuse favorite</label>
+                      <select id="defaultSeller" name="defaultSeller"></select>
+                    </div>
+                    <div class="form-row full checkbox-row">
+                      <label class="checkbox" for="autoPrintReceipts">
+                        <input type="checkbox" id="autoPrintReceipts" name="autoPrintReceipts" />
+                        <span>Imprimer automatiquement un reçu après chaque vente validée</span>
+                      </label>
+                    </div>
                   </div>
-                  <div class="form-row">
-                    <label for="lowStockThreshold">Seuil de stock faible</label>
-                    <input id="lowStockThreshold" name="lowStockThreshold" type="number" min="1" />
+                </section>
+
+                <section class="form-section">
+                  <header class="form-section__header">
+                    <h3>Identité de la boutique</h3>
+                    <p>Personnalisez le nom affiché et le message d'accueil.</p>
+                  </header>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="companyName">Nom commercial</label>
+                      <input id="companyName" name="companyName" placeholder="Jocelyne K" />
+                    </div>
+                    <div class="form-row">
+                      <label for="companyTagline">Slogan / Tagline</label>
+                      <input
+                        id="companyTagline"
+                        name="companyTagline"
+                        placeholder="Gestionnaire de ventes &amp; stocks"
+                      />
+                    </div>
                   </div>
-                  <div class="form-row">
-                    <label for="receiptFormat">Format de reçu par défaut</label>
-                    <select id="receiptFormat" name="receiptFormat">
-                      <option value="a4">A4</option>
-                      <option value="ticket">Ticket thermique</option>
-                    </select>
+                </section>
+
+                <section class="form-section">
+                  <header class="form-section__header">
+                    <h3>Coordonnées &amp; documents</h3>
+                    <p>Ces informations apparaissent sur les reçus et rapports imprimés.</p>
+                  </header>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="companyPhone">Téléphone</label>
+                      <input id="companyPhone" name="companyPhone" type="tel" placeholder="+225" />
+                    </div>
+                    <div class="form-row">
+                      <label for="companyEmail">Adresse e-mail</label>
+                      <input id="companyEmail" name="companyEmail" type="email" placeholder="contact@..." />
+                    </div>
+                    <div class="form-row full">
+                      <label for="companyAddress">Adresse postale</label>
+                      <textarea id="companyAddress" name="companyAddress" rows="3"></textarea>
+                    </div>
+                    <div class="form-row full">
+                      <label for="receiptMessage">Message sur les reçus</label>
+                      <textarea
+                        id="receiptMessage"
+                        name="receiptMessage"
+                        rows="2"
+                        placeholder="Merci pour votre confiance."
+                      ></textarea>
+                    </div>
+                    <div class="form-row full">
+                      <label for="closingNote">Note de clôture journalière</label>
+                      <textarea
+                        id="closingNote"
+                        name="closingNote"
+                        rows="2"
+                        placeholder="Message ajouté aux rapports de clôture"
+                      ></textarea>
+                    </div>
                   </div>
-                </div>
+                </section>
+
                 <div class="form-actions">
                   <button type="submit" class="primary">Sauvegarder</button>
                   <button type="button" class="ghost" id="resetData">Réinitialiser les données</button>
@@ -502,8 +583,8 @@
           <div class="invoice__brand">
             <img src="assets/logo.png" alt="Logo Jocelyne K" class="invoice__logo" />
             <div>
-              <h1>Jocelyne K</h1>
-              <p>Gestionnaire de ventes &amp; stocks</p>
+              <h1 id="receiptBrandName">Jocelyne K</h1>
+              <p id="receiptBrandTagline">Gestionnaire de ventes &amp; stocks</p>
             </div>
           </div>
           <div class="invoice__meta">
@@ -562,8 +643,8 @@
           </div>
         </section>
         <footer class="invoice__footer">
-          <p>Merci pour votre confiance. Veuillez conserver cette facture.</p>
-          <p class="invoice__footer-meta">Contact : +225 00 00 00 00 · Abidjan, Côte d'Ivoire</p>
+          <p id="receiptFooterMessage">Merci pour votre confiance. Veuillez conserver cette facture.</p>
+          <p class="invoice__footer-meta" id="receiptFooterMeta">Contact : +225 00 00 00 00 · Abidjan, Côte d'Ivoire</p>
         </footer>
       </article>
     </template>
