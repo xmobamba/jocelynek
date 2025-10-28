@@ -87,17 +87,20 @@ function renderDashboard() {
   if (!cards) return;
   const today = todayISO();
   const salesToday = data.sales.filter((sale) => sale.date === today);
+  const now = new Date();
+  const currentMonthSales = data.sales.filter((sale) => {
+    const saleDate = new Date(sale.date);
+    return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+  });
   const totalToday = salesToday.reduce((sum, sale) => {
     const product = data.products.find((prod) => prod.id === sale.productId);
     const unit = product ? Number(product.price) : 0;
     return sum + unit * sale.quantity - (sale.discount || 0);
   }, 0);
-  const totalMonth = data.sales.reduce((sum, sale) => {
-    const saleDate = new Date(sale.date);
-    const now = new Date();
-    return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear()
-      ? sum + (data.products.find((prod) => prod.id === sale.productId)?.price || 0) * sale.quantity - (sale.discount || 0)
-      : sum;
+  const totalMonth = currentMonthSales.reduce((sum, sale) => {
+    const product = data.products.find((prod) => prod.id === sale.productId);
+    const unit = product ? Number(product.price) : 0;
+    return sum + unit * sale.quantity - (sale.discount || 0);
   }, 0);
   const totalSales = data.sales.length;
   const inventory = data.products.reduce((acc, product) => acc + Number(product.stock || 0), 0);
@@ -140,6 +143,7 @@ function renderDashboard() {
 
   renderDailySalesTable(salesToday, data);
   renderLowStock(data);
+  renderCategorySales(currentMonthSales, data, now);
 }
 
 function renderDailySalesTable(salesToday, data) {
@@ -181,6 +185,58 @@ function renderLowStock(data) {
         <li>
           <span>${product.name} (${shop ? shop.name : '—'})</span>
           <span class="badge danger">${product.stock} en stock</span>
+        </li>
+      `;
+    })
+    .join('');
+}
+
+function renderCategorySales(monthSales, data, now) {
+  const list = document.getElementById('categorySalesList');
+  if (!list) return;
+  const periodLabel = document.getElementById('categorySalesPeriod');
+  if (periodLabel) {
+    periodLabel.textContent = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  }
+
+  if (!monthSales.length) {
+    list.innerHTML = '<li class="empty-state">Aucune vente enregistrée ce mois-ci.</li>';
+    return;
+  }
+
+  const totals = monthSales.reduce((acc, sale) => {
+    const product = data.products.find((prod) => prod.id === sale.productId);
+    if (!product) return acc;
+    const category = product.category?.trim() || 'Sans catégorie';
+    if (!acc[category]) {
+      acc[category] = { name: category, total: 0 };
+    }
+    const unit = Number(product.price) || 0;
+    acc[category].total += unit * sale.quantity - (sale.discount || 0);
+    return acc;
+  }, {});
+
+  const ranking = Object.values(totals).sort((a, b) => b.total - a.total);
+  const grandTotal = ranking.reduce((sum, item) => sum + item.total, 0);
+
+  if (!ranking.length || grandTotal === 0) {
+    list.innerHTML = '<li class="empty-state">Aucune vente enregistrée ce mois-ci.</li>';
+    return;
+  }
+
+  list.innerHTML = ranking
+    .map((item) => {
+      const percentage = grandTotal ? Math.round((item.total / grandTotal) * 100) : 0;
+      return `
+        <li>
+          <div class="category-row">
+            <span>${item.name}</span>
+            <strong>${context.formatCurrency(item.total, data.settings.currency)}</strong>
+          </div>
+          <div class="category-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percentage}">
+            <span style="width: ${percentage}%"></span>
+          </div>
+          <small>${percentage}% des ventes du mois</small>
         </li>
       `;
     })
