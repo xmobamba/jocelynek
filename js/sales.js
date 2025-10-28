@@ -673,7 +673,7 @@ function printDailyReport(date, data, formatCurrency) {
             margin-bottom: 2rem;
           }
           .report__metric {
-            background: linear-gradient(135deg, rgba(255, 165, 0, 0.15), rgba(0, 168, 107, 0.15));
+            background: rgba(255, 165, 0, 0.12);
             border-radius: 16px;
             padding: 1rem 1.25rem;
           }
