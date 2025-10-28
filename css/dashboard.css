@@ -24,7 +24,7 @@
   height: 140px;
   top: -60px;
   right: -60px;
-  background: radial-gradient(circle at center, rgba(37, 99, 235, 0.28), transparent 70%);
+  background: radial-gradient(circle at center, rgba(0, 168, 107, 0.28), transparent 70%);
   pointer-events: none;
 }
 
@@ -122,12 +122,12 @@
 
 .inventory-table tbody td:nth-child(2) {
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .inventory-table tbody td:nth-child(3) {
   font-weight: 600;
-  color: var(--color-secondary);
+  color: var(--color-tertiary);
 }
 
 .inventory-table tbody tr:nth-child(even) {
