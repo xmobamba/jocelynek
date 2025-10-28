@@ -51,12 +51,14 @@ function renderRevenueChart(sales, products, settings, container, startDate, day
 
   const maxTotal = Math.max(...dailyTotals.map((day) => day.total), 1);
   container.innerHTML = dailyTotals
-    .map((day) => {
-      const height = Math.max((day.total / maxTotal) * 100, 8);
+    .map((day, index) => {
+      const height = Math.max((day.total / maxTotal) * 100, 12);
+      const color = index % 2 === 0 ? 'var(--color-secondary)' : 'var(--color-tertiary)';
       return `
-        <div class="chart-bar" style="height: ${height}%">
-          <span>${formatNumber(day.total)}</span>
-          <small>${day.label}</small>
+        <div class="chart-bar">
+          <span class="chart-bar__value">${formatNumber(day.total)} ${settings.currency}</span>
+          <div class="chart-bar__fill" style="height: ${height}%; --bar-color: ${color};"></div>
+          <span class="chart-bar__label">${day.label}</span>
         </div>
       `;
     })
