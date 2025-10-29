@@ -751,6 +751,16 @@ form {
   background: rgba(255, 165, 0, 0.3);
 }
 
+.table-card button.small.delete {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #b91c1c;
+}
+
+.table-card button.small.delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
 .empty-state {
   text-align: center;
   padding: 2rem 1rem;

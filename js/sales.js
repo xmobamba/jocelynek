@@ -422,6 +422,7 @@ export function initSales(context) {
             <td>
               <button class="small edit" data-edit-sale="${sale.id}">Modifier</button>
               <button class="small print" data-sale="${sale.id}">Imprimer</button>
+              <button class="small delete" data-delete-sale="${sale.id}">Supprimer</button>
             </td>
           </tr>
         `;
@@ -441,6 +442,38 @@ export function initSales(context) {
         const sale = sales.find((s) => s.id === button.dataset.editSale);
         if (!sale) return;
         toggleForm(true, sale);
+      });
+    });
+
+    table.querySelectorAll('button[data-delete-sale]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const saleId = button.dataset.deleteSale;
+        if (!saleId) return;
+        const sale = sales.find((s) => s.id === saleId);
+        if (!sale) return;
+        const product = products.find((prod) => prod.id === sale.productId);
+        const confirmationMessage = product
+          ? `Supprimer la vente ${sale.number} du produit « ${product.name} » ?`
+          : `Supprimer la vente ${sale.number} ?`;
+        const confirmed = window.confirm(confirmationMessage);
+        if (!confirmed) return;
+
+        context.updateData((draft) => {
+          const index = draft.sales.findIndex((entry) => entry.id === saleId);
+          if (index === -1) return;
+          const [removed] = draft.sales.splice(index, 1);
+          if (removed && removed.productId) {
+            const productToRestore = draft.products.find((prod) => prod.id === removed.productId);
+            if (productToRestore) {
+              productToRestore.stock = Number(productToRestore.stock || 0) + Number(removed.quantity || 0);
+            }
+          }
+          return draft;
+        });
+
+        if (editingSaleId === saleId) {
+          toggleForm(false);
+        }
       });
     });
   }
