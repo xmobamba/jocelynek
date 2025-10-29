@@ -531,6 +531,26 @@
                 <ul id="aiAlerts" class="insight-list" role="list"></ul>
               </article>
             </div>
+            <section class="insight-chat" aria-labelledby="aiChatTitle">
+              <div class="insight-chat__header">
+                <h3 id="aiChatTitle">Poser une question</h3>
+                <p>Demandez par exemple le stock restant d'un produit ou l'état d'une boutique.</p>
+              </div>
+              <form id="aiQuestionForm" class="chat-form">
+                <label class="visually-hidden" for="aiQuestionInput">Votre question</label>
+                <div class="chat-form__field">
+                  <input
+                    id="aiQuestionInput"
+                    name="question"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="Ex. Il reste combien de lunettes en stock ?"
+                  />
+                  <button type="submit" class="primary">Obtenir une réponse</button>
+                </div>
+              </form>
+              <div id="aiQuestionResponse" class="chat-response" role="status" aria-live="polite"></div>
+            </section>
             <section class="insight-report" aria-labelledby="aiNarrativeTitle">
               <div class="insight-report__header">
                 <h3 id="aiNarrativeTitle">Analyse détaillée</h3>

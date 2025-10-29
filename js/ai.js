@@ -6,6 +6,154 @@ import {
   toISODate
 } from './utils.js';
 
+function normalizeText(value) {
+  const stringValue = `${value ?? ''}`;
+  const base = typeof stringValue.normalize === 'function' ? stringValue.normalize('NFD') : stringValue;
+  return base
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function escapeHtml(value) {
+  return `${value ?? ''}`
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function tokenize(value) {
+  return normalizeText(value)
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 3);
+}
+
+function buildDefaultSuggestions() {
+  return {
+    html:
+      '<p>Je peux vous aider à analyser vos stocks et vos ventes.</p>' +
+      '<ul class="chat-response__list">' +
+      '<li><span class="chat-response__name">Stock produit</span><span class="chat-response__meta">« Il reste combien de sacs bandoulière en stock ? »</span></li>' +
+      '<li><span class="chat-response__name">Stock boutique</span><span class="chat-response__meta">« Quel est le stock disponible à Jocelyne K ? »</span></li>' +
+      '</ul>',
+    isSuggestion: true
+  };
+}
+
+function buildStockAnswer(normalizedQuestion, data) {
+  const { products, shops } = data;
+
+  const matchedShops = shops.filter((shop) => {
+    const normalizedShop = normalizeText(shop.name || '');
+    return normalizedShop && normalizedQuestion.includes(normalizedShop);
+  });
+
+  const productMatches = products
+    .map((product) => {
+      const normalizedName = normalizeText(product.name || '');
+      if (!normalizedName) return null;
+
+      let strength = 0;
+      if (normalizedQuestion.includes(normalizedName)) {
+        strength = normalizedName.length;
+      } else {
+        const tokens = tokenize(product.name || '');
+        strength = tokens.reduce(
+          (count, token) => (normalizedQuestion.includes(token) ? count + 1 : count),
+          0
+        );
+      }
+
+      if (strength === 0) return null;
+
+      if (matchedShops.length > 0 && !matchedShops.some((shop) => shop.id === product.shopId)) {
+        return null;
+      }
+
+      return { product, strength };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.strength - a.strength);
+
+  if (productMatches.length > 0) {
+    const limited = productMatches.slice(0, 5);
+    const sentences = limited.map(({ product }) => {
+      const shop = shops.find((item) => item.id === product.shopId);
+      const stockValue = Number(product.stock);
+      const numericStock = Number.isFinite(stockValue) ? stockValue : 0;
+      const safeStock = Math.max(numericStock, 0);
+      const quantity = formatNumber(safeStock);
+      const safeName = escapeHtml(product.name || 'Produit');
+      const hasExplicitShopFilter = matchedShops.length > 0;
+      const location =
+        hasExplicitShopFilter && matchedShops.length === 1
+          ? ''
+          : shop
+          ? ` à ${escapeHtml(shop.name)}`
+          : '';
+
+      if (safeStock > 0) {
+        return `<p>Il reste <strong>${quantity}</strong> ${safeName}${location}.</p>`;
+      }
+      return `<p>${safeName}${location} est actuellement en rupture de stock.</p>`;
+    });
+
+    if (productMatches.length > limited.length) {
+      sentences.push(
+        `<p class="chat-response__meta">${
+          productMatches.length - limited.length
+        } autre(s) résultat(s) correspondent également. Affinez votre question pour être plus précis.</p>`
+      );
+    }
+
+    return { html: sentences.join('') };
+  }
+
+  if (matchedShops.length > 0) {
+    const sentences = matchedShops.map((shop) => {
+      const stockTotal = products
+        .filter((product) => product.shopId === shop.id)
+        .reduce((sum, product) => {
+          const value = Number(product.stock);
+          const numeric = Number.isFinite(value) ? value : 0;
+          return sum + Math.max(numeric, 0);
+        }, 0);
+      return `<p>La boutique ${escapeHtml(shop.name)} dispose de <strong>${formatNumber(
+        stockTotal
+      )}</strong> article(s) en stock.</p>`;
+    });
+    return { html: sentences.join('') };
+  }
+
+  return {
+    html:
+      "<p>Je n'ai trouvé aucun produit correspondant à votre question. Vérifiez l'orthographe ou précisez le nom du produit.</p>" +
+      '<p class="chat-response__meta">Astuce : demandez par exemple « Il reste combien de lunettes de soleil en stock ? »</p>',
+    isSuggestion: true
+  };
+}
+
+function buildAnswerForQuestion(question, data) {
+  const normalizedQuestion = normalizeText(question);
+  if (!normalizedQuestion) {
+    return buildDefaultSuggestions();
+  }
+
+  const wantsStock = /\b(stock|reste|restant|restes|quantite|quantites|disponible|disponibles|dispo|combien|piece|pieces|unite|unites)\b/.test(
+    normalizedQuestion
+  );
+
+  if (wantsStock) {
+    return buildStockAnswer(normalizedQuestion, data);
+  }
+
+  return buildDefaultSuggestions();
+}
+
 function getSalesInPeriod(sales, start, end) {
   return sales.filter((sale) => {
     const rawDate = sale.date || sale.createdAt || sale.timestamp;
@@ -95,10 +243,17 @@ export function initAi(context) {
   const narrative = document.getElementById('aiNarrative');
   const refreshButton = document.getElementById('refreshInsights');
   const copyButton = document.getElementById('copyAiNarrative');
+  const questionForm = document.getElementById('aiQuestionForm');
+  const questionInput = document.getElementById('aiQuestionInput');
+  const questionResponse = document.getElementById('aiQuestionResponse');
   const dashboardHighlights = document.getElementById('dashboardAiHighlights');
   const dashboardOpportunities = document.getElementById('dashboardAiOpportunities');
   const dashboardAlerts = document.getElementById('dashboardAiAlerts');
   const dashboardNarrative = document.getElementById('dashboardAiNarrative');
+
+  const defaultResponseMarkup =
+    '<p class="chat-response__meta">Posez une question pour obtenir la disponibilité de vos produits ou boutiques.</p>';
+  let lastQuestion = '';
 
   if (
     !highlightsList &&
@@ -111,6 +266,29 @@ export function initAi(context) {
     return {
       render() {}
     };
+  }
+
+  if (questionResponse) {
+    questionResponse.innerHTML = defaultResponseMarkup;
+    questionResponse.classList.add('chat-response--empty');
+  }
+
+  function updateQuestionResponse(rawQuestion) {
+    if (!questionResponse) return;
+    const value = (rawQuestion || '').trim();
+    if (!value) {
+      questionResponse.innerHTML = defaultResponseMarkup;
+      questionResponse.classList.add('chat-response--empty');
+      return;
+    }
+
+    const answer = buildAnswerForQuestion(value, context.getData());
+    questionResponse.innerHTML = answer.html;
+    if (answer.isSuggestion) {
+      questionResponse.classList.add('chat-response--empty');
+    } else {
+      questionResponse.classList.remove('chat-response--empty');
+    }
   }
 
   function render() {
@@ -355,6 +533,10 @@ export function initAi(context) {
       const summary = sentences.slice(0, 2).join(' ').trim() || finalNarrative;
       dashboardNarrative.textContent = summary;
     }
+
+    if (lastQuestion) {
+      updateQuestionResponse(lastQuestion);
+    }
   }
 
   if (refreshButton) {
@@ -404,6 +586,16 @@ export function initAi(context) {
         console.error('Copie impossible', error);
         showCopyFeedback('Copie impossible');
       }
+    });
+  }
+
+  if (questionForm && questionInput) {
+    questionForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const value = questionInput.value.trim();
+      lastQuestion = value;
+      questionInput.value = value;
+      updateQuestionResponse(value);
     });
   }
 

@@ -15,6 +15,7 @@ Application web responsive permettant de gérer les ventes, le stock et les avan
 - Export CSV des ventes
 - Statistiques visuelles : chiffre d'affaires, top produits, top vendeuses
 - Assistant IA : recommandations automatiques (tendances, opportunités, alertes de stock, rapport narratif)
+- Assistant IA interactif : posez des questions (ex. « Combien de lunettes en stock ? ») pour obtenir des réponses instantanées
 - Personnalisation des paramètres (devise, seuil de stock, format de reçu, boutique/vendeuse par défaut, identité visuelle et coordonnées)
 - Impression d'un rapport de clôture quotidien (totaux, avances, restes à payer) pour la date sélectionnée
 - Tableau de bord détaillant stocks actuels et quantités vendues du jour
