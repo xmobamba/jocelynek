@@ -814,7 +814,9 @@ function printReceipt(sale, data, formatCurrency) {
 
 function printDailyReport(date, data, formatCurrency) {
   const normalizedDate = toISODate(date) || todayISO();
-  const dateLabel = new Date(normalizedDate).toLocaleDateString('fr-FR', {
+  const generatedAt = new Date();
+  const dateObj = new Date(normalizedDate);
+  const dateLabel = dateObj.toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -825,13 +827,20 @@ function printDailyReport(date, data, formatCurrency) {
   const companyName = (settings.companyName || 'Jocelyne K').trim() || 'Jocelyne K';
   const shopLabel = shops.length ? shops.map((shop) => shop.name).join(' • ') : companyName;
   const tagline = (settings.companyTagline || '').trim() || shopLabel;
-  const contactPieces = [];
-  if (settings.companyPhone) contactPieces.push(settings.companyPhone);
-  if (settings.companyEmail) contactPieces.push(settings.companyEmail);
-  const contactLine = contactPieces.length ? `Contact : ${contactPieces.join(' · ')}` : '';
+  const contactLines = [];
+  if (settings.companyPhone) contactLines.push(settings.companyPhone);
+  if (settings.companyEmail) contactLines.push(settings.companyEmail);
+  const contactLine = contactLines.join(' · ');
   const addressLine = settings.companyAddress ? settings.companyAddress : '';
-  const contactBlock = [contactLine, addressLine].filter(Boolean).join(' · ');
-  const closingNote = settings.closingNote || '';
+  const closingNote = (settings.closingNote || '').trim();
+  const paymentReminder =
+    (settings.paymentTerms || settings.paymentTerm || closingNote || 'Merci pour votre confiance.').trim();
+  const recipientName = (settings.closingRecipient || 'Direction générale').trim() || 'Direction générale';
+  const recipientDetails =
+    (settings.closingRecipientNote || shopLabel || tagline || companyName).trim() || companyName;
+  const reportNumber = `CLT-${normalizedDate.replace(/-/g, '')}`;
+  const generatedLabel = generatedAt.toLocaleString('fr-FR');
+
   const detailed = data.sales
     .filter((sale) => isSameDay(sale.date, normalizedDate))
     .map((sale) => {
@@ -849,6 +858,10 @@ function printDailyReport(date, data, formatCurrency) {
     });
 
   const totalQuantity = detailed.reduce((sum, item) => sum + Number(item.sale.quantity || 0), 0);
+  const grossRevenue = detailed.reduce(
+    (sum, item) => sum + item.amounts.unit * Number(item.sale.quantity || 0),
+    0
+  );
   const totalRevenue = detailed.reduce((sum, item) => sum + item.amounts.total, 0);
   const totalAdvance = detailed.reduce((sum, item) => sum + item.amounts.advance, 0);
   const totalBalance = detailed.reduce((sum, item) => sum + item.amounts.balance, 0);
@@ -857,22 +870,24 @@ function printDailyReport(date, data, formatCurrency) {
   const breakdownByShop = detailed.reduce((acc, item) => {
     const key = item.shopName;
     if (!acc[key]) {
-      acc[key] = { name: key, total: 0, count: 0 };
+      acc[key] = { name: key, total: 0, count: 0, quantity: 0 };
     }
     acc[key].total += item.amounts.total;
     acc[key].count += 1;
+    acc[key].quantity += Number(item.sale.quantity || 0);
     return acc;
   }, {});
 
-  const breakdownList = Object.values(breakdownByShop)
+  const breakdownRows = Object.values(breakdownByShop)
     .sort((a, b) => b.total - a.total)
     .map(
       (entry) => `
-        <li>
-          <span>${entry.name}</span>
-          <strong>${formatCurrency(entry.total, settings.currency)}</strong>
-          <small>${entry.count} vente${entry.count > 1 ? 's' : ''}</small>
-        </li>
+        <tr>
+          <td>${entry.name}</td>
+          <td>${entry.count}</td>
+          <td>${entry.quantity}</td>
+          <td>${formatCurrency(entry.total, settings.currency)}</td>
+        </tr>
       `
     )
     .join('');
@@ -886,11 +901,11 @@ function printDailyReport(date, data, formatCurrency) {
               <td>${item.sale.number}</td>
               <td>${item.productName}</td>
               <td>${item.sale.quantity}</td>
-              <td>${formatCurrency(item.amounts.unit, settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.discount, settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.total, settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.advance, settings.currency)}</td>
-              <td>${formatCurrency(item.amounts.balance, settings.currency)}</td>
+              <td class="number">${formatCurrency(item.amounts.unit, settings.currency)}</td>
+              <td class="number">${formatCurrency(item.amounts.discount, settings.currency)}</td>
+              <td class="number">${formatCurrency(item.amounts.total, settings.currency)}</td>
+              <td class="number">${formatCurrency(item.amounts.advance, settings.currency)}</td>
+              <td class="number">${formatCurrency(item.amounts.balance, settings.currency)}</td>
               <td>${item.sellerName}</td>
               <td>${item.shopName}</td>
             </tr>
@@ -907,272 +922,407 @@ function printDailyReport(date, data, formatCurrency) {
         <title>${companyName} – Clôture des ventes (${dateLabel})</title>
         <style>
           :root { color-scheme: light; }
+          * { box-sizing: border-box; }
           body {
             margin: 0;
             padding: 32px;
             font-family: 'Inter', sans-serif;
-            background: #f1f5f9;
-            color: #0f172a;
+            background: #f5f7fa;
+            color: #1f2937;
           }
-          .report {
+          .invoice {
             background: #ffffff;
-            border-radius: 24px;
-            padding: 2.75rem;
             max-width: 960px;
             margin: 0 auto;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            box-shadow: 0 28px 60px rgba(15, 23, 42, 0.12);
+            padding: 48px;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+            border: 1px solid #e2e8f0;
+            border-top: 8px solid #00a86b;
           }
-          .report__header {
+          .invoice__header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            gap: 2rem;
-            padding-bottom: 1.75rem;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-            margin-bottom: 2.25rem;
+            gap: 24px;
+            margin-bottom: 32px;
           }
-          .report__header h1 {
+          .invoice__brand h1 {
             margin: 0;
-            font-size: 2.1rem;
+            font-size: 1.9rem;
+            color: #00a86b;
           }
-          .report__header p {
-            margin: 0.3rem 0 0;
-            color: #64748b;
-          }
-          .report__contact {
-            margin-top: 0.75rem;
-            font-size: 0.85rem;
+          .invoice__brand .invoice__tagline {
+            margin: 4px 0 0;
             color: #475569;
+            font-size: 0.98rem;
           }
-          .report__meta {
-            text-align: right;
-            font-size: 0.95rem;
-            color: #475569;
-          }
-          .report__meta p {
-            margin: 0.2rem 0;
-          }
-          .report__metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 2.5rem;
-          }
-          .report__metric {
-            background: #fff8e6;
-            border: 1px solid rgba(255, 165, 0, 0.25);
-            border-radius: 18px;
-            padding: 1.1rem 1.35rem;
-          }
-          .report__metric span {
-            display: block;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #a16207;
-          }
-          .report__metric strong {
-            display: block;
-            margin-top: 0.45rem;
-            font-size: 1.45rem;
-            color: #0f172a;
-          }
-          .report__metric small {
-            display: block;
-            margin-top: 0.35rem;
-            font-size: 0.85rem;
-            color: #64748b;
-          }
-          .report__breakdown {
-            margin-bottom: 2.5rem;
-          }
-          .report__breakdown h2 {
-            margin: 0 0 1rem;
-            font-size: 0.95rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: #64748b;
-          }
-          .report__breakdown ul {
-            list-style: none;
-            margin: 0;
+          .invoice__brand ul {
+            margin: 12px 0 0;
             padding: 0;
-            display: grid;
-            gap: 0.85rem;
+            list-style: none;
+            color: #475569;
+            font-size: 0.9rem;
+            line-height: 1.6;
           }
-          .report__breakdown li {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 0.75rem;
-            align-items: baseline;
-            background: rgba(15, 23, 42, 0.03);
-            border-radius: 14px;
-            padding: 0.9rem 1.1rem;
+          .invoice__meta {
+            text-align: right;
+            min-width: 240px;
           }
-          .report__breakdown span {
+          .invoice__title {
+            font-size: 1.45rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #1f2937;
             font-weight: 600;
-            color: #0f172a;
           }
-          .report__breakdown strong {
-            font-size: 1.05rem;
-            color: #0f172a;
-          }
-          .report__breakdown small {
-            grid-column: 1 / -1;
-            color: #64748b;
-            font-size: 0.82rem;
-          }
-          table {
-            width: 100%;
+          .invoice__meta table {
+            margin-top: 12px;
+            margin-left: auto;
             border-collapse: collapse;
             font-size: 0.92rem;
           }
-          thead th {
-            padding: 0.85rem 0.7rem;
-            background: rgba(0, 168, 107, 0.08);
+          .invoice__meta td {
+            padding: 6px 0 6px 16px;
+            color: #334155;
+            white-space: nowrap;
+          }
+          .invoice__meta td:first-child {
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
             font-size: 0.78rem;
-            color: #0f172a;
+            color: #64748b;
+            padding-left: 0;
+          }
+          .invoice__summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 32px;
+          }
+          .invoice__bill {
+            flex: 1 1 260px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px 22px;
+            background: #f8fafc;
+          }
+          .invoice__bill h2 {
+            margin: 0 0 12px;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #64748b;
+          }
+          .invoice__bill strong {
+            display: block;
+            font-size: 1.08rem;
+            color: #1f2937;
+            margin-bottom: 4px;
+          }
+          .invoice__bill p {
+            margin: 4px 0;
+            color: #475569;
+            font-size: 0.92rem;
+          }
+          .invoice__totals {
+            flex: 1 1 320px;
+            display: grid;
+            gap: 14px;
+          }
+          .invoice__totals-card {
+            border: 1px solid #bbf7d0;
+            background: #f0fdf4;
+            border-radius: 14px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #065f46;
+          }
+          .invoice__totals-card span {
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #047857;
+          }
+          .invoice__totals-card strong {
+            font-size: 1.1rem;
+          }
+          .invoice__totals-card--highlight {
+            background: #dcfce7;
+            border-color: #34d399;
+            box-shadow: 0 10px 20px rgba(4, 120, 87, 0.12);
+          }
+          .invoice__totals-card--highlight span {
+            color: #047857;
+          }
+          .invoice__table {
+            margin-bottom: 32px;
+          }
+          .invoice__table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+          }
+          .invoice__table thead th {
+            background: #00a86b;
+            color: #ffffff;
+            padding: 12px 10px;
             text-align: left;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
           }
-          tbody td {
-            padding: 0.85rem 0.7rem;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-            color: #0f172a;
+          .invoice__table tbody td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #1f2937;
           }
-          tbody tr:nth-child(even) td {
-            background: rgba(15, 23, 42, 0.02);
+          .invoice__table tbody tr:nth-child(even) td {
+            background: #f8fafc;
           }
-          tfoot td {
-            font-weight: 700;
-            padding: 0.85rem 0.7rem;
-            color: #0f172a;
+          .invoice__table .number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
           }
-          .empty-state {
+          .invoice__table tfoot td {
+            padding: 14px 10px;
+            font-weight: 600;
+            color: #1f2937;
+            background: #ecfdf5;
+            border-top: 2px solid #00a86b;
+          }
+          .invoice__table .empty-state {
             text-align: center;
-            padding: 2rem 1rem;
+            padding: 24px 16px;
             color: #64748b;
             font-style: italic;
           }
-          .report__footer-note {
-            margin-top: 2.5rem;
+          .invoice__section-title {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #64748b;
+            margin: 0 0 12px;
+          }
+          .invoice__breakdown table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+          }
+          .invoice__breakdown thead th {
+            background: #f0fdf4;
+            color: #047857;
+            padding: 10px;
+            text-align: left;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+          }
+          .invoice__breakdown tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          .invoice__breakdown tbody tr:nth-child(even) td {
+            background: #f8fafc;
+          }
+          .invoice__breakdown .empty-state {
             text-align: center;
+            padding: 16px;
+            color: #94a3b8;
+          }
+          .invoice__notes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-top: 32px;
+          }
+          .invoice__payment {
+            flex: 1 1 360px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px 22px;
+            background: #ffffff;
+          }
+          .invoice__payment-summary {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 16px;
+          }
+          .invoice__payment-summary div {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 0.92rem;
+            color: #1f2937;
+          }
+          .invoice__payment-summary span {
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.72rem;
+          }
+          .invoice__payment-summary strong {
+            font-size: 1rem;
+            color: #0f172a;
+          }
+          .invoice__payment-note {
+            margin: 8px 0 0;
             color: #475569;
+            line-height: 1.6;
             font-size: 0.95rem;
-            font-style: italic;
+          }
+          .invoice__signature {
+            flex: 1 1 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border: 1px dashed #cbd5f5;
+            border-radius: 14px;
+            padding: 18px 22px;
+            background: #f8fafc;
+          }
+          .invoice__signature span {
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 24px;
+          }
+          .invoice__signature .line {
+            border-bottom: 2px solid #94a3b8;
+            height: 48px;
           }
           @media (max-width: 720px) {
-            body {
-              padding: 16px;
-            }
-            .report {
-              padding: 2rem 1.5rem;
-            }
-            .report__header {
-              flex-direction: column;
-              align-items: stretch;
-              text-align: left;
-            }
-            .report__meta {
-              text-align: left;
-            }
-            table,
-            thead,
-            tbody,
-            tfoot {
-              font-size: 0.9rem;
-            }
+            body { padding: 16px; }
+            .invoice { padding: 32px 24px; }
+            .invoice__header { flex-direction: column; text-align: left; }
+            .invoice__meta { text-align: left; }
+            .invoice__meta table { margin-left: 0; }
+            .invoice__notes { flex-direction: column; }
+            .invoice__signature { min-height: 140px; }
           }
           @media print {
-            body {
-              padding: 0;
-              background: #ffffff;
-            }
-            .report {
-              box-shadow: none;
-              border-radius: 0;
-              border: none;
-            }
+            body { padding: 0; background: #ffffff; }
+            .invoice { box-shadow: none; border-radius: 0; border: none; }
+            .invoice__signature { border-color: #d1d5db; }
           }
-                </style>
+          @page { margin: 20mm; }
+        </style>
       </head>
       <body>
-        <div class="report">
-          <div class="report__header">
-            <div>
+        <div class="invoice">
+          <div class="invoice__header">
+            <div class="invoice__brand">
               <h1>${companyName}</h1>
-              <p>${tagline}</p>
-              ${contactBlock ? `<p class="report__contact">${contactBlock}</p>` : ''}
+              <p class="invoice__tagline">${tagline}</p>
+              <ul>
+                ${addressLine ? `<li>${addressLine}</li>` : ''}
+                ${contactLine ? `<li>${contactLine}</li>` : ''}
+              </ul>
             </div>
-            <div class="report__meta">
-              <p><strong>Clôture du :</strong> ${dateLabel}</p>
-              <p><strong>Rapport généré :</strong> ${new Date().toLocaleString('fr-FR')}</p>
-              ${shopLabel ? `<p><strong>Boutiques :</strong> ${shopLabel}</p>` : ''}
-            </div>
-          </div>
-          <div class="report__metrics">
-            <div class="report__metric">
-              <span>Chiffre d'affaires</span>
-              <strong>${formatCurrency(totalRevenue, settings.currency)}</strong>
-              <small>${detailed.length} vente${detailed.length > 1 ? 's' : ''}</small>
-            </div>
-            <div class="report__metric">
-              <span>Quantité vendue</span>
-              <strong>${totalQuantity}</strong>
-              <small>Articles</small>
-            </div>
-            <div class="report__metric">
-              <span>Avances encaissées</span>
-              <strong>${formatCurrency(totalAdvance, settings.currency)}</strong>
-            </div>
-            <div class="report__metric">
-              <span>Restes à percevoir</span>
-              <strong>${formatCurrency(totalBalance, settings.currency)}</strong>
+            <div class="invoice__meta">
+              <div class="invoice__title">Clôture journalière</div>
+              <table>
+                <tr><td>N° rapport</td><td>${reportNumber}</td></tr>
+                <tr><td>Date</td><td>${dateLabel}</td></tr>
+                <tr><td>Généré le</td><td>${generatedLabel}</td></tr>
+                ${shopLabel ? `<tr><td>Boutiques</td><td>${shopLabel}</td></tr>` : ''}
+              </table>
             </div>
           </div>
-          <div class="report__breakdown">
-            <h2>Détail par boutique</h2>
-            <ul>
-              ${
-                breakdownList ||
-                '<li><span>Aucune vente enregistrée</span><strong>0</strong><small>—</small></li>'
-              }
-            </ul>
+          <div class="invoice__summary">
+            <div class="invoice__bill">
+              <h2>Destinataire</h2>
+              <strong>${recipientName}</strong>
+              <p>${recipientDetails}</p>
+            </div>
+            <div class="invoice__totals">
+              <div class="invoice__totals-card invoice__totals-card--highlight">
+                <span>Total du jour</span>
+                <strong>${formatCurrency(totalRevenue, settings.currency)}</strong>
+              </div>
+              <div class="invoice__totals-card">
+                <span>Avances encaissées</span>
+                <strong>${formatCurrency(totalAdvance, settings.currency)}</strong>
+              </div>
+              <div class="invoice__totals-card">
+                <span>Solde dû</span>
+                <strong>${formatCurrency(totalBalance, settings.currency)}</strong>
+              </div>
+              <div class="invoice__totals-card">
+                <span>Remises accordées</span>
+                <strong>${formatCurrency(totalDiscount, settings.currency)}</strong>
+              </div>
+            </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Numéro</th>
-                <th>Produit</th>
-                <th>Qté</th>
-                <th>Prix unitaire</th>
-                <th>Remise</th>
-                <th>Total</th>
-                <th>Avance</th>
-                <th>Reste</th>
-                <th>Vendeuse</th>
-                <th>Boutique</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows || `<tr><td colspan="10" class="empty">Aucune vente enregistrée ce jour.</td></tr>`}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="2">Totaux</td>
-                <td>${totalQuantity}</td>
-                <td>—</td>
-                <td>${formatCurrency(totalDiscount, settings.currency)}</td>
-                <td>${formatCurrency(totalRevenue, settings.currency)}</td>
-                <td>${formatCurrency(totalAdvance, settings.currency)}</td>
-                <td>${formatCurrency(totalBalance, settings.currency)}</td>
-                <td colspan="2"> </td>
-              </tr>
-            </tfoot>
-          </table>
-          ${closingNote ? `<p class="report__footer-note">${closingNote}</p>` : ''}
+          <div class="invoice__table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Numéro</th>
+                  <th>Produit</th>
+                  <th>Qté</th>
+                  <th>Prix unitaire</th>
+                  <th>Remise</th>
+                  <th>Total</th>
+                  <th>Avance</th>
+                  <th>Reste</th>
+                  <th>Vendeuse</th>
+                  <th>Boutique</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="2">Totaux</td>
+                  <td>${totalQuantity}</td>
+                  <td class="number">—</td>
+                  <td class="number">${formatCurrency(totalDiscount, settings.currency)}</td>
+                  <td class="number">${formatCurrency(totalRevenue, settings.currency)}</td>
+                  <td class="number">${formatCurrency(totalAdvance, settings.currency)}</td>
+                  <td class="number">${formatCurrency(totalBalance, settings.currency)}</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="invoice__breakdown">
+            <div class="invoice__section-title">Récapitulatif par boutique</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Boutique</th>
+                  <th>Ventes</th>
+                  <th>Quantité</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  breakdownRows ||
+                  '<tr><td colspan="4" class="empty-state">Aucune vente enregistrée pour cette période.</td></tr>'
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="invoice__notes">
+            <div class="invoice__payment">
+              <div class="invoice__section-title">Instructions & résumé</div>
+              <div class="invoice__payment-summary">
+                <div><span>Sous-total</span><strong>${formatCurrency(grossRevenue, settings.currency)}</strong></div>
+                <div><span>Total du jour</span><strong>${formatCurrency(totalRevenue, settings.currency)}</strong></div>
+                <div><span>Avances encaissées</span><strong>${formatCurrency(totalAdvance, settings.currency)}</strong></div>
+                <div><span>Solde dû</span><strong>${formatCurrency(totalBalance, settings.currency)}</strong></div>
+              </div>
+              <p class="invoice__payment-note">${paymentReminder}</p>
+            </div>
+            <div class="invoice__signature">
+              <span>Signature autorisée</span>
+              <div class="line"></div>
+            </div>
+          </div>
         </div>
       </body>
     </html>
@@ -1181,3 +1331,4 @@ function printDailyReport(date, data, formatCurrency) {
   printWindow.focus();
   printWindow.print();
 }
+
