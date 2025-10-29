@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestionnaire de Ventes - Jocelyne K</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="brand">
+            <div class="brand-logo" id="brandInitials" aria-hidden="true">JK</div>
+            <div>
+              <h1 id="brandName">Jocelyne K</h1>
+              <p id="brandTagline">Gestionnaire de ventes &amp; stocks</p>
+            </div>
+          </div>
+          <div class="topbar-search">
+            <input
+              type="search"
+              id="globalSearch"
+              placeholder="Rechercher (produits, ventes, vendeuses...)"
+              aria-label="Recherche globale"
+            />
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button id="exportCsvBtn" class="ghost-button" type="button">
+            Exporter les ventes
+          </button>
+          <div class="user-card" aria-label="Profil">
+            <div class="user-avatar" id="userInitials" aria-hidden="true">JK</div>
+            <div class="user-details">
+              <strong id="userName">Jocelyne K</strong>
+              <span>Administratrice</span>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div class="layout">
+        <nav class="sidebar" aria-label="Navigation principale">
+          <div class="sidebar-header">
+            <div class="sidebar-logo" id="sidebarInitials" aria-hidden="true">JK</div>
+            <div>
+              <h2 id="sidebarName">Jocelyne K</h2>
+              <p id="sidebarTagline">Gestionnaire multi-boutiques</p>
+            </div>
+          </div>
+          <div class="sidebar-menu">
+            <button class="nav-link active" data-target="dashboard">Tableau de bord</button>
+            <button class="nav-link" data-target="shops">Boutiques</button>
+            <button class="nav-link" data-target="sellers">Vendeuses</button>
+            <button class="nav-link" data-target="products">Produits</button>
+            <button class="nav-link" data-target="sales">Ventes</button>
+            <button class="nav-link" data-target="advances">Avances &amp; paiements</button>
+            <button class="nav-link" data-target="stats">Statistiques</button>
+            <button class="nav-link" data-target="insights">Assistant IA</button>
+            <button class="nav-link" data-target="settings">Paramètres</button>
+          </div>
+        </nav>
+        <main class="content" id="content">
+          <section id="dashboard" class="view active" aria-labelledby="dashboardTitle">
+            <header class="view-header">
+              <h2 id="dashboardTitle">Tableau de bord</h2>
+              <p id="dashboardSubtitle">Vue d'ensemble des boutiques Jocelyne K.</p>
+            </header>
+            <div class="dashboard-grid" id="dashboardCards"></div>
+            <div class="dashboard-panels">
+              <section class="panel" aria-labelledby="dailySalesTitle">
+                <div class="panel-header">
+                  <h3 id="dailySalesTitle">Ventes du jour</h3>
+                  <span id="dashboardDate"></span>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Vente</th>
+                      <th>Produit</th>
+                      <th>Quantité</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dailySalesTable"></tbody>
+                </table>
+              </section>
+              <section class="panel" aria-labelledby="lowStockTitle">
+                <div class="panel-header">
+                  <h3 id="lowStockTitle">Stocks à surveiller</h3>
+                  <span>Seuil &lt;= 5</span>
+                </div>
+                <ul id="lowStockList" class="stock-alerts"></ul>
+              </section>
+              <section class="panel panel-full" aria-labelledby="inventorySummaryTitle">
+                <div class="panel-header">
+                  <h3 id="inventorySummaryTitle">Inventaire &amp; ventes du jour</h3>
+                  <span>Vue par produit</span>
+                </div>
+                <table class="inventory-table">
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Stock actuel</th>
+                      <th>Vendu aujourd'hui</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inventorySummaryTable"></tbody>
+                </table>
+              </section>
+              <section class="panel panel-full" aria-labelledby="categorySalesTitle">
+                <div class="panel-header">
+                  <h3 id="categorySalesTitle">Catégories de vente</h3>
+                  <span id="categorySalesPeriod"></span>
+                </div>
+                <ul id="categorySalesList" class="category-breakdown"></ul>
+              </section>
+              <section class="panel panel-full" aria-labelledby="dashboardAiTitle">
+                <div class="panel-header">
+                  <div>
+                    <h3 id="dashboardAiTitle">Assistant IA</h3>
+                    <span>Résumé automatique des 7 derniers jours</span>
+                  </div>
+                  <div class="panel-actions">
+                    <button type="button" class="ghost" id="openInsightsFromDashboard">Ouvrir l'assistant</button>
+                    <button type="button" class="ghost" id="dashboardRefreshInsights">Actualiser</button>
+                  </div>
+                </div>
+                <div class="dashboard-ai">
+                  <div class="dashboard-ai__lists">
+                    <article class="dashboard-ai__column" aria-labelledby="dashboardAiHighlightsTitle">
+                      <h4 id="dashboardAiHighlightsTitle">Points clés</h4>
+                      <ul id="dashboardAiHighlights" class="insight-list insight-list--compact" role="list"></ul>
+                    </article>
+                    <article class="dashboard-ai__column" aria-labelledby="dashboardAiOpportunitiesTitle">
+                      <h4 id="dashboardAiOpportunitiesTitle">Opportunités</h4>
+                      <ul id="dashboardAiOpportunities" class="insight-list insight-list--compact" role="list"></ul>
+                    </article>
+                    <article class="dashboard-ai__column" aria-labelledby="dashboardAiAlertsTitle">
+                      <h4 id="dashboardAiAlertsTitle">Alertes</h4>
+                      <ul id="dashboardAiAlerts" class="insight-list insight-list--compact" role="list"></ul>
+                    </article>
+                  </div>
+                  <p id="dashboardAiNarrative" class="dashboard-ai__narrative"></p>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section id="shops" class="view" aria-labelledby="shopsTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="shopsTitle">Boutiques</h2>
+                <p>Gérez vos points de vente Jocelyne K.</p>
+              </div>
+              <button class="primary" data-action="add-shop">Nouvelle boutique</button>
+            </header>
+            <div class="form-card" id="shopFormWrapper" hidden>
+              <form id="shopForm">
+                <div class="form-row">
+                  <label for="shopName">Nom</label>
+                  <input id="shopName" name="name" required placeholder="Nom de la boutique" />
+                </div>
+                <div class="form-row">
+                  <label for="shopLocation">Localisation</label>
+                  <input id="shopLocation" name="location" placeholder="Quartier, ville" />
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="primary">Enregistrer</button>
+                  <button type="button" class="ghost" data-action="cancel-shop">Annuler</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Localisation</th>
+                    <th>Produits</th>
+                    <th>Ventes</th>
+                  </tr>
+                </thead>
+                <tbody id="shopsTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="sellers" class="view" aria-labelledby="sellersTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="sellersTitle">Vendeuses</h2>
+                <p>Suivi des performances individuelles.</p>
+              </div>
+              <button class="primary" data-action="add-seller">Ajouter une vendeuse</button>
+            </header>
+            <div class="form-card" id="sellerFormWrapper" hidden>
+              <form id="sellerForm">
+                <div class="form-row">
+                  <label for="sellerName">Nom complet</label>
+                  <input id="sellerName" name="name" required placeholder="Nom de la vendeuse" />
+                </div>
+                <div class="form-row">
+                  <label for="sellerPhone">Téléphone</label>
+                  <input id="sellerPhone" name="phone" placeholder="Contact" />
+                </div>
+                <div class="form-row">
+                  <label for="sellerShop">Boutique</label>
+                  <select id="sellerShop" name="shopId" required></select>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="primary">Enregistrer</button>
+                  <button type="button" class="ghost" data-action="cancel-seller">Annuler</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Contact</th>
+                    <th>Boutique</th>
+                    <th>Ventes</th>
+                    <th>Total vendu</th>
+                  </tr>
+                </thead>
+                <tbody id="sellersTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="products" class="view" aria-labelledby="productsTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="productsTitle">Produits</h2>
+                <p>Catalogue produits et stocks.</p>
+              </div>
+              <div class="toolbar">
+                <input type="search" id="productSearch" placeholder="Rechercher un produit" />
+                <button class="primary" data-action="add-product">Ajouter un produit</button>
+              </div>
+            </header>
+            <div class="form-card" id="productFormWrapper" hidden>
+              <form id="productForm">
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label for="productName">Nom</label>
+                    <input id="productName" name="name" required placeholder="Nom du produit" />
+                  </div>
+                  <div class="form-row">
+                    <label for="productCategory">Catégorie</label>
+                    <input id="productCategory" name="category" placeholder="Catégorie" />
+                  </div>
+                  <div class="form-row">
+                    <label for="productSubcategory">Sous-catégorie</label>
+                    <input id="productSubcategory" name="subcategory" placeholder="Sous-catégorie" />
+                  </div>
+                  <div class="form-row">
+                    <label for="productPrice">Prix (FCFA)</label>
+                    <input id="productPrice" name="price" type="number" min="0" step="100" required />
+                  </div>
+                  <div class="form-row">
+                    <label for="productStock">Stock</label>
+                    <input id="productStock" name="stock" type="number" min="0" step="1" required />
+                  </div>
+                  <div class="form-row">
+                    <label for="productShop">Boutique</label>
+                    <select id="productShop" name="shopId" required></select>
+                  </div>
+                  <div class="form-row">
+                    <label for="productImage">Image (URL)</label>
+                    <input id="productImage" name="image" placeholder="https://..." />
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="primary">Enregistrer</button>
+                  <button type="button" class="ghost" data-action="cancel-product">Annuler</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Produit</th>
+                    <th>Catégorie</th>
+                    <th>Prix</th>
+                    <th>Stock</th>
+                    <th>Boutique</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="sales" class="view" aria-labelledby="salesTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="salesTitle">Ventes</h2>
+                <p>Enregistrement des ventes et impression des reçus.</p>
+              </div>
+              <div class="toolbar">
+                <input type="search" id="salesSearch" placeholder="Rechercher une vente" />
+                <label class="toolbar-group" for="dailyReportDate">
+                  <span>Résumé du jour</span>
+                  <input type="date" id="dailyReportDate" />
+                </label>
+                <button type="button" class="ghost" id="printDailyReport">Imprimer la journée</button>
+                <button class="primary" data-action="add-sale">Nouvelle vente</button>
+              </div>
+            </header>
+            <div class="form-card" id="saleFormWrapper" hidden>
+              <form id="saleForm">
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label for="saleProduct">Produit</label>
+                    <select id="saleProduct" name="productId" required></select>
+                  </div>
+                  <div class="form-row">
+                    <label for="saleShop">Boutique</label>
+                    <select id="saleShop" name="shopId" required></select>
+                  </div>
+                  <div class="form-row">
+                    <label for="saleSeller">Vendeuse</label>
+                    <select id="saleSeller" name="sellerId" required></select>
+                  </div>
+                  <div class="form-row">
+                    <label for="saleQuantity">Quantité</label>
+                    <input id="saleQuantity" name="quantity" type="number" min="1" value="1" required />
+                  </div>
+                  <div class="form-row">
+                    <label for="saleUnitPriceInput">Prix unitaire (FCFA)</label>
+                    <input
+                      id="saleUnitPriceInput"
+                      name="unitPrice"
+                      type="number"
+                      min="0"
+                      step="100"
+                      value="0"
+                      required
+                    />
+                  </div>
+                  <div class="form-row">
+                    <label for="saleDiscount">Remise (FCFA)</label>
+                    <input id="saleDiscount" name="discount" type="number" min="0" step="100" value="0" />
+                  </div>
+                  <div class="form-row">
+                    <label for="saleAdvance">Avance (FCFA)</label>
+                    <input id="saleAdvance" name="advance" type="number" min="0" step="100" value="0" />
+                  </div>
+                  <div class="form-row">
+                    <label class="checkbox" for="salePaidInFull">
+                      <input id="salePaidInFull" type="checkbox" checked />
+                      Facture soldée
+                    </label>
+                    <p class="form-hint">Décochez pour encaisser une avance et laisser un solde à payer.</p>
+                  </div>
+                  <div class="form-row">
+                    <label for="saleDate">Date</label>
+                    <input id="saleDate" name="date" type="date" required />
+                  </div>
+                  <div class="form-row">
+                    <label for="saleCustomer">Client</label>
+                    <input id="saleCustomer" name="customer" type="text" placeholder="Nom du client" />
+                  </div>
+                  <div class="form-row">
+                    <label for="saleNotes">Notes</label>
+                    <textarea id="saleNotes" name="notes" rows="2" placeholder="Notes ou description"></textarea>
+                  </div>
+                </div>
+                <div class="form-summary">
+                  <p><strong>Prix unitaire :</strong> <span id="saleUnitPrice">0 FCFA</span></p>
+                  <p><strong>Total :</strong> <span id="saleTotal">0 FCFA</span></p>
+                  <p><strong>Avance :</strong> <span id="saleAdvanceDisplay">0 FCFA</span></p>
+                  <p><strong>Reste à payer :</strong> <span id="saleBalance">0 FCFA</span></p>
+                  <p class="status-pill status-pill--ok" id="saleStatusPill">Facture soldée</p>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="primary" id="saleSubmit">Enregistrer &amp; imprimer</button>
+                  <button type="button" class="ghost" data-action="cancel-sale">Annuler</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Numéro</th>
+                    <th>Date</th>
+                    <th>Produit</th>
+                    <th>Quantité</th>
+                    <th>Total</th>
+                    <th>Avance</th>
+                    <th>Reste</th>
+                    <th>Vendeuse</th>
+                    <th>Boutique</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="salesTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="advances" class="view" aria-labelledby="advancesTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="advancesTitle">Avances &amp; paiements</h2>
+                <p>Suivi des avances versées et des soldes restants.</p>
+              </div>
+              <button class="primary" data-action="add-advance">Enregistrer une avance</button>
+            </header>
+            <div class="form-card" id="advanceFormWrapper" hidden>
+              <form id="advanceForm">
+                <div class="form-grid">
+                  <div class="form-row">
+                    <label for="advanceSeller">Vendeuse</label>
+                    <select id="advanceSeller" name="sellerId" required></select>
+                  </div>
+                  <div class="form-row">
+                    <label for="advanceAmount">Montant (FCFA)</label>
+                    <input id="advanceAmount" name="amount" type="number" min="0" step="100" required />
+                  </div>
+                  <div class="form-row">
+                    <label for="advanceDate">Date</label>
+                    <input id="advanceDate" name="date" type="date" required />
+                  </div>
+                  <div class="form-row">
+                    <label for="advanceNotes">Notes</label>
+                    <textarea id="advanceNotes" name="notes" rows="2" placeholder="Motif ou description"></textarea>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="primary">Enregistrer</button>
+                  <button type="button" class="ghost" data-action="cancel-advance">Annuler</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Vendeuse</th>
+                    <th>Montant</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="advancesTable"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="stats" class="view" aria-labelledby="statsTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="statsTitle">Statistiques</h2>
+                <p>Analyse des ventes, top produits et top vendeuses.</p>
+              </div>
+              <div class="toolbar">
+                <label class="filter">
+                  Période
+                  <select id="statsPeriod">
+                    <option value="week">7 derniers jours</option>
+                    <option value="month">30 derniers jours</option>
+                    <option value="quarter">90 derniers jours</option>
+                  </select>
+                </label>
+              </div>
+            </header>
+            <div class="stats-grid">
+              <section class="panel" aria-labelledby="statsRevenueTitle">
+                <div class="panel-header">
+                  <h3 id="statsRevenueTitle">Chiffre d'affaires</h3>
+                  <span id="statsPeriodLabel"></span>
+                </div>
+                <div class="chart" id="revenueChart"></div>
+              </section>
+              <section class="panel" aria-labelledby="topProductsTitle">
+                <div class="panel-header">
+                  <h3 id="topProductsTitle">Top produits</h3>
+                </div>
+                <ul class="ranking" id="topProductsList"></ul>
+              </section>
+              <section class="panel" aria-labelledby="topSellersTitle">
+                <div class="panel-header">
+                  <h3 id="topSellersTitle">Top vendeuses</h3>
+                </div>
+                <ul class="ranking" id="topSellersList"></ul>
+              </section>
+            </div>
+          </section>
+
+          <section id="insights" class="view" aria-labelledby="insightsTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="insightsTitle">Assistant IA</h2>
+                <p>Suggestions intelligentes pour booster vos ventes.</p>
+              </div>
+              <div class="insights-actions">
+                <button type="button" class="primary" id="refreshInsights">Analyser à nouveau</button>
+              </div>
+            </header>
+            <div class="insights-grid">
+              <article class="insight-card" aria-labelledby="aiHighlightsTitle">
+                <div class="insight-card__header">
+                  <h3 id="aiHighlightsTitle">Tendances clés</h3>
+                </div>
+                <ul id="aiHighlights" class="insight-list" role="list"></ul>
+              </article>
+              <article class="insight-card" aria-labelledby="aiOpportunitiesTitle">
+                <div class="insight-card__header">
+                  <h3 id="aiOpportunitiesTitle">Opportunités</h3>
+                </div>
+                <ul id="aiOpportunities" class="insight-list" role="list"></ul>
+              </article>
+              <article class="insight-card" aria-labelledby="aiAlertsTitle">
+                <div class="insight-card__header">
+                  <h3 id="aiAlertsTitle">Alertes</h3>
+                </div>
+                <ul id="aiAlerts" class="insight-list" role="list"></ul>
+              </article>
+            </div>
+            <section class="insight-chat" aria-labelledby="aiChatTitle">
+              <div class="insight-chat__header">
+                <h3 id="aiChatTitle">Poser une question</h3>
+                <p>Demandez par exemple le stock restant d'un produit ou l'état d'une boutique.</p>
+              </div>
+              <form id="aiQuestionForm" class="chat-form">
+                <label class="visually-hidden" for="aiQuestionInput">Votre question</label>
+                <div class="chat-form__field">
+                  <input
+                    id="aiQuestionInput"
+                    name="question"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="Ex. Il reste combien de lunettes en stock ?"
+                  />
+                  <button type="submit" class="primary">Obtenir une réponse</button>
+                </div>
+              </form>
+              <div id="aiQuestionResponse" class="chat-response" role="status" aria-live="polite"></div>
+            </section>
+            <section class="insight-report" aria-labelledby="aiNarrativeTitle">
+              <div class="insight-report__header">
+                <h3 id="aiNarrativeTitle">Analyse détaillée</h3>
+                <button type="button" class="ghost" id="copyAiNarrative">Copier le rapport</button>
+              </div>
+              <p id="aiNarrative" class="insight-report__body"></p>
+            </section>
+          </section>
+
+          <section id="settings" class="view" aria-labelledby="settingsTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="settingsTitle">Paramètres</h2>
+                <p>Personnalisez votre espace de travail.</p>
+              </div>
+            </header>
+            <div class="form-card">
+              <form id="settingsForm">
+                <section class="form-section">
+                  <header class="form-section__header">
+                    <h3>Préférences générales</h3>
+                    <p>Adaptez les paramètres communs à toutes les boutiques.</p>
+                  </header>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="currency">Devise</label>
+                      <input id="currency" name="currency" placeholder="FCFA" />
+                    </div>
+                    <div class="form-row">
+                      <label for="lowStockThreshold">Seuil de stock faible</label>
+                      <input id="lowStockThreshold" name="lowStockThreshold" type="number" min="1" />
+                    </div>
+                    <div class="form-row">
+                      <label for="receiptFormat">Format de reçu par défaut</label>
+                      <select id="receiptFormat" name="receiptFormat">
+                        <option value="a4">A4</option>
+                        <option value="ticket">Ticket thermique</option>
+                      </select>
+                    </div>
+                    <div class="form-row">
+                      <label for="defaultShop">Boutique sélectionnée par défaut</label>
+                      <select id="defaultShop" name="defaultShop"></select>
+                    </div>
+                    <div class="form-row">
+                      <label for="defaultSeller">Vendeuse favorite</label>
+                      <select id="defaultSeller" name="defaultSeller"></select>
+                    </div>
+                    <div class="form-row full checkbox-row">
+                      <label class="checkbox" for="autoPrintReceipts">
+                        <input type="checkbox" id="autoPrintReceipts" name="autoPrintReceipts" />
+                        <span>Imprimer automatiquement un reçu après chaque vente validée</span>
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="form-section">
+                  <header class="form-section__header">
+                    <h3>Identité de la boutique</h3>
+                    <p>Personnalisez le nom affiché et le message d'accueil.</p>
+                  </header>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="companyName">Nom commercial</label>
+                      <input id="companyName" name="companyName" placeholder="Jocelyne K" />
+                    </div>
+                    <div class="form-row">
+                      <label for="companyTagline">Slogan / Tagline</label>
+                      <input
+                        id="companyTagline"
+                        name="companyTagline"
+                        placeholder="Gestionnaire de ventes &amp; stocks"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section class="form-section">
+                  <header class="form-section__header">
+                    <h3>Coordonnées &amp; documents</h3>
+                    <p>Ces informations apparaissent sur les reçus et rapports imprimés.</p>
+                  </header>
+                  <div class="form-grid">
+                    <div class="form-row">
+                      <label for="companyPhone">Téléphone</label>
+                      <input id="companyPhone" name="companyPhone" type="tel" placeholder="+225" />
+                    </div>
+                    <div class="form-row">
+                      <label for="companyEmail">Adresse e-mail</label>
+                      <input id="companyEmail" name="companyEmail" type="email" placeholder="contact@..." />
+                    </div>
+                    <div class="form-row full">
+                      <label for="companyAddress">Adresse postale</label>
+                      <textarea id="companyAddress" name="companyAddress" rows="3"></textarea>
+                    </div>
+                    <div class="form-row full">
+                      <label for="receiptMessage">Message sur les reçus</label>
+                      <textarea
+                        id="receiptMessage"
+                        name="receiptMessage"
+                        rows="2"
+                        placeholder="Merci pour votre confiance."
+                      ></textarea>
+                    </div>
+                    <div class="form-row full">
+                      <label for="closingNote">Note de clôture journalière</label>
+                      <textarea
+                        id="closingNote"
+                        name="closingNote"
+                        rows="2"
+                        placeholder="Message ajouté aux rapports de clôture"
+                      ></textarea>
+                    </div>
+                  </div>
+                </section>
+
+                <div class="form-actions">
+                  <button type="submit" class="primary">Sauvegarder</button>
+                  <button type="button" class="ghost" id="resetData">Réinitialiser les données</button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <template id="receiptTemplate">
+      <article class="invoice">
+        <header class="invoice__head">
+          <div class="invoice__identity">
+            <span class="invoice__label">Facture</span>
+            <h1 id="receiptBrandName">Jocelyne K</h1>
+            <p id="receiptBrandTagline" class="invoice__tagline">Gestionnaire de ventes &amp; stocks</p>
+            <div class="invoice__company">
+              <div class="invoice__logo-wrap">
+                <img src="assets/logo.png" alt="Logo Jocelyne K" class="invoice__logo" />
+              </div>
+              <div class="invoice__company-info">
+                <strong id="receiptCompanyName">Jocelyne K</strong>
+                <address id="receiptVendor"></address>
+              </div>
+            </div>
+          </div>
+          <div class="invoice__meta">
+            <dl>
+              <div>
+                <dt>Numéro</dt>
+                <dd id="receiptNumber"></dd>
+              </div>
+              <div>
+                <dt>Date</dt>
+                <dd id="receiptDate"></dd>
+              </div>
+            </dl>
+          </div>
+        </header>
+        <section class="invoice__cards">
+          <article class="invoice__card">
+            <span>Total facture</span>
+            <strong id="receiptSummaryTotal">0 FCFA</strong>
+            <small>Montant TTC</small>
+          </article>
+          <article class="invoice__card">
+            <span>Avance encaissée</span>
+            <strong id="receiptSummaryAdvance">0 FCFA</strong>
+            <small>Paiement reçu</small>
+          </article>
+          <article class="invoice__card">
+            <span id="receiptBalanceLabel">Reste à payer</span>
+            <strong id="receiptSummaryBalance">0 FCFA</strong>
+            <small id="receiptBalanceHint">Solde client</small>
+          </article>
+          <article class="invoice__card">
+            <span>Quantité vendue</span>
+            <strong id="receiptSummaryQuantity">0</strong>
+            <small id="receiptSummaryUnit">Articles</small>
+          </article>
+        </section>
+        <section class="invoice__parties">
+          <div class="invoice__party">
+            <h2>Client</h2>
+            <p id="receiptCustomer">Client non renseigné</p>
+          </div>
+          <div class="invoice__party">
+            <h2>Point de vente</h2>
+            <p>
+              <span id="receiptShop"></span><br />
+              <small id="receiptSeller"></small>
+            </p>
+          </div>
+          <div class="invoice__party invoice__party--terms">
+            <h2>Conditions</h2>
+            <ul class="invoice__list">
+              <li>
+                <span>Devise</span>
+                <strong id="receiptCurrency">FCFA</strong>
+              </li>
+              <li>
+                <span>Paiement</span>
+                <strong id="receiptPaymentTerm">Comptant</strong>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="invoice__table-wrapper">
+          <table class="invoice__table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+                <th>Remise</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="receiptProduct"></td>
+                <td id="receiptQuantity"></td>
+                <td id="receiptUnit"></td>
+                <td id="receiptDiscount"></td>
+                <td id="receiptTotal"></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+        <section class="invoice__extra">
+          <div class="invoice__notes">
+            <h3>Informations additionnelles</h3>
+            <p id="receiptNotes"></p>
+          </div>
+          <div class="invoice__totals">
+            <dl>
+              <div>
+                <dt>Total facture</dt>
+                <dd id="receiptTotalDue"></dd>
+              </div>
+              <div>
+                <dt>Avance encaissée</dt>
+                <dd id="receiptAdvance"></dd>
+              </div>
+              <div>
+                <dt id="receiptBalanceTitle">Reste à payer</dt>
+                <dd id="receiptBalance"></dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+        <footer class="invoice__footer">
+          <p id="receiptFooterMessage">Merci pour votre confiance. Veuillez conserver cette facture.</p>
+          <p class="invoice__footer-meta" id="receiptFooterMeta">Contact : +225 00 00 00 00 · Abidjan, Côte d'Ivoire</p>
+        </footer>
+      </article>
+    </template>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
