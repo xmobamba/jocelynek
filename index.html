@@ -122,6 +122,35 @@
                 </div>
                 <ul id="categorySalesList" class="category-breakdown"></ul>
               </section>
+              <section class="panel panel-full" aria-labelledby="dashboardAiTitle">
+                <div class="panel-header">
+                  <div>
+                    <h3 id="dashboardAiTitle">Assistant IA</h3>
+                    <span>Résumé automatique des 7 derniers jours</span>
+                  </div>
+                  <div class="panel-actions">
+                    <button type="button" class="ghost" id="openInsightsFromDashboard">Ouvrir l'assistant</button>
+                    <button type="button" class="ghost" id="dashboardRefreshInsights">Actualiser</button>
+                  </div>
+                </div>
+                <div class="dashboard-ai">
+                  <div class="dashboard-ai__lists">
+                    <article class="dashboard-ai__column" aria-labelledby="dashboardAiHighlightsTitle">
+                      <h4 id="dashboardAiHighlightsTitle">Points clés</h4>
+                      <ul id="dashboardAiHighlights" class="insight-list insight-list--compact" role="list"></ul>
+                    </article>
+                    <article class="dashboard-ai__column" aria-labelledby="dashboardAiOpportunitiesTitle">
+                      <h4 id="dashboardAiOpportunitiesTitle">Opportunités</h4>
+                      <ul id="dashboardAiOpportunities" class="insight-list insight-list--compact" role="list"></ul>
+                    </article>
+                    <article class="dashboard-ai__column" aria-labelledby="dashboardAiAlertsTitle">
+                      <h4 id="dashboardAiAlertsTitle">Alertes</h4>
+                      <ul id="dashboardAiAlerts" class="insight-list insight-list--compact" role="list"></ul>
+                    </article>
+                  </div>
+                  <p id="dashboardAiNarrative" class="dashboard-ai__narrative"></p>
+                </div>
+              </section>
             </div>
           </section>
 

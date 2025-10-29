@@ -48,6 +48,7 @@ const context = {
 };
 
 const modules = [];
+let aiModule = null;
 
 function getInitials(value) {
   if (!value) return 'JK';
@@ -102,18 +103,22 @@ function notify() {
   renderDashboard();
 }
 
-function setupNavigation() {
+function activateView(target) {
   const navLinks = document.querySelectorAll('.nav-link');
   const views = document.querySelectorAll('.view');
+  navLinks.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.target === target);
+  });
+  views.forEach((view) => {
+    view.classList.toggle('active', view.id === target);
+  });
+}
 
+function setupNavigation() {
+  const navLinks = document.querySelectorAll('.nav-link');
   navLinks.forEach((link) => {
     link.addEventListener('click', () => {
-      navLinks.forEach((btn) => btn.classList.remove('active'));
-      views.forEach((view) => view.classList.remove('active'));
-
-      link.classList.add('active');
-      const target = link.dataset.target;
-      document.getElementById(target).classList.add('active');
+      activateView(link.dataset.target);
     });
   });
 }
@@ -351,6 +356,33 @@ function setupExport() {
   });
 }
 
+function setupDashboardShortcuts() {
+  const openButton = document.getElementById('openInsightsFromDashboard');
+  if (openButton) {
+    openButton.addEventListener('click', () => {
+      activateView('insights');
+      const insightsLink = document.querySelector('.nav-link[data-target="insights"]');
+      insightsLink?.focus?.();
+    });
+  }
+
+  const refreshButton = document.getElementById('dashboardRefreshInsights');
+  if (refreshButton) {
+    refreshButton.addEventListener('click', () => {
+      if (aiModule?.render) {
+        aiModule.render();
+      }
+      const originalText = refreshButton.textContent;
+      refreshButton.textContent = 'Analyse actualisée';
+      refreshButton.disabled = true;
+      setTimeout(() => {
+        refreshButton.textContent = originalText;
+        refreshButton.disabled = false;
+      }, 1400);
+    });
+  }
+}
+
 function setupSettings() {
   const form = document.getElementById('settingsForm');
   const resetButton = document.getElementById('resetData');
@@ -461,15 +493,23 @@ function init() {
   setupExport();
   setupSettings();
 
-  modules.push(
+  const registeredModules = [
     initShops(context),
     initSellers(context),
     initProducts(context),
     initSales(context),
     initAdvances(context),
-    initStats(context),
-    initAi(context)
-  );
+    initStats(context)
+  ];
+
+  aiModule = initAi(context);
+  if (aiModule) {
+    registeredModules.push(aiModule);
+  }
+
+  modules.push(...registeredModules.filter(Boolean));
+
+  setupDashboardShortcuts();
 
   notify();
 }

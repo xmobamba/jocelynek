@@ -472,6 +472,17 @@ section.panel,
   gap: 1rem;
 }
 
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.panel-actions button {
+  white-space: nowrap;
+}
+
 .panel-header h3 {
   margin: 0;
   font-size: 1.1rem;

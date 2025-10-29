@@ -95,8 +95,19 @@ export function initAi(context) {
   const narrative = document.getElementById('aiNarrative');
   const refreshButton = document.getElementById('refreshInsights');
   const copyButton = document.getElementById('copyAiNarrative');
+  const dashboardHighlights = document.getElementById('dashboardAiHighlights');
+  const dashboardOpportunities = document.getElementById('dashboardAiOpportunities');
+  const dashboardAlerts = document.getElementById('dashboardAiAlerts');
+  const dashboardNarrative = document.getElementById('dashboardAiNarrative');
 
-  if (!highlightsList || !opportunitiesList || !alertsList || !narrative) {
+  if (
+    !highlightsList &&
+    !opportunitiesList &&
+    !alertsList &&
+    !dashboardHighlights &&
+    !dashboardOpportunities &&
+    !dashboardAlerts
+  ) {
     return {
       render() {}
     };
@@ -120,18 +131,21 @@ export function initAi(context) {
 
     const currentSummary = summarizeSales(currentSales, products, sellers);
     const previousSummary = summarizeSales(previousSales, products, sellers);
+    const lowStockProducts = products
+      .filter((product) => Number(product.stock || 0) <= Number(settings.lowStockThreshold || 5))
+      .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0));
 
     const highlights = [];
     const opportunities = [];
     const alerts = [];
+    let narrativeText = '';
 
     if (currentSummary.count === 0) {
       highlights.push('<li class="insight-item">Ajoutez des ventes pour générer des recommandations personnalisées.</li>');
       opportunities.push('<li class="insight-item">Renseignez vos ventes afin que l\'assistant IA identifie les produits phares et les vendeuses performantes.</li>');
-      const lowStock = products.filter((product) => Number(product.stock || 0) <= Number(settings.lowStockThreshold || 5));
-      if (lowStock.length) {
-        const alertMarkup = lowStock
-          .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0))
+
+      if (lowStockProducts.length) {
+        const alertMarkup = lowStockProducts
           .slice(0, 3)
           .map((product) => `<strong>${product.name}</strong> (${formatNumber(product.stock || 0)} restants)`)
           .join('<br />');
@@ -140,172 +154,207 @@ export function initAi(context) {
         alerts.push('<li class="insight-item">Vos stocks sont stables pour le moment.</li>');
       }
 
-      narrative.textContent =
+      narrativeText =
         "Enregistrez les ventes de vos boutiques pour obtenir une analyse automatique des performances, des opportunités et des alertes de stock.";
+    } else {
+      const avgTicket = currentSummary.count ? currentSummary.total / currentSummary.count : 0;
+      const dailyAverage = currentSummary.total / 7;
+      const growth = buildGrowthMessage(currentSummary.total, previousSummary.total);
 
-      highlightsList.innerHTML = highlights.join('');
-      opportunitiesList.innerHTML = opportunities.join('');
-      alertsList.innerHTML = alerts.join('');
-      return;
-    }
-
-    const avgTicket = currentSummary.count ? currentSummary.total / currentSummary.count : 0;
-    const dailyAverage = currentSummary.total / 7;
-    const growth = buildGrowthMessage(currentSummary.total, previousSummary.total);
-
-    highlights.push(
-      `<li class="insight-item"><span>Chiffre d'affaires 7 jours</span><strong>${formatCurrency(
-        currentSummary.total,
-        currency
-      )}</strong><small>${growth}</small></li>`
-    );
-    highlights.push(
-      `<li class="insight-item"><span>Ventes réalisées</span><strong>${formatNumber(
-        currentSummary.count
-      )}</strong><small>${formatCurrency(dailyAverage, currency)} par jour en moyenne</small></li>`
-    );
-    highlights.push(
-      `<li class="insight-item"><span>Panier moyen</span><strong>${formatCurrency(
-        avgTicket,
-        currency
-      )}</strong><small>${formatNumber(currentSummary.count)} ventes analysées</small></li>`
-    );
-
-    const topProduct = pickTopEntry(currentSummary.byProduct);
-    if (topProduct) {
-      opportunities.push(
-        `<li class="insight-item"><strong>${topProduct.name}</strong> génère ${formatCurrency(
-          topProduct.total,
-          currency
-        )}. Proposez un lot ou une remise flash pour prolonger la dynamique.</li>`
-      );
-    }
-
-    const topSeller = pickTopEntry(currentSummary.bySeller);
-    if (topSeller) {
-      opportunities.push(
-        `<li class="insight-item">${topSeller.name} mène les ventes (${formatCurrency(
-          topSeller.total,
-          currency
-        )}). Partagez ses bonnes pratiques avec l'équipe.</li>`
-      );
-    }
-
-    if (currentSummary.outstanding > 0) {
-      opportunities.push(
-        `<li class="insight-item">${formatCurrency(
-          currentSummary.outstanding,
-          currency
-        )} restent à encaisser. Planifiez un suivi clients pour solder les avances.</li>`
-      );
-    }
-
-    if (previousSummary.total && currentSummary.total < previousSummary.total) {
-      const shortfall = previousSummary.total - currentSummary.total;
-      opportunities.push(
-        `<li class="insight-item">Le chiffre d'affaires est en retrait de ${formatCurrency(
-          shortfall,
-          currency
-        )} vs la semaine précédente. Lancez une action commerciale ciblée.</li>`
-      );
-    }
-
-    const lowStock = products
-      .filter((product) => Number(product.stock || 0) <= Number(settings.lowStockThreshold || 5))
-      .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0));
-
-    if (lowStock.length) {
-      alerts.push(
-        `<li class="insight-item">Priorité réassort : ${lowStock
-          .slice(0, 3)
-          .map((product) => `${product.name} (${formatNumber(product.stock || 0)} restants)`)
-          .join(', ')}.</li>`
-      );
-    }
-
-    const bestDayEntry = Array.from(currentSummary.byDay.entries())
-      .map(([date, values]) => ({ date, total: values.total, count: values.count }))
-      .sort((a, b) => b.total - a.total)[0];
-    if (bestDayEntry) {
       highlights.push(
-        `<li class="insight-item"><span>Jour le plus performant</span><strong>${formatCurrency(
-          bestDayEntry.total,
+        `<li class="insight-item"><span>Chiffre d'affaires 7 jours</span><strong>${formatCurrency(
+          currentSummary.total,
           currency
-        )}</strong><small>${new Date(bestDayEntry.date).toLocaleDateString('fr-FR', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long'
-        })}</small></li>`
+        )}</strong><small>${growth}</small></li>`
       );
-    }
-
-    if (!lowStock.length) {
-      alerts.push('<li class="insight-item">Aucune alerte de stock critique sur le seuil actuel.</li>');
-    }
-
-    const inactiveProducts = products.filter((product) => {
-      const soldRecently = currentSales.some((sale) => sale.productId === product.id);
-      return !soldRecently;
-    });
-    if (inactiveProducts.length) {
-      alerts.push(
-        `<li class="insight-item">${inactiveProducts.length} produit(s) sans vente cette semaine. Pensez à les mettre en avant ou à ajuster le prix.</li>`
+      highlights.push(
+        `<li class="insight-item"><span>Ventes réalisées</span><strong>${formatNumber(
+          currentSummary.count
+        )}</strong><small>${formatCurrency(dailyAverage, currency)} par jour en moyenne</small></li>`
       );
+      highlights.push(
+        `<li class="insight-item"><span>Panier moyen</span><strong>${formatCurrency(
+          avgTicket,
+          currency
+        )}</strong><small>${formatNumber(currentSummary.count)} ventes analysées</small></li>`
+      );
+
+      const topProduct = pickTopEntry(currentSummary.byProduct);
+      if (topProduct) {
+        opportunities.push(
+          `<li class="insight-item"><strong>${topProduct.name}</strong> génère ${formatCurrency(
+            topProduct.total,
+            currency
+          )}. Proposez un lot ou une remise flash pour prolonger la dynamique.</li>`
+        );
+      }
+
+      const topSeller = pickTopEntry(currentSummary.bySeller);
+      if (topSeller) {
+        opportunities.push(
+          `<li class="insight-item">${topSeller.name} mène les ventes (${formatCurrency(
+            topSeller.total,
+            currency
+          )}). Partagez ses bonnes pratiques avec l'équipe.</li>`
+        );
+      }
+
+      if (currentSummary.outstanding > 0) {
+        opportunities.push(
+          `<li class="insight-item">${formatCurrency(
+            currentSummary.outstanding,
+            currency
+          )} restent à encaisser. Planifiez un suivi clients pour solder les avances.</li>`
+        );
+      }
+
+      if (previousSummary.total && currentSummary.total < previousSummary.total) {
+        const shortfall = previousSummary.total - currentSummary.total;
+        opportunities.push(
+          `<li class="insight-item">Le chiffre d'affaires est en retrait de ${formatCurrency(
+            shortfall,
+            currency
+          )} vs la semaine précédente. Lancez une action commerciale ciblée.</li>`
+        );
+      }
+
+      if (lowStockProducts.length) {
+        alerts.push(
+          `<li class="insight-item">Priorité réassort : ${lowStockProducts
+            .slice(0, 3)
+            .map((product) => `${product.name} (${formatNumber(product.stock || 0)} restants)`)
+            .join(', ')}.</li>`
+        );
+      } else {
+        alerts.push('<li class="insight-item">Aucune alerte de stock critique sur le seuil actuel.</li>');
+      }
+
+      const inactiveProducts = products.filter((product) => {
+        const soldRecently = currentSales.some((sale) => sale.productId === product.id);
+        return !soldRecently;
+      });
+      if (inactiveProducts.length) {
+        alerts.push(
+          `<li class="insight-item">${inactiveProducts.length} produit(s) sans vente cette semaine. Pensez à les mettre en avant ou à ajuster le prix.</li>`
+        );
+      }
+
+      const bestDayEntry = Array.from(currentSummary.byDay.entries())
+        .map(([date, values]) => ({ date, total: values.total, count: values.count }))
+        .sort((a, b) => b.total - a.total)[0];
+
+      if (bestDayEntry) {
+        highlights.push(
+          `<li class="insight-item"><span>Jour le plus performant</span><strong>${formatCurrency(
+            bestDayEntry.total,
+            currency
+          )}</strong><small>${new Date(bestDayEntry.date).toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+          })}</small></li>`
+        );
+      }
+
+      const narrativeParts = [
+        `Sur les 7 derniers jours, le chiffre d'affaires atteint ${formatCurrency(
+          currentSummary.total,
+          currency
+        )} pour ${formatNumber(currentSummary.count)} ventes enregistrées.`
+      ];
+
+      if (bestDayEntry) {
+        narrativeParts.push(
+          `La meilleure journée a été ${new Date(bestDayEntry.date).toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+          })} avec ${formatCurrency(bestDayEntry.total, currency)} encaissés.`
+        );
+      }
+
+      if (topProduct) {
+        narrativeParts.push(
+          `${topProduct.name} domine les ventes avec ${formatNumber(topProduct.quantity)} unité(s) vendue(s) représentant ${formatCurrency(
+            topProduct.total,
+            currency
+          )}.`
+        );
+      }
+
+      if (topSeller) {
+        narrativeParts.push(
+          `${topSeller.name} réalise la meilleure performance vendeuse avec ${formatCurrency(
+            topSeller.total,
+            currency
+          )} générés.`
+        );
+      }
+
+      if (currentSummary.outstanding > 0) {
+        narrativeParts.push(
+          `Il reste ${formatCurrency(currentSummary.outstanding, currency)} d'avances à régulariser auprès de vos clients.`
+        );
+      }
+
+      if (lowStockProducts.length) {
+        narrativeParts.push(
+          `Planifiez un réassort rapide pour ${lowStockProducts
+            .slice(0, 3)
+            .map((product) => product.name)
+            .join(', ')} afin d'éviter les ruptures.`
+        );
+      }
+
+      narrativeText = narrativeParts.join(' ');
     }
 
-    highlightsList.innerHTML = highlights.join('');
-    opportunitiesList.innerHTML = opportunities.length
+    const highlightMarkup = highlights.length
+      ? highlights.join('')
+      : '<li class="insight-item">Aucune donnée disponible pour cette période.</li>';
+    const opportunityMarkup = opportunities.length
       ? opportunities.join('')
       : '<li class="insight-item">Vos ventes sont en progression continue, poursuivez vos actions actuelles.</li>';
-    alertsList.innerHTML = alerts.length
+    const alertMarkup = alerts.length
       ? alerts.join('')
       : '<li class="insight-item">Aucune alerte urgente détectée. Continuez sur cette lancée !</li>';
 
-    const bestDay = bestDayEntry
-      ? new Date(bestDayEntry.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-      : null;
-
-    const narrativeParts = [
-      `Sur les 7 derniers jours, le chiffre d'affaires atteint ${formatCurrency(currentSummary.total, currency)} pour ${formatNumber(
-        currentSummary.count
-      )} ventes enregistrées.`
-    ];
-
-    if (bestDay) {
-      narrativeParts.push(`La meilleure journée a été ${bestDay} avec ${formatCurrency(bestDayEntry.total, currency)} encaissés.`);
+    if (highlightsList) {
+      highlightsList.innerHTML = highlightMarkup;
+    }
+    if (opportunitiesList) {
+      opportunitiesList.innerHTML = opportunityMarkup;
+    }
+    if (alertsList) {
+      alertsList.innerHTML = alertMarkup;
     }
 
-    if (topProduct) {
-      narrativeParts.push(
-        `${topProduct.name} domine les ventes avec ${formatNumber(topProduct.quantity)} unité(s) vendue(s) représentant ${formatCurrency(
-          topProduct.total,
-          currency
-        )}.`
-      );
+    if (dashboardHighlights) {
+      const preview = highlights.length ? highlights.slice(0, 2).join('') : highlightMarkup;
+      dashboardHighlights.innerHTML = preview;
+    }
+    if (dashboardOpportunities) {
+      const preview = opportunities.length ? opportunities.slice(0, 1).join('') : opportunityMarkup;
+      dashboardOpportunities.innerHTML = preview;
+    }
+    if (dashboardAlerts) {
+      const preview = alerts.length ? alerts.slice(0, 1).join('') : alertMarkup;
+      dashboardAlerts.innerHTML = preview;
     }
 
-    if (topSeller) {
-      narrativeParts.push(
-        `${topSeller.name} réalise la meilleure performance vendeuse avec ${formatCurrency(topSeller.total, currency)} générés.`
-      );
+    const finalNarrative =
+      narrativeText ||
+      "Enregistrez les ventes de vos boutiques pour obtenir une analyse automatique des performances, des opportunités et des alertes de stock.";
+
+    if (narrative) {
+      narrative.textContent = finalNarrative;
     }
 
-    if (currentSummary.outstanding > 0) {
-      narrativeParts.push(
-        `Il reste ${formatCurrency(currentSummary.outstanding, currency)} d'avances à régulariser auprès de vos clients.`
-      );
+    if (dashboardNarrative) {
+      const sentences = finalNarrative.match(/[^.!?]+[.!?]?/g) || [finalNarrative];
+      const summary = sentences.slice(0, 2).join(' ').trim() || finalNarrative;
+      dashboardNarrative.textContent = summary;
     }
-
-    if (lowStock.length) {
-      narrativeParts.push(
-        `Planifiez un réassort rapide pour ${lowStock
-          .slice(0, 3)
-          .map((product) => product.name)
-          .join(', ')} afin d'éviter les ruptures.`
-      );
-    }
-
-    narrative.textContent = narrativeParts.join(' ');
   }
 
   if (refreshButton) {
