@@ -58,6 +58,32 @@ export function loadData() {
     } else {
       data.settings = { ...structuredClone(defaultData.settings), ...data.settings };
     }
+    if (!Array.isArray(data.sales)) {
+      data.sales = [];
+    } else {
+      data.sales = data.sales
+        .filter((sale) => sale && typeof sale === 'object')
+        .map((sale) => {
+          const quantity = Number(sale?.quantity || 0);
+          const rawUnit =
+            sale && sale.unitPrice !== undefined && sale.unitPrice !== null && sale.unitPrice !== ''
+              ? Number(sale.unitPrice) || 0
+              : 0;
+          const discount = Number(sale?.discount || 0);
+          const total = Math.max(rawUnit * quantity - discount, 0);
+          let advance = Number(sale?.advance || 0);
+          if (Number.isNaN(advance) || advance < 0) {
+            advance = 0;
+          }
+          const explicitSettled = sale?.settled === true;
+          const implicitSettled = sale?.settled !== false && advance >= total - 0.005;
+          const settled = explicitSettled || implicitSettled;
+          if (settled && advance < total) {
+            advance = total;
+          }
+          return { ...sale, advance, settled };
+        });
+    }
     return data;
   } catch (error) {
     console.error('Impossible de lire les données, réinitialisation...', error);
@@ -100,10 +126,19 @@ export function calculateSaleAmounts(sale, product) {
   const quantity = Number(sale?.quantity || 0);
   const discount = Number(sale?.discount || 0);
   const total = Math.max(unit * quantity - discount, 0);
-  const advanceRaw = Number(sale?.advance || 0);
-  const advance = Math.min(Math.max(advanceRaw, 0), total);
-  const balance = Math.max(total - advance, 0);
-  return { unit, quantity, discount, total, advance, balance };
+  let advance = Number(sale?.advance || 0);
+  if (Number.isNaN(advance) || advance < 0) {
+    advance = 0;
+  }
+  if (advance > total) {
+    advance = total;
+  }
+  const settled = Boolean(sale?.settled) || advance >= total - 0.005;
+  if (settled && advance < total) {
+    advance = total;
+  }
+  const balance = settled ? 0 : Math.max(total - advance, 0);
+  return { unit, quantity, discount, total, advance, balance, settled };
 }
 
 export function generateIncrementalCode(prefix, counter) {

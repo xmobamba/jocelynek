@@ -86,11 +86,14 @@ export function initSales(context) {
           ? Number(productData.price) || 0
           : getProductPrice(sale.productId);
       unitPriceInput.value = presetUnit;
-      advanceInput.value = Number(sale.advance || 0);
       if (paidInFullCheckbox) {
         const computedTotal = Math.max(presetUnit * Number(quantityInput.value || 0) - Number(discountInput.value || 0), 0);
-        const isSettled = Number(sale.advance || 0) >= computedTotal - 0.005;
+        const isSettled =
+          sale.settled === true || Number(sale.advance || 0) >= computedTotal - 0.005;
         paidInFullCheckbox.checked = isSettled;
+        advanceInput.value = isSettled ? computedTotal : Number(sale.advance || 0);
+      } else {
+        advanceInput.value = Number(sale.advance || 0);
       }
     } else {
       editingSaleId = null;
@@ -288,7 +291,7 @@ export function initSales(context) {
     const customer = (formData.get('customer') || '').trim();
     const date = formData.get('date') || todayISO();
     const rawAdvance = formData.get('advance');
-    const paidInFull = paidInFullCheckbox?.checked;
+    const paidInFull = Boolean(paidInFullCheckbox?.checked);
     const total = Math.max(unitPrice * quantity - discount, 0);
     let advance = Number(rawAdvance);
     if (paidInFull) {
@@ -301,6 +304,8 @@ export function initSales(context) {
         advance = total;
       }
     }
+    const settled = paidInFull || advance >= total - 0.005;
+    const storedAdvance = settled ? total : advance;
 
     if (!productId || !sellerId || !shopId) return;
 
@@ -324,10 +329,11 @@ export function initSales(context) {
         sale.quantity = quantity;
         sale.discount = discount;
         sale.unitPrice = unitPrice;
-        sale.advance = advance;
+        sale.advance = storedAdvance;
         sale.date = date;
         sale.notes = notes;
         sale.customer = customer;
+        sale.settled = settled;
         affectedSaleId = sale.id;
         return;
       }
@@ -345,7 +351,8 @@ export function initSales(context) {
         quantity,
         discount,
         unitPrice,
-        advance,
+        advance: storedAdvance,
+        settled,
         date,
         customer,
         notes
@@ -406,7 +413,7 @@ export function initSales(context) {
             <td>${context.formatCurrency(amounts.total, settings.currency)}</td>
             <td>${context.formatCurrency(amounts.advance, settings.currency)}</td>
             <td>${
-              amounts.balance <= 0.005
+              amounts.settled
                 ? '<span class="status-pill status-pill--ok">Soldée</span>'
                 : context.formatCurrency(amounts.balance, settings.currency)
             }</td>
@@ -463,7 +470,7 @@ function printReceipt(sale, data, formatCurrency) {
 
   const receipt = template.content.cloneNode(true);
   const amounts = calculateSaleAmounts(sale, product);
-  const settled = amounts.balance <= 0.005;
+  const settled = amounts.settled;
   const balanceLabelText = settled ? 'Facture soldée' : 'Reste à payer';
   const balanceHintText = settled ? 'Aucun montant dû' : 'Solde client';
 
@@ -937,7 +944,7 @@ function printDailyReport(date, data, formatCurrency) {
   const totalBalance = detailed.reduce((sum, item) => sum + item.amounts.balance, 0);
   const totalDiscount = detailed.reduce((sum, item) => sum + item.amounts.discount, 0);
 
-  const hasOutstanding = totalBalance > 0.005;
+  const hasOutstanding = detailed.some((item) => !item.amounts.settled);
   const outstandingLabel = hasOutstanding ? 'Solde dû' : 'Factures soldées';
   const outstandingCardClass = hasOutstanding ? '' : ' invoice__totals-card--settled';
 
