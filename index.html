@@ -330,6 +330,13 @@
                     <input id="saleAdvance" name="advance" type="number" min="0" step="100" value="0" />
                   </div>
                   <div class="form-row">
+                    <label class="checkbox" for="salePaidInFull">
+                      <input id="salePaidInFull" type="checkbox" checked />
+                      Facture soldée
+                    </label>
+                    <p class="form-hint">Décochez pour encaisser une avance et laisser un solde à payer.</p>
+                  </div>
+                  <div class="form-row">
                     <label for="saleDate">Date</label>
                     <input id="saleDate" name="date" type="date" required />
                   </div>
@@ -347,6 +354,7 @@
                   <p><strong>Total :</strong> <span id="saleTotal">0 FCFA</span></p>
                   <p><strong>Avance :</strong> <span id="saleAdvanceDisplay">0 FCFA</span></p>
                   <p><strong>Reste à payer :</strong> <span id="saleBalance">0 FCFA</span></p>
+                  <p class="status-pill status-pill--ok" id="saleStatusPill">Facture soldée</p>
                 </div>
                 <div class="form-actions">
                   <button type="submit" class="primary" id="saleSubmit">Enregistrer &amp; imprimer</button>
@@ -663,9 +671,9 @@
             <small>Paiement reçu</small>
           </article>
           <article class="invoice__card">
-            <span>Reste à payer</span>
+            <span id="receiptBalanceLabel">Reste à payer</span>
             <strong id="receiptSummaryBalance">0 FCFA</strong>
-            <small>Solde client</small>
+            <small id="receiptBalanceHint">Solde client</small>
           </article>
           <article class="invoice__card">
             <span>Quantité vendue</span>
@@ -737,7 +745,7 @@
                 <dd id="receiptAdvance"></dd>
               </div>
               <div>
-                <dt>Reste à payer</dt>
+                <dt id="receiptBalanceTitle">Reste à payer</dt>
                 <dd id="receiptBalance"></dd>
               </div>
             </dl>

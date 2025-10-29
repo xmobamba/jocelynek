@@ -20,6 +20,8 @@ export function initSales(context) {
   const totalDisplay = document.getElementById('saleTotal');
   const advanceDisplay = document.getElementById('saleAdvanceDisplay');
   const balanceDisplay = document.getElementById('saleBalance');
+  const paidInFullCheckbox = document.getElementById('salePaidInFull');
+  const statusPill = document.getElementById('saleStatusPill');
   const searchInput = document.getElementById('salesSearch');
   const submitBtn = document.getElementById('saleSubmit');
   const reportDateInput = document.getElementById('dailyReportDate');
@@ -85,6 +87,11 @@ export function initSales(context) {
           : getProductPrice(sale.productId);
       unitPriceInput.value = presetUnit;
       advanceInput.value = Number(sale.advance || 0);
+      if (paidInFullCheckbox) {
+        const computedTotal = Math.max(presetUnit * Number(quantityInput.value || 0) - Number(discountInput.value || 0), 0);
+        const isSettled = Number(sale.advance || 0) >= computedTotal - 0.005;
+        paidInFullCheckbox.checked = isSettled;
+      }
     } else {
       editingSaleId = null;
       submitBtn.textContent = 'Enregistrer & imprimer';
@@ -108,6 +115,9 @@ export function initSales(context) {
       unitPriceInput.value = firstProduct ? Number(firstProduct.price) || 0 : 0;
       shopSelect.value = firstShop ? firstShop.id : '';
       sellerSelect.value = firstSeller ? firstSeller.id : '';
+      if (paidInFullCheckbox) {
+        paidInFullCheckbox.checked = true;
+      }
     }
 
     updateSummary();
@@ -185,18 +195,39 @@ export function initSales(context) {
     const quantity = Number(quantityInput.value) || 0;
     const discount = Number(discountInput.value) || 0;
     const total = Math.max(unitPrice * quantity - discount, 0);
-    let advance = Number(advanceInput.value);
-    if (Number.isNaN(advance) || advance < 0) {
-      advance = 0;
-    }
-    if (advance > total) {
+    let advance;
+    const paidInFull = paidInFullCheckbox?.checked;
+    if (paidInFull) {
       advance = total;
+      if (paidInFullCheckbox) {
+        advanceInput.value = total;
+      }
+    } else {
+      let rawAdvance = Number(advanceInput.value);
+      if (advanceInput.value === '' || Number.isNaN(rawAdvance) || rawAdvance < 0) {
+        rawAdvance = 0;
+      }
+      advance = Math.min(rawAdvance, total);
+      if (rawAdvance !== advance) {
+        advanceInput.value = advance;
+      }
+    }
+
+    if (paidInFullCheckbox) {
+      advanceInput.readOnly = Boolean(paidInFull);
     }
 
     unitPriceDisplay.textContent = context.formatCurrency(unitPrice, settings.currency);
     totalDisplay.textContent = context.formatCurrency(total, settings.currency);
     advanceDisplay.textContent = context.formatCurrency(advance, settings.currency);
-    balanceDisplay.textContent = context.formatCurrency(Math.max(total - advance, 0), settings.currency);
+    const balance = Math.max(total - advance, 0);
+    balanceDisplay.textContent = context.formatCurrency(balance, settings.currency);
+    if (statusPill) {
+      const settled = balance <= 0.005;
+      statusPill.textContent = settled ? 'Facture soldée' : 'Solde à encaisser';
+      statusPill.classList.toggle('status-pill--ok', settled);
+      statusPill.classList.toggle('status-pill--alert', !settled);
+    }
   }
 
   addBtn.addEventListener('click', () => toggleForm(true));
@@ -218,6 +249,28 @@ export function initSales(context) {
     advanceInput.addEventListener(eventName, updateSummary);
   });
 
+  if (paidInFullCheckbox) {
+    paidInFullCheckbox.addEventListener('change', () => {
+      if (paidInFullCheckbox.checked) {
+        const { products } = context.getData();
+        const product = products.find((prod) => prod.id === productSelect.value);
+        const rawUnitPrice = unitPriceInput.value;
+        let unitPrice = Number(rawUnitPrice);
+        if (rawUnitPrice === '' || Number.isNaN(unitPrice)) {
+          unitPrice = product ? Number(product.price) || 0 : 0;
+        }
+        const quantity = Number(quantityInput.value) || 0;
+        const discount = Number(discountInput.value) || 0;
+        const total = Math.max(unitPrice * quantity - discount, 0);
+        advanceInput.value = total;
+      }
+      updateSummary();
+      if (!paidInFullCheckbox.checked) {
+        advanceInput.focus();
+      }
+    });
+  }
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const formData = new FormData(form);
@@ -235,14 +288,18 @@ export function initSales(context) {
     const customer = (formData.get('customer') || '').trim();
     const date = formData.get('date') || todayISO();
     const rawAdvance = formData.get('advance');
-    let advance = Number(rawAdvance);
-    if (rawAdvance === '' || Number.isNaN(advance) || advance < 0) {
-      advance = 0;
-    }
-
+    const paidInFull = paidInFullCheckbox?.checked;
     const total = Math.max(unitPrice * quantity - discount, 0);
-    if (advance > total) {
+    let advance = Number(rawAdvance);
+    if (paidInFull) {
       advance = total;
+    } else {
+      if (rawAdvance === '' || Number.isNaN(advance) || advance < 0) {
+        advance = 0;
+      }
+      if (advance > total) {
+        advance = total;
+      }
     }
 
     if (!productId || !sellerId || !shopId) return;
@@ -348,7 +405,11 @@ export function initSales(context) {
             <td>${sale.quantity}</td>
             <td>${context.formatCurrency(amounts.total, settings.currency)}</td>
             <td>${context.formatCurrency(amounts.advance, settings.currency)}</td>
-            <td>${context.formatCurrency(amounts.balance, settings.currency)}</td>
+            <td>${
+              amounts.balance <= 0.005
+                ? '<span class="status-pill status-pill--ok">Soldée</span>'
+                : context.formatCurrency(amounts.balance, settings.currency)
+            }</td>
             <td>${seller ? seller.name : '—'}</td>
             <td>${shop ? shop.name : '—'}</td>
             <td>
@@ -402,6 +463,9 @@ function printReceipt(sale, data, formatCurrency) {
 
   const receipt = template.content.cloneNode(true);
   const amounts = calculateSaleAmounts(sale, product);
+  const settled = amounts.balance <= 0.005;
+  const balanceLabelText = settled ? 'Facture soldée' : 'Reste à payer';
+  const balanceHintText = settled ? 'Aucun montant dû' : 'Solde client';
 
   const brandNameEl = receipt.getElementById('receiptBrandName');
   if (brandNameEl) brandNameEl.textContent = companyName;
@@ -469,6 +533,12 @@ function printReceipt(sale, data, formatCurrency) {
   if (balanceEl) balanceEl.textContent = formatCurrency(amounts.balance, settings.currency);
   const summaryBalanceEl = receipt.getElementById('receiptSummaryBalance');
   if (summaryBalanceEl) summaryBalanceEl.textContent = formatCurrency(amounts.balance, settings.currency);
+  const balanceLabelEl = receipt.getElementById('receiptBalanceLabel');
+  if (balanceLabelEl) balanceLabelEl.textContent = balanceLabelText;
+  const balanceHintEl = receipt.getElementById('receiptBalanceHint');
+  if (balanceHintEl) balanceHintEl.textContent = balanceHintText;
+  const balanceTitleEl = receipt.getElementById('receiptBalanceTitle');
+  if (balanceTitleEl) balanceTitleEl.textContent = balanceLabelText;
   const summaryQuantityEl = receipt.getElementById('receiptSummaryQuantity');
   if (summaryQuantityEl) summaryQuantityEl.textContent = String(sale.quantity || 0);
   const summaryUnitEl = receipt.getElementById('receiptSummaryUnit');
@@ -867,6 +937,10 @@ function printDailyReport(date, data, formatCurrency) {
   const totalBalance = detailed.reduce((sum, item) => sum + item.amounts.balance, 0);
   const totalDiscount = detailed.reduce((sum, item) => sum + item.amounts.discount, 0);
 
+  const hasOutstanding = totalBalance > 0.005;
+  const outstandingLabel = hasOutstanding ? 'Solde dû' : 'Factures soldées';
+  const outstandingCardClass = hasOutstanding ? '' : ' invoice__totals-card--settled';
+
   const breakdownByShop = detailed.reduce((acc, item) => {
     const key = item.shopName;
     if (!acc[key]) {
@@ -1055,6 +1129,14 @@ function printDailyReport(date, data, formatCurrency) {
           }
           .invoice__totals-card--highlight span {
             color: #047857;
+          }
+          .invoice__totals-card--settled {
+            background: #f8fafc;
+            border-color: #cbd5f5;
+            color: #1f2937;
+          }
+          .invoice__totals-card--settled span {
+            color: #475569;
           }
           .invoice__table {
             margin-bottom: 32px;
@@ -1245,8 +1327,8 @@ function printDailyReport(date, data, formatCurrency) {
                 <span>Avances encaissées</span>
                 <strong>${formatCurrency(totalAdvance, settings.currency)}</strong>
               </div>
-              <div class="invoice__totals-card">
-                <span>Solde dû</span>
+              <div class="invoice__totals-card${outstandingCardClass}">
+                <span>${outstandingLabel}</span>
                 <strong>${formatCurrency(totalBalance, settings.currency)}</strong>
               </div>
               <div class="invoice__totals-card">
@@ -1314,7 +1396,7 @@ function printDailyReport(date, data, formatCurrency) {
                 <div><span>Sous-total</span><strong>${formatCurrency(grossRevenue, settings.currency)}</strong></div>
                 <div><span>Total du jour</span><strong>${formatCurrency(totalRevenue, settings.currency)}</strong></div>
                 <div><span>Avances encaissées</span><strong>${formatCurrency(totalAdvance, settings.currency)}</strong></div>
-                <div><span>Solde dû</span><strong>${formatCurrency(totalBalance, settings.currency)}</strong></div>
+                <div><span>${outstandingLabel}</span><strong>${formatCurrency(totalBalance, settings.currency)}</strong></div>
               </div>
               <p class="invoice__payment-note">${paymentReminder}</p>
             </div>

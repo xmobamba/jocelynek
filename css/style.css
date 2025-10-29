@@ -565,6 +565,12 @@ form {
   color: var(--color-muted);
 }
 
+.form-row .form-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
 .checkbox {
   display: flex;
   align-items: flex-start;
@@ -591,6 +597,12 @@ form {
   font-family: inherit;
   background: var(--color-background);
   transition: border var(--transition), box-shadow var(--transition);
+}
+
+.form-row input[readonly] {
+  background: rgba(0, 168, 107, 0.05);
+  color: var(--color-text);
+  cursor: not-allowed;
 }
 
 .form-row input:focus,
@@ -683,6 +695,16 @@ form {
   font-size: 0.75rem;
   font-weight: 500;
   background: rgba(15, 23, 42, 0.08);
+}
+
+.status-pill--ok {
+  background: rgba(0, 168, 107, 0.18);
+  color: #047857;
+}
+
+.status-pill--alert {
+  background: rgba(255, 165, 0, 0.18);
+  color: #b45309;
 }
 
 .table-card table tbody tr td:last-child {
