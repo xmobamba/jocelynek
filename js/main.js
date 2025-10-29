@@ -16,6 +16,7 @@ import { initProducts } from './products.js';
 import { initSales } from './sales.js';
 import { initAdvances } from './advances.js';
 import { initStats } from './stats.js';
+import { initAi } from './ai.js';
 
 const state = {
   data: loadData(),
@@ -466,7 +467,8 @@ function init() {
     initProducts(context),
     initSales(context),
     initAdvances(context),
-    initStats(context)
+    initStats(context),
+    initAi(context)
   );
 
   notify();

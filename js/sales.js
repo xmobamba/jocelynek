@@ -457,10 +457,22 @@ function printReceipt(sale, data, formatCurrency) {
   if (discountEl) discountEl.textContent = formatCurrency(amounts.discount, settings.currency);
   const totalEl = receipt.getElementById('receiptTotal');
   if (totalEl) totalEl.textContent = formatCurrency(amounts.total, settings.currency);
+  const summaryTotalEl = receipt.getElementById('receiptSummaryTotal');
+  if (summaryTotalEl) summaryTotalEl.textContent = formatCurrency(amounts.total, settings.currency);
+  const totalDueEl = receipt.getElementById('receiptTotalDue');
+  if (totalDueEl) totalDueEl.textContent = formatCurrency(amounts.total, settings.currency);
   const advanceEl = receipt.getElementById('receiptAdvance');
   if (advanceEl) advanceEl.textContent = formatCurrency(amounts.advance, settings.currency);
+  const summaryAdvanceEl = receipt.getElementById('receiptSummaryAdvance');
+  if (summaryAdvanceEl) summaryAdvanceEl.textContent = formatCurrency(amounts.advance, settings.currency);
   const balanceEl = receipt.getElementById('receiptBalance');
   if (balanceEl) balanceEl.textContent = formatCurrency(amounts.balance, settings.currency);
+  const summaryBalanceEl = receipt.getElementById('receiptSummaryBalance');
+  if (summaryBalanceEl) summaryBalanceEl.textContent = formatCurrency(amounts.balance, settings.currency);
+  const summaryQuantityEl = receipt.getElementById('receiptSummaryQuantity');
+  if (summaryQuantityEl) summaryQuantityEl.textContent = String(sale.quantity || 0);
+  const summaryUnitEl = receipt.getElementById('receiptSummaryUnit');
+  if (summaryUnitEl) summaryUnitEl.textContent = (sale.quantity || 0) > 1 ? 'Articles' : 'Article';
   const notesEl = receipt.getElementById('receiptNotes');
   if (notesEl) notesEl.textContent = sale.notes || '—';
   const footerMessageEl = receipt.getElementById('receiptFooterMessage');
@@ -484,167 +496,227 @@ function printReceipt(sale, data, formatCurrency) {
             padding: 32px;
             font-family: 'Inter', sans-serif;
             background: #f1f5f9;
-            color: #1f2933;
+            color: #0f172a;
           }
           .invoice {
             max-width: 780px;
             margin: 0 auto;
             background: #ffffff;
             border-radius: 24px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 32px 64px rgba(15, 23, 42, 0.12);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 28px 60px rgba(15, 23, 42, 0.12);
             overflow: hidden;
           }
           .invoice__head {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 2.5rem;
-            padding: 2.75rem 2.75rem 2.25rem;
-            border-bottom: 1px solid #e5e7eb;
+            gap: 2rem;
+            padding: 2.5rem 3rem 2.25rem;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            background: #ffffff;
           }
-          .invoice__title {
-            max-width: 60%;
+          .invoice__identity {
+            flex: 1 1 auto;
           }
           .invoice__label {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.35rem 0.75rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
             background: rgba(0, 168, 107, 0.12);
-            color: #00794f;
+            color: #047857;
             font-weight: 600;
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            font-size: 0.78rem;
-            border-radius: 999px;
             margin-bottom: 1rem;
           }
-          .invoice__title h1 {
+          .invoice__identity h1 {
             margin: 0;
             font-size: 2rem;
+            color: #0f172a;
           }
           .invoice__tagline {
-            margin: 0.5rem 0 0;
+            margin: 0.4rem 0 0;
             color: #64748b;
             font-size: 0.95rem;
           }
-          .invoice__brand {
+          .invoice__company {
+            margin-top: 1.75rem;
             display: flex;
-            gap: 1.25rem;
-            align-items: flex-start;
-            text-align: left;
+            align-items: center;
+            gap: 1rem;
           }
           .invoice__logo-wrap {
-            border: 1px solid rgba(0, 168, 107, 0.2);
+            width: 72px;
+            height: 72px;
             border-radius: 18px;
-            padding: 0.65rem;
+            border: 1px solid rgba(0, 168, 107, 0.25);
             background: rgba(0, 168, 107, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.65rem;
           }
           .invoice__logo {
-            width: 70px;
-            height: 70px;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
           }
-          .invoice__brand-info {
+          .invoice__company-info {
             font-size: 0.9rem;
-            color: #4b5563;
+            color: #475569;
           }
-          .invoice__brand-info strong {
+          .invoice__company-info strong {
             display: block;
             font-size: 1.05rem;
-            margin-bottom: 0.5rem;
-            color: #1f2933;
+            color: #0f172a;
+            margin-bottom: 0.35rem;
           }
-          .invoice__brand-info address {
+          .invoice__company-info address {
             margin: 0;
             font-style: normal;
             line-height: 1.5;
           }
           .invoice__meta {
-            padding: 1.75rem 2.75rem;
-            border-bottom: 1px solid #e5e7eb;
+            min-width: 220px;
           }
           .invoice__meta dl {
             margin: 0;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 1.5rem;
+            gap: 1.1rem;
+            text-align: right;
           }
           .invoice__meta dt {
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: #64748b;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.3rem;
           }
           .invoice__meta dd {
             margin: 0;
             font-weight: 600;
             font-size: 1.05rem;
-            color: #1f2933;
+            color: #0f172a;
+          }
+          .invoice__cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 1rem;
+            padding: 1.75rem 3rem 2rem;
+            background: #f8fafc;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+          }
+          .invoice__card {
+            background: #fff8e6;
+            border: 1px solid rgba(255, 165, 0, 0.25);
+            border-radius: 18px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+          }
+          .invoice__card span {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a16207;
+          }
+          .invoice__card strong {
+            font-size: 1.35rem;
+            color: #0f172a;
+          }
+          .invoice__card small {
+            font-size: 0.82rem;
+            color: #64748b;
           }
           .invoice__parties {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 2rem;
-            padding: 1.75rem 2.75rem;
-            border-bottom: 1px solid #e5e7eb;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.75rem;
+            padding: 2rem 3rem;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
           }
           .invoice__party h2 {
-            margin: 0 0 0.5rem;
+            margin: 0 0 0.6rem;
+            font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            font-size: 0.9rem;
             color: #64748b;
           }
           .invoice__party p {
             margin: 0;
+            color: #0f172a;
             font-size: 0.95rem;
-            color: #1f2933;
             line-height: 1.6;
           }
           .invoice__party small {
+            color: #475569;
             font-size: 0.85rem;
-            color: #4b5563;
+          }
+          .invoice__party--terms .invoice__list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 0.75rem;
+          }
+          .invoice__list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            color: #0f172a;
+            font-size: 0.95rem;
+          }
+          .invoice__list span {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
           }
           .invoice__table-wrapper {
-            padding: 0 2.75rem 2.25rem;
+            padding: 0 3rem 2.25rem;
           }
           .invoice__table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 0.95rem;
           }
           .invoice__table thead th {
-            background: #00a86b;
-            color: #ffffff;
-            padding: 0.75rem 0.85rem;
-            font-size: 0.8rem;
+            padding: 0.8rem 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
+            font-size: 0.78rem;
+            color: #0f172a;
+            background: rgba(0, 168, 107, 0.08);
             text-align: left;
           }
           .invoice__table tbody td {
             padding: 0.85rem;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 0.95rem;
-            color: #1f2933;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            color: #0f172a;
           }
-          .invoice__table tbody tr:last-child td {
-            border-bottom: none;
+          .invoice__table tbody tr:nth-child(even) td {
+            background: rgba(15, 23, 42, 0.02);
           }
-          .invoice__summary {
-            padding: 0 2.75rem 2.75rem;
+          .invoice__table td:last-child {
+            font-weight: 600;
+          }
+          .invoice__extra {
+            padding: 0 3rem 2.75rem;
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 2rem;
+            gap: 2.25rem;
           }
           .invoice__notes {
             flex: 1 1 320px;
           }
           .invoice__notes h3 {
-            margin: 0 0 0.75rem;
+            margin: 0 0 0.8rem;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -652,52 +724,67 @@ function printReceipt(sale, data, formatCurrency) {
           }
           .invoice__notes p {
             margin: 0;
-            font-size: 0.95rem;
+            color: #0f172a;
             line-height: 1.6;
-            color: #1f2933;
+            font-size: 0.95rem;
           }
           .invoice__totals {
             flex: 0 0 260px;
             border: 1px solid rgba(0, 168, 107, 0.25);
             border-radius: 18px;
-            padding: 1.5rem 1.75rem;
             background: rgba(0, 168, 107, 0.08);
+            padding: 1.5rem 1.75rem;
           }
           .invoice__totals dl {
             margin: 0;
             display: grid;
-            gap: 1.25rem;
-          }
-          .invoice__totals div {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 1rem;
+            gap: 1.15rem;
           }
           .invoice__totals dt {
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            font-size: 0.78rem;
-            color: #64748b;
+            color: #0f766e;
           }
           .invoice__totals dd {
             margin: 0;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             color: #0f172a;
           }
           .invoice__footer {
-            border-top: 1px solid #e5e7eb;
             background: #f8fafc;
+            border-top: 1px solid rgba(15, 23, 42, 0.08);
+            padding: 1.75rem 3rem;
             text-align: center;
-            padding: 2rem 2.75rem;
-            font-size: 0.85rem;
-            color: #64748b;
+            font-size: 0.9rem;
+            color: #475569;
           }
           .invoice__footer-meta {
-            margin-top: 0.6rem;
+            margin: 0.5rem 0 0;
             font-size: 0.8rem;
-            color: #4b5563;
+            color: #64748b;
+          }
+          @media (max-width: 720px) {
+            body {
+              padding: 16px;
+            }
+            .invoice__head,
+            .invoice__cards,
+            .invoice__parties,
+            .invoice__table-wrapper,
+            .invoice__extra,
+            .invoice__footer {
+              padding-left: 1.75rem;
+              padding-right: 1.75rem;
+            }
+            .invoice__head {
+              flex-direction: column;
+              gap: 1.5rem;
+            }
+            .invoice__meta dl {
+              text-align: left;
+            }
           }
           @media print {
             body {
@@ -711,7 +798,6 @@ function printReceipt(sale, data, formatCurrency) {
             }
             .invoice__label {
               background: none;
-              padding-left: 0;
             }
           }
         </style>
@@ -825,143 +911,179 @@ function printDailyReport(date, data, formatCurrency) {
             margin: 0;
             padding: 32px;
             font-family: 'Inter', sans-serif;
-            background: #f5f7fb;
-            color: #1f2933;
+            background: #f1f5f9;
+            color: #0f172a;
           }
           .report {
             background: #ffffff;
-            border-radius: 20px;
-            padding: 2.5rem;
+            border-radius: 24px;
+            padding: 2.75rem;
             max-width: 960px;
             margin: 0 auto;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
-            border: 1px solid rgba(15, 23, 42, 0.05);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 28px 60px rgba(15, 23, 42, 0.12);
           }
           .report__header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            gap: 1.5rem;
+            align-items: flex-start;
+            gap: 2rem;
+            padding-bottom: 1.75rem;
             border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-            padding-bottom: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2.25rem;
           }
           .report__header h1 {
             margin: 0;
-            font-size: 1.6rem;
+            font-size: 2.1rem;
           }
           .report__header p {
-            margin: 0.2rem 0;
-            color: #6b7280;
+            margin: 0.3rem 0 0;
+            color: #64748b;
           }
           .report__contact {
-            margin-top: 0.6rem;
+            margin-top: 0.75rem;
             font-size: 0.85rem;
-            color: #6b7280;
+            color: #475569;
           }
           .report__meta {
             text-align: right;
+            font-size: 0.95rem;
+            color: #475569;
           }
           .report__meta p {
             margin: 0.2rem 0;
           }
           .report__metrics {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
           }
           .report__metric {
-            background: rgba(255, 165, 0, 0.12);
-            border-radius: 16px;
-            padding: 1rem 1.25rem;
+            background: #fff8e6;
+            border: 1px solid rgba(255, 165, 0, 0.25);
+            border-radius: 18px;
+            padding: 1.1rem 1.35rem;
           }
           .report__metric span {
             display: block;
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #6b7280;
+            color: #a16207;
           }
           .report__metric strong {
             display: block;
-            margin-top: 0.35rem;
-            font-size: 1.3rem;
+            margin-top: 0.45rem;
+            font-size: 1.45rem;
+            color: #0f172a;
           }
           .report__metric small {
             display: block;
             margin-top: 0.35rem;
             font-size: 0.85rem;
-            color: #6b7280;
+            color: #64748b;
           }
           .report__breakdown {
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
           }
           .report__breakdown h2 {
-            margin: 0 0 0.75rem;
-            font-size: 1rem;
+            margin: 0 0 1rem;
+            font-size: 0.95rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #6b7280;
+            color: #64748b;
           }
           .report__breakdown ul {
             list-style: none;
             margin: 0;
             padding: 0;
             display: grid;
-            gap: 0.75rem;
+            gap: 0.85rem;
           }
           .report__breakdown li {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.75rem;
             align-items: baseline;
-            gap: 1rem;
             background: rgba(15, 23, 42, 0.03);
             border-radius: 14px;
-            padding: 0.85rem 1rem;
+            padding: 0.9rem 1.1rem;
+          }
+          .report__breakdown span {
+            font-weight: 600;
+            color: #0f172a;
           }
           .report__breakdown strong {
             font-size: 1.05rem;
+            color: #0f172a;
           }
           .report__breakdown small {
-            color: #6b7280;
+            grid-column: 1 / -1;
+            color: #64748b;
+            font-size: 0.82rem;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
           }
-          th, td {
-            padding: 0.75rem 0.5rem;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+          thead th {
+            padding: 0.85rem 0.7rem;
+            background: rgba(0, 168, 107, 0.08);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 0.78rem;
+            color: #0f172a;
             text-align: left;
           }
-          th {
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-size: 0.75rem;
-            color: #6b7280;
+          tbody td {
+            padding: 0.85rem 0.7rem;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            color: #0f172a;
+          }
+          tbody tr:nth-child(even) td {
+            background: rgba(15, 23, 42, 0.02);
           }
           tfoot td {
             font-weight: 700;
-          }
-          .empty {
-            text-align: center;
-            padding: 2rem 1rem;
-            color: #6b7280;
-            font-style: italic;
+            padding: 0.85rem 0.7rem;
+            color: #0f172a;
           }
           .empty-state {
             text-align: center;
+            padding: 2rem 1rem;
+            color: #64748b;
             font-style: italic;
-            color: #6b7280;
           }
           .report__footer-note {
-            margin-top: 2rem;
+            margin-top: 2.5rem;
             text-align: center;
             color: #475569;
             font-size: 0.95rem;
             font-style: italic;
+          }
+          @media (max-width: 720px) {
+            body {
+              padding: 16px;
+            }
+            .report {
+              padding: 2rem 1.5rem;
+            }
+            .report__header {
+              flex-direction: column;
+              align-items: stretch;
+              text-align: left;
+            }
+            .report__meta {
+              text-align: left;
+            }
+            table,
+            thead,
+            tbody,
+            tfoot {
+              font-size: 0.9rem;
+            }
           }
           @media print {
             body {
@@ -970,11 +1092,11 @@ function printDailyReport(date, data, formatCurrency) {
             }
             .report {
               box-shadow: none;
-              border: none;
               border-radius: 0;
+              border: none;
             }
           }
-        </style>
+                </style>
       </head>
       <body>
         <div class="report">
@@ -1013,7 +1135,10 @@ function printDailyReport(date, data, formatCurrency) {
           <div class="report__breakdown">
             <h2>Détail par boutique</h2>
             <ul>
-              ${breakdownList || '<li><span>Aucune vente enregistrée</span><small>—</small></li>'}
+              ${
+                breakdownList ||
+                '<li><span>Aucune vente enregistrée</span><strong>0</strong><small>—</small></li>'
+              }
             </ul>
           </div>
           <table>

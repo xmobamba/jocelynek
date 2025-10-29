@@ -63,6 +63,7 @@
             <button class="nav-link" data-target="sales">Ventes</button>
             <button class="nav-link" data-target="advances">Avances &amp; paiements</button>
             <button class="nav-link" data-target="stats">Statistiques</button>
+            <button class="nav-link" data-target="insights">Assistant IA</button>
             <button class="nav-link" data-target="settings">Paramètres</button>
           </div>
         </nav>
@@ -463,6 +464,45 @@
             </div>
           </section>
 
+          <section id="insights" class="view" aria-labelledby="insightsTitle">
+            <header class="view-header">
+              <div>
+                <h2 id="insightsTitle">Assistant IA</h2>
+                <p>Suggestions intelligentes pour booster vos ventes.</p>
+              </div>
+              <div class="insights-actions">
+                <button type="button" class="primary" id="refreshInsights">Analyser à nouveau</button>
+              </div>
+            </header>
+            <div class="insights-grid">
+              <article class="insight-card" aria-labelledby="aiHighlightsTitle">
+                <div class="insight-card__header">
+                  <h3 id="aiHighlightsTitle">Tendances clés</h3>
+                </div>
+                <ul id="aiHighlights" class="insight-list" role="list"></ul>
+              </article>
+              <article class="insight-card" aria-labelledby="aiOpportunitiesTitle">
+                <div class="insight-card__header">
+                  <h3 id="aiOpportunitiesTitle">Opportunités</h3>
+                </div>
+                <ul id="aiOpportunities" class="insight-list" role="list"></ul>
+              </article>
+              <article class="insight-card" aria-labelledby="aiAlertsTitle">
+                <div class="insight-card__header">
+                  <h3 id="aiAlertsTitle">Alertes</h3>
+                </div>
+                <ul id="aiAlerts" class="insight-list" role="list"></ul>
+              </article>
+            </div>
+            <section class="insight-report" aria-labelledby="aiNarrativeTitle">
+              <div class="insight-report__header">
+                <h3 id="aiNarrativeTitle">Analyse détaillée</h3>
+                <button type="button" class="ghost" id="copyAiNarrative">Copier le rapport</button>
+              </div>
+              <p id="aiNarrative" class="insight-report__body"></p>
+            </section>
+          </section>
+
           <section id="settings" class="view" aria-labelledby="settingsTitle">
             <header class="view-header">
               <div>
@@ -584,40 +624,54 @@
     <template id="receiptTemplate">
       <article class="invoice">
         <header class="invoice__head">
-          <div class="invoice__title">
+          <div class="invoice__identity">
             <span class="invoice__label">Facture</span>
             <h1 id="receiptBrandName">Jocelyne K</h1>
             <p id="receiptBrandTagline" class="invoice__tagline">Gestionnaire de ventes &amp; stocks</p>
+            <div class="invoice__company">
+              <div class="invoice__logo-wrap">
+                <img src="assets/logo.png" alt="Logo Jocelyne K" class="invoice__logo" />
+              </div>
+              <div class="invoice__company-info">
+                <strong id="receiptCompanyName">Jocelyne K</strong>
+                <address id="receiptVendor"></address>
+              </div>
+            </div>
           </div>
-          <div class="invoice__brand">
-            <div class="invoice__logo-wrap">
-              <img src="assets/logo.png" alt="Logo Jocelyne K" class="invoice__logo" />
-            </div>
-            <div class="invoice__brand-info">
-              <strong id="receiptCompanyName">Jocelyne K</strong>
-              <address id="receiptVendor"></address>
-            </div>
+          <div class="invoice__meta">
+            <dl>
+              <div>
+                <dt>Numéro</dt>
+                <dd id="receiptNumber"></dd>
+              </div>
+              <div>
+                <dt>Date</dt>
+                <dd id="receiptDate"></dd>
+              </div>
+            </dl>
           </div>
         </header>
-        <section class="invoice__meta">
-          <dl>
-            <div>
-              <dt>Numéro</dt>
-              <dd id="receiptNumber"></dd>
-            </div>
-            <div>
-              <dt>Date</dt>
-              <dd id="receiptDate"></dd>
-            </div>
-            <div>
-              <dt>Devise</dt>
-              <dd id="receiptCurrency">FCFA</dd>
-            </div>
-            <div>
-              <dt>Paiement</dt>
-              <dd id="receiptPaymentTerm">Comptant</dd>
-            </div>
-          </dl>
+        <section class="invoice__cards">
+          <article class="invoice__card">
+            <span>Total facture</span>
+            <strong id="receiptSummaryTotal">0 FCFA</strong>
+            <small>Montant TTC</small>
+          </article>
+          <article class="invoice__card">
+            <span>Avance encaissée</span>
+            <strong id="receiptSummaryAdvance">0 FCFA</strong>
+            <small>Paiement reçu</small>
+          </article>
+          <article class="invoice__card">
+            <span>Reste à payer</span>
+            <strong id="receiptSummaryBalance">0 FCFA</strong>
+            <small>Solde client</small>
+          </article>
+          <article class="invoice__card">
+            <span>Quantité vendue</span>
+            <strong id="receiptSummaryQuantity">0</strong>
+            <small id="receiptSummaryUnit">Articles</small>
+          </article>
         </section>
         <section class="invoice__parties">
           <div class="invoice__party">
@@ -630,6 +684,19 @@
               <span id="receiptShop"></span><br />
               <small id="receiptSeller"></small>
             </p>
+          </div>
+          <div class="invoice__party invoice__party--terms">
+            <h2>Conditions</h2>
+            <ul class="invoice__list">
+              <li>
+                <span>Devise</span>
+                <strong id="receiptCurrency">FCFA</strong>
+              </li>
+              <li>
+                <span>Paiement</span>
+                <strong id="receiptPaymentTerm">Comptant</strong>
+              </li>
+            </ul>
           </div>
         </section>
         <section class="invoice__table-wrapper">
@@ -654,7 +721,7 @@
             </tbody>
           </table>
         </section>
-        <section class="invoice__summary">
+        <section class="invoice__extra">
           <div class="invoice__notes">
             <h3>Informations additionnelles</h3>
             <p id="receiptNotes"></p>
@@ -662,7 +729,11 @@
           <div class="invoice__totals">
             <dl>
               <div>
-                <dt>Avance</dt>
+                <dt>Total facture</dt>
+                <dd id="receiptTotalDue"></dd>
+              </div>
+              <div>
+                <dt>Avance encaissée</dt>
                 <dd id="receiptAdvance"></dd>
               </div>
               <div>
