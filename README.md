@@ -1,65 +1,67 @@
-# Gestionnaire de ventes – Jocelyne K
+# JOCELYNE K POS SYSTEM
 
-Application web responsive permettant de gérer les ventes, le stock et les avances des boutiques **Jocelyne K** et **Jocelyne K 2**. Le projet fonctionne entièrement hors ligne en utilisant le `localStorage` du navigateur (HTML, CSS et JavaScript).
+Application de point de vente 100 % hors ligne, pensée pour les boutiques Jocelyne K. Le projet est un tableau de bord moderne en HTML, CSS et JavaScript pur avec stockage des données dans `localStorage`. Toutes les opérations (inventaire, encaissement, finances, fournisseurs, clients et paramètres) se font dans une seule page responsive.
 
-## ✨ Fonctionnalités principales
+## ✨ Fonctionnalités clés
 
-- Tableau de bord consolidé (ventes du jour, ventes du mois, stocks critiques, avances)
-- Gestion des boutiques, vendeuses, produits, ventes et avances
-- Numérotation automatique des ventes (`VENT0001`, `VENT0002`, ...)
-- Mise à jour automatique du stock lors des ventes
-- Prix unitaires ajustables, saisie d'avances et calcul du reste à payer par vente
-- Facture professionnelle imprimable (A4 ou ticket thermique) avec avances et soldes
-- Modification, réimpression et export des ventes existantes
-- Recherche en temps réel dans les tables
-- Export CSV des ventes
-- Statistiques visuelles : chiffre d'affaires, top produits, top vendeuses
-- Assistant IA : recommandations automatiques (tendances, opportunités, alertes de stock, rapport narratif)
-- Assistant IA interactif : posez des questions (ex. « Combien de lunettes en stock ? ») pour obtenir des réponses instantanées
-- Personnalisation des paramètres (devise, seuil de stock, format de reçu, boutique/vendeuse par défaut, identité visuelle et coordonnées)
-- Impression d'un rapport de clôture quotidien (totaux, avances, restes à payer) pour la date sélectionnée
-- Tableau de bord détaillant stocks actuels et quantités vendues du jour
+- **Tableau de bord** : cartes de synthèse, fil d'activité et graphique animé des ventes des 7 derniers jours.
+- **Inventaire** : ajout/modification/suppression, import/export CSV/JSON, alertes visuelles de stocks faibles, génération d'étiquettes 15×7 mm avec pseudo-QR code.
+- **Ventes (POS)** : recherche rapide, panier interactif, sélection du vendeur et du client, paiements espèces/mobile money/crédit, impression de reçu.
+- **Fournisseurs** : fiches détaillées (solde, avance, historique) et liens automatiques avec les produits associés.
+- **Clients** : suivi des coordonnées, crédits et historiques d'achats, encaissement des règlements.
+- **Finances** : journal recettes/dépenses, synthèse mensuelle, export comptable CSV.
+- **Paramètres** : identité de la boutique, devise FCFA (personnalisable), TVA, gestion du logo, export/import complet de la base JSON, remise à zéro.
+- **Assistant IA local** : widget flottant avec réponses contextuelles pré-enregistrées sur les ventes, l'inventaire et la configuration.
+- **Sécurité des données** : sauvegarde locale à la demande et auto-sauvegarde toutes les 10 minutes.
 
-## 🗂 Structure du projet
+## 🗂️ Structure du projet
 
 ```
-/gestionnaire-ventes
+/ (racine du dépôt)
 ├── index.html
 ├── css/
 │   ├── style.css
-│   └── dashboard.css
+│   ├── dashboard.css
+│   └── print.css
 ├── js/
-│   ├── main.js
-│   ├── utils.js
-│   ├── shops.js
-│   ├── sellers.js
-│   ├── products.js
+│   ├── app.js
+│   ├── inventory.js
 │   ├── sales.js
-│   ├── advances.js
-│   ├── stats.js
+│   ├── suppliers.js
+│   ├── clients.js
+│   ├── finances.js
+│   ├── settings.js
 │   └── ai.js
 ├── assets/
-│   ├── images/
-│   └── icons/
-└── README.md
+│   ├── README.md
+│   ├── icons/
+│   └── images/
+└── data/
+    └── backup.json
 ```
 
-## 🚀 Utilisation
+> ℹ️ Les fichiers binaires (ex. PNG) ont été retirés de ce dépôt. Ajoutez vos propres logos ou icônes (format SVG recommandé) dans le dossier `assets/` avant le déploiement.
 
-1. Télécharger ou cloner le dépôt.
-2. Ouvrir `index.html` dans un navigateur récent.
-3. Commencer à enregistrer les boutiques, vendeuses, produits et ventes. Toutes les données sont conservées localement.
+## 🚀 Démarrage
 
-## 💾 Sauvegarde des données
+1. Cloner ou télécharger le dépôt.
+2. Ouvrir `index.html` dans un navigateur récent (Chrome, Edge ou Safari).
+3. Patienter le temps de l'écran de chargement puis utiliser le menu latéral pour naviguer.
+4. Toutes les données sont enregistrées automatiquement dans `localStorage` (aucun backend requis).
 
-Les informations sont stockées dans `localStorage` sous la clé `jkManagerData`. Pour remettre l'application à zéro, ouvrir l'onglet **Paramètres** puis cliquer sur **Réinitialiser les données**.
+## 💾 Sauvegarde et restauration
 
-## 🎨 Design
+- Utiliser le bouton **Sauvegarder** du tableau de bord ou l'option **Exporter la base JSON** dans Paramètres pour créer un fichier `jk-backup.json`.
+- Pour restaurer, importer le fichier via **Importer une base JSON**.
+- Une sauvegarde automatique est également réalisée toutes les 10 minutes et la date de la dernière sauvegarde apparaît dans le pied de page.
 
-- Palette principale : orange `#FFA500` et vert `#00A86B`
-- Police : [Inter](https://fonts.google.com/specimen/Inter)
-- Interface moderne, responsive, optimisée pour bureau, tablette et mobile.
+## 🎨 Design & accessibilité
+
+- Palette : blanc, orange `#FFA500`, vert `#00A86B` et accents verts/orange pour les états.
+- Police : Inter et équivalents système.
+- Layout responsive avec menu latéral fixe, transitions douces, badges et notifications accessibles.
+- Feuilles de styles dédiées pour l'impression des reçus et étiquettes.
 
 ## 📄 Licence
 
-Projet conçu pour les boutiques Jocelyne K (Abidjan, Côte d'Ivoire). Usage interne.
+Projet interne Jocelyne K – librement utilisable dans un contexte hors ligne.
