@@ -91,6 +91,10 @@ const POSApp = {
             }
             if (field.value !== undefined) input.value = field.value;
             if (field.required) input.required = true;
+            if (field.readonly) {
+                input.readOnly = true;
+                input.classList.add('readonly');
+            }
             label.appendChild(input);
             form.appendChild(label);
         });

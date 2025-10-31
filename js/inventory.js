@@ -50,10 +50,23 @@
         return POSApp.state.suppliers.find(s => s.id === id)?.name || 'Non défini';
     }
 
+    function generateProductReference() {
+        const prefix = 'PROD';
+        const highest = POSApp.state.products.reduce((max, product) => {
+            const match = product.id?.match(/(\d+)/);
+            if (!match) return max;
+            const numeric = Number(match[1]);
+            return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
+        }, 0);
+        const next = highest + 1;
+        return `${prefix}${String(next).padStart(3, '0')}`;
+    }
+
     function addProduct() {
+        const reference = generateProductReference();
         const suppliersOptions = POSApp.state.suppliers.map(s => ({ value: s.id, label: s.name }));
         POSApp.openModal('Nouveau produit', [
-            { id: 'id', label: 'Référence', required: true },
+            { id: 'id', label: 'Référence', required: true, value: reference, readonly: true },
             { id: 'name', label: 'Nom du produit', required: true },
             { id: 'category', label: 'Catégorie', required: true },
             { id: 'price', label: 'Prix de vente', required: true, type: 'number' },
@@ -86,7 +99,7 @@
         if (!product) return;
         const suppliersOptions = POSApp.state.suppliers.map(s => ({ value: s.id, label: s.name }));
         POSApp.openModal('Modifier le produit', [
-            { id: 'id', label: 'Référence', required: true, value: product.id },
+            { id: 'id', label: 'Référence', required: true, value: product.id, readonly: true },
             { id: 'name', label: 'Nom du produit', required: true, value: product.name },
             { id: 'category', label: 'Catégorie', required: true, value: product.category },
             { id: 'price', label: 'Prix de vente', required: true, type: 'number', value: product.price },
