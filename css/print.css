@@ -1,0 +1,62 @@
+@page {
+    margin: 12mm;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.receipt {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    border: 1px dashed #999;
+    padding: 1rem;
+}
+
+.receipt h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.receipt table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.receipt th,
+.receipt td {
+    text-align: left;
+    padding: 0.35rem 0;
+}
+
+.label-sheet {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6mm;
+}
+
+.label {
+    width: 15mm;
+    min-height: 7mm;
+    border: 1px solid #000;
+    padding: 1mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 6px;
+    text-align: center;
+}
+
+.qr-placeholder {
+    width: 10mm;
+    height: 10mm;
+    background: repeating-linear-gradient(45deg, #000, #000 1px, #fff 1px, #fff 2px);
+}
+
+@media screen {
+    #print-area {
+        display: none;
+    }
+}
