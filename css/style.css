@@ -456,10 +456,102 @@ details summary {
 
 .cart-item {
     display: grid;
-    grid-template-columns: 2fr 1fr auto;
-    gap: 0.5rem;
+    grid-template-columns: 1.8fr 1fr auto;
+    gap: 0.75rem;
     align-items: center;
     margin-bottom: 0.5rem;
+}
+
+.cart-item > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.price-editor {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.price-editor > span {
+    font-weight: 600;
+}
+
+.price-editor-field {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.price-editor input {
+    width: 120px;
+    padding: 0.45rem 0.6rem;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+body.dark-theme .price-editor input {
+    background: rgba(31, 41, 55, 0.9);
+}
+
+.cart-price.adjusted {
+    border-color: rgba(0, 168, 107, 0.5);
+    box-shadow: 0 0 0 2px rgba(0, 168, 107, 0.16);
+}
+
+body.dark-theme .cart-price.adjusted {
+    border-color: rgba(0, 255, 200, 0.45);
+    box-shadow: 0 0 0 2px rgba(0, 255, 200, 0.18);
+}
+
+.price-suffix {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--primary-dark);
+}
+
+body.dark-theme .price-suffix {
+    color: var(--accent);
+}
+
+.price-reference {
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.price-reference.adjusted {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.cart-quantity {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: flex-end;
+}
+
+.cart-quantity span {
+    min-width: 2.2rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.cart-quantity button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+}
+
+.cart-item > .danger {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
 }
 
 .status-badge {

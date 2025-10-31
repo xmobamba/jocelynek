@@ -39,7 +39,13 @@
         if (existing) {
             if (existing.quantity < product.stock) existing.quantity += 1;
         } else {
-            cart.push({ id: productId, name: product.name, price: product.price, quantity: 1 });
+            cart.push({
+                id: productId,
+                name: product.name,
+                price: product.price,
+                basePrice: product.price,
+                quantity: 1
+            });
         }
         renderCart();
     }
@@ -69,25 +75,52 @@
         cart.forEach(item => {
             const wrapper = document.createElement('div');
             wrapper.className = 'cart-item';
+            const basePriceInfo = item.basePrice !== undefined
+                ? `<small class="price-reference${item.price !== item.basePrice ? ' adjusted' : ''}">Tarif catalogue : ${POSApp.formatCurrency(item.basePrice)}</small>`
+                : '';
             wrapper.innerHTML = `
                 <div>
                     <strong>${item.name}</strong>
-                    <small>${POSApp.formatCurrency(item.price)}</small>
+                    <label class="price-editor" for="price-${item.id}">
+                        <span>Prix unitaire</span>
+                        <div class="price-editor-field">
+                            <input type="number" id="price-${item.id}" class="cart-price${item.basePrice !== undefined && item.price !== item.basePrice ? ' adjusted' : ''}" data-id="${item.id}" value="${item.price}" min="0" step="1">
+                            <span class="price-suffix">${POSApp.currency()}</span>
+                        </div>
+                    </label>
+                    ${basePriceInfo}
                 </div>
-                <div>
+                <div class="cart-quantity">
                     <button class="secondary" data-action="minus" data-id="${item.id}">-</button>
                     <span>${item.quantity}</span>
                     <button class="secondary" data-action="plus" data-id="${item.id}">+</button>
                 </div>
                 <button class="danger" data-action="remove" data-id="${item.id}">×</button>`;
             container.appendChild(wrapper);
-        });
-        container.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = btn.dataset.id;
-                if (btn.dataset.action === 'minus') changeQuantity(id, -1);
-                if (btn.dataset.action === 'plus') changeQuantity(id, 1);
-                if (btn.dataset.action === 'remove') removeFromCart(id);
+
+            wrapper.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    if (btn.dataset.action === 'minus') changeQuantity(id, -1);
+                    if (btn.dataset.action === 'plus') changeQuantity(id, 1);
+                    if (btn.dataset.action === 'remove') removeFromCart(id);
+                });
+            });
+
+            const priceInput = wrapper.querySelector('.cart-price');
+            priceInput.inputMode = 'numeric';
+            priceInput.addEventListener('input', event => {
+                if (event.target.value === '') return;
+                updateItemPrice(item.id, event.target.value);
+            });
+            priceInput.addEventListener('change', event => {
+                updateItemPrice(item.id, event.target.value);
+                renderCart();
+            });
+            priceInput.addEventListener('blur', event => {
+                if (event.target.value === '') {
+                    event.target.value = item.price;
+                }
             });
         });
         updateCartTotal();
@@ -97,6 +130,17 @@
         const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
         document.getElementById('cart-total').textContent = POSApp.formatCurrency(total);
         return total;
+    }
+
+    function updateItemPrice(productId, value) {
+        const item = cart.find(i => i.id === productId);
+        if (!item) return false;
+        if (value === '' || value === null) return false;
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric < 0) return false;
+        item.price = Math.max(0, Math.round(numeric));
+        updateCartTotal();
+        return true;
     }
 
     function populateSelectors() {
@@ -146,7 +190,7 @@
             clientId: clientId || null,
             taxAmount,
             total: grandTotal,
-            items: cart.map(item => ({ ...item }))
+            items: cart.map(({ id, name, price, quantity }) => ({ id, name, price, quantity }))
         };
         POSApp.state.sales.push(sale);
         cart.forEach(item => {
