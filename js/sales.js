@@ -26,9 +26,13 @@
             list.appendChild(li);
         });
         if (!products.length) {
-            const empty = document.createElement('li');
-            empty.textContent = 'Aucun produit disponible.';
-            list.appendChild(empty);
+            list.innerHTML = `<li class="empty-state mini">
+                <span class="empty-icon" aria-hidden="true">🛒</span>
+                <div>
+                    <span class="empty-title">Aucun produit disponible.</span>
+                    <span class="empty-subtitle">Ajoutez des articles depuis l'inventaire pour commencer.</span>
+                </div>
+            </li>`;
         }
     }
 
@@ -68,7 +72,13 @@
         const container = document.getElementById('cart-items');
         container.innerHTML = '';
         if (!cart.length) {
-            container.textContent = 'Panier vide.';
+            container.innerHTML = `<div class="empty-state">
+                <span class="empty-icon" aria-hidden="true">🛍️</span>
+                <div>
+                    <span class="empty-title">Panier vide</span>
+                    <span class="empty-subtitle">Sélectionnez un produit dans la liste pour créer une vente.</span>
+                </div>
+            </div>`;
             updateCartTotal();
             return;
         }
@@ -232,7 +242,13 @@
         history.innerHTML = '';
         const sales = POSApp.state.sales.slice(-5).reverse();
         if (!sales.length) {
-            history.innerHTML = '<li>Aucune vente récente.</li>';
+            history.innerHTML = `<li class="empty-state mini">
+                <span class="empty-icon" aria-hidden="true">📄</span>
+                <div>
+                    <span class="empty-title">Aucune vente récente.</span>
+                    <span class="empty-subtitle">Finalisez une commande pour voir l'historique ici.</span>
+                </div>
+            </li>`;
             return;
         }
         sales.forEach(sale => {
@@ -245,6 +261,8 @@
 
     function appendActivity(message) {
         const feed = document.getElementById('activity-feed');
+        const placeholder = feed.querySelector('.empty-state');
+        if (placeholder) placeholder.remove();
         const item = document.createElement('li');
         item.textContent = `${new Date().toLocaleTimeString('fr-FR')} · ${message}`;
         feed.prepend(item);

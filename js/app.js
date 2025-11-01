@@ -194,6 +194,11 @@ function updateOfflineStatus() {
     const online = navigator.onLine;
     status.querySelector('span').textContent = online ? 'En ligne (mode autonome)' : 'Hors ligne';
     status.querySelector('span').style.color = online ? 'var(--accent)' : 'var(--danger)';
+    const topbarBadge = document.getElementById('topbar-status');
+    if (topbarBadge) {
+        topbarBadge.textContent = online ? 'En ligne' : 'Hors ligne';
+        topbarBadge.classList.toggle('online', online);
+    }
 }
 
 function initNavigation() {

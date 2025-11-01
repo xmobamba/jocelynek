@@ -10,9 +10,14 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23FFA500'/%3E%3Ctext x='32' y='38' font-size='28' text-anchor='middle' fill='white' font-family='Inter, Arial, sans-serif'%3EJK%3C/text%3E%3C/svg%3E">
 </head>
 <body class="light-theme">
-    <div id="loader">
-        <div class="spinner"></div>
-        <p>Chargement du système POS...</p>
+    <div id="loader" role="alert" aria-live="polite">
+        <div class="loader-panel">
+            <div class="loader-icon" aria-hidden="true">JK</div>
+            <div class="loader-progress" aria-hidden="true">
+                <span></span>
+            </div>
+            <p>Chargement du système POS...</p>
+        </div>
     </div>
     <div class="app hidden" id="app">
         <aside class="sidebar">
@@ -38,7 +43,10 @@
         <main>
             <header class="topbar">
                 <div class="store-info">
-                    <h2 id="store-name">Boutique Jocelyne</h2>
+                    <div class="store-heading">
+                        <h2 id="store-name">Boutique Jocelyne</h2>
+                        <span class="status-badge" id="topbar-status">Hors ligne</span>
+                    </div>
                     <p id="store-subtitle">Votre caisse intelligente hors ligne</p>
                 </div>
                 <div class="topbar-actions">
@@ -48,20 +56,55 @@
             </header>
             <section id="dashboard" class="section active">
                 <div class="cards-grid">
-                    <article class="card">
-                        <h3>Ventes du jour</h3>
+                    <article class="card metric-card accent-sales">
+                        <div class="card-header">
+                            <span class="card-icon" aria-hidden="true">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 12.5L9.5 6L14 10L19.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M4 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3>Ventes du jour</h3>
+                                <p class="card-subtitle">Chiffre d'affaires</p>
+                            </div>
+                        </div>
                         <p class="metric" id="daily-sales">0 FCFA</p>
-                        <small id="daily-sales-count">0 ventes</small>
+                        <p class="card-meta" id="daily-sales-count">0 ventes</p>
                     </article>
-                    <article class="card">
-                        <h3>Bénéfices nets</h3>
+                    <article class="card metric-card accent-profit">
+                        <div class="card-header">
+                            <span class="card-icon" aria-hidden="true">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M6 19C6 15.13 9.13 12 13 12H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M14 7L18 3L22 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M4 5H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M4 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3>Bénéfices nets</h3>
+                                <p class="card-subtitle">Mois en cours</p>
+                            </div>
+                        </div>
                         <p class="metric" id="net-profit">0 FCFA</p>
-                        <small>Mois en cours</small>
                     </article>
-                    <article class="card warning" id="low-stock-card">
-                        <h3>Produits en rupture</h3>
+                    <article class="card metric-card accent-stock" id="low-stock-card">
+                        <div class="card-header">
+                            <span class="card-icon" aria-hidden="true">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M4.93 19.07C3.12 17.26 2 14.76 2 12C2 6.48 6.48 2 12 2C14.76 2 17.26 3.12 19.07 4.93C20.88 6.74 22 9.24 22 12C22 17.52 17.52 22 12 22C9.24 22 6.74 20.88 4.93 19.07Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3>Produits en rupture</h3>
+                                <p class="card-subtitle">Surveiller les stocks</p>
+                            </div>
+                        </div>
                         <p class="metric" id="low-stock-count">0</p>
-                        <small>Surveiller les stocks</small>
+                        <p class="card-meta">Alertes automatiques</p>
                     </article>
                 </div>
                 <div class="dashboard-layout">
@@ -77,7 +120,13 @@
                             <h3>Activité récente</h3>
                         </header>
                         <ul id="activity-feed">
-                            <li>Aucune activité pour le moment.</li>
+                            <li class="empty-state inline">
+                                <span class="empty-icon" aria-hidden="true">🕓</span>
+                                <div>
+                                    <span class="empty-title">Aucune activité pour le moment.</span>
+                                    <span class="empty-subtitle">Les ventes et actions récentes s'afficheront ici.</span>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </div>
