@@ -4,12 +4,11 @@
 const STORAGE_KEYS = {
     products: 'jk_products',
     sales: 'jk_sales',
-<<<<<<< HEAD
     sellers: 'jk_sellers',
-=======
+    sellers: 'jk_sellers',
     suppliers: 'jk_suppliers',
     clients: 'jk_clients',
->>>>>>> main
+
     finances: 'jk_finances',
     settings: 'jk_settings',
     backupDate: 'jk_last_backup'
@@ -24,7 +23,6 @@ const cloneState = data => {
 
 const DEFAULT_STATE = {
     products: [
-<<<<<<< HEAD
         { id: 'PROD001', name: 'Sac en cuir noir', category: 'Sacs', price: 13000, stock: 9, cost: 8000 },
         { id: 'PROD002', name: 'Chaussures dorées', category: 'Chaussures', price: 18000, stock: 8, cost: 11000 },
         { id: 'PROD003', name: 'Robe wax', category: 'Vêtements', price: 22000, stock: 4, cost: 15000 }
@@ -48,7 +46,6 @@ const DEFAULT_STATE = {
             assignments: [],
             history: []
         }
-=======
         { id: 'PROD001', name: 'Sac en cuir noir', category: 'Sacs', price: 13000, stock: 12, supplier: 'FOUR001', cost: 8000 },
         { id: 'PROD002', name: 'Chaussures dorées', category: 'Chaussures', price: 18000, stock: 8, supplier: 'FOUR002', cost: 11000 },
         { id: 'PROD003', name: 'Robe wax', category: 'Vêtements', price: 22000, stock: 4, supplier: 'FOUR001', cost: 15000 }
@@ -60,7 +57,7 @@ const DEFAULT_STATE = {
     clients: [
         { id: 'CLT001', name: 'Awa Koné', phone: '+225 05 44 32 10', credit: 15000, history: [] },
         { id: 'CLT002', name: 'Serge Traoré', phone: '+225 07 22 18 05', credit: 0, history: [] }
->>>>>>> main
+
     ],
     sales: [],
     finances: [],
@@ -69,12 +66,11 @@ const DEFAULT_STATE = {
         currency: 'FCFA',
         tax: 0,
         theme: 'light',
-<<<<<<< HEAD
         manualPricing: true
-=======
+        manualPricing: true
         manualPricing: true,
         sellers: ['Aminata', 'Seydou', 'Default']
->>>>>>> main
+
     }
 };
 
@@ -196,10 +192,9 @@ function backupData() {
 function restoreData(data) {
     POSApp.state = cloneState(data);
     ensureSettingsDefaults();
-<<<<<<< HEAD
     ensureSellersDefaults();
-=======
->>>>>>> main
+    ensureSellersDefaults();
+
     persistState();
     POSApp.notify('Base restaurée avec succès', 'success');
     POSApp.refresh();
@@ -223,10 +218,9 @@ function loadStateFromStorage() {
         }
     });
     ensureSettingsDefaults();
-<<<<<<< HEAD
     ensureSellersDefaults();
-=======
->>>>>>> main
+    ensureSellersDefaults();
+
     if (!initialized) {
         persistState();
     }
@@ -250,18 +244,15 @@ function ensureSettingsDefaults() {
         ...defaults,
         ...POSApp.state.settings
     };
-<<<<<<< HEAD
-=======
     if (!Array.isArray(POSApp.state.settings.sellers) || !POSApp.state.settings.sellers.length) {
         POSApp.state.settings.sellers = [...defaults.sellers];
     }
->>>>>>> main
+
     if (typeof POSApp.state.settings.manualPricing !== 'boolean') {
         POSApp.state.settings.manualPricing = defaults.manualPricing;
     }
 }
 
-<<<<<<< HEAD
 function ensureSellersDefaults() {
     if (!Array.isArray(POSApp.state.sellers) || !POSApp.state.sellers.length) {
         const legacyNames = Array.isArray(POSApp.state.settings?.sellers)
@@ -293,8 +284,7 @@ function ensureSellersDefaults() {
     }
 }
 
-=======
->>>>>>> main
+
 function updateOfflineStatus() {
     const status = document.getElementById('offline-status');
     if (!status) return;
@@ -309,6 +299,41 @@ function updateOfflineStatus() {
 }
 
 function initNavigation() {
+    const links = Array.from(document.querySelectorAll('.nav-link'));
+    let needsDefault = false;
+
+    links.forEach(btn => {
+        const targetId = btn.dataset.section;
+        const targetSection = targetId ? document.getElementById(targetId) : null;
+        if (!targetSection) {
+            needsDefault = needsDefault || btn.classList.contains('active');
+            btn.remove();
+            return;
+        }
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            targetSection.classList.add('active');
+            POSApp.refresh(targetId);
+        });
+    });
+
+    let activeLink = document.querySelector('.nav-link.active');
+    if (!activeLink || needsDefault) {
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        activeLink = document.querySelector('.nav-link');
+        if (activeLink) {
+            activeLink.classList.add('active');
+            const firstSection = document.getElementById(activeLink.dataset.section);
+            firstSection?.classList.add('active');
+            POSApp.refresh(activeLink.dataset.section);
+        }
+    } else {
+        const currentSection = document.getElementById(activeLink.dataset.section);
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        currentSection?.classList.add('active');
+    }
     document.querySelectorAll('.nav-link').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));

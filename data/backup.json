@@ -1,6 +1,5 @@
 {
   "createdAt": "2024-01-01T00:00:00.000Z",
-<<<<<<< HEAD
   "data": {
     "products": [],
     "sellers": [],
@@ -14,7 +13,5 @@
       "manualPricing": true
     }
   }
-=======
   "data": {}
->>>>>>> main
 }

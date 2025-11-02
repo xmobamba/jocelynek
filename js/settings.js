@@ -2,6 +2,34 @@
 
 (function () {
     const form = () => document.getElementById('store-settings');
+    const brandLogo = () => document.getElementById('brand-logo');
+
+    function ensureBrandInitials() {
+        const logo = brandLogo();
+        if (logo && !logo.dataset.initials) {
+            logo.dataset.initials = logo.textContent.trim() || 'JK';
+        }
+    }
+
+    function applyLogo(src) {
+        const logo = brandLogo();
+        if (!logo) return;
+        ensureBrandInitials();
+        if (src) {
+            logo.style.setProperty('--logo-image', `url(${src})`);
+            logo.classList.add('has-image');
+            logo.textContent = '';
+        }
+    }
+
+    function resetLogo() {
+        const logo = brandLogo();
+        if (!logo) return;
+        ensureBrandInitials();
+        logo.classList.remove('has-image');
+        logo.style.removeProperty('--logo-image');
+        logo.textContent = logo.dataset.initials || 'JK';
+    }
 
     function populateForm() {
         const settings = POSApp.state.settings;
@@ -64,6 +92,8 @@
                 persistState();
                 POSApp.refresh();
                 POSApp.notify('Données réinitialisées', 'success');
+                localStorage.removeItem('jk_logo');
+                resetLogo();
             }
         });
 
@@ -72,6 +102,9 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = event => {
+                const dataUrl = event.target.result;
+                localStorage.setItem('jk_logo', dataUrl);
+                applyLogo(dataUrl);
                 localStorage.setItem('jk_logo', event.target.result);
                 document.querySelector('.brand img')?.setAttribute('src', event.target.result);
                 POSApp.notify('Logo mis à jour', 'success');
@@ -83,6 +116,9 @@
     function loadLogo() {
         const stored = localStorage.getItem('jk_logo');
         if (stored) {
+            applyLogo(stored);
+        } else {
+            resetLogo();
             document.querySelector('.brand img')?.setAttribute('src', stored);
         }
     }
@@ -91,6 +127,7 @@
         if (!detail?.section || detail.section === 'settings') {
             populateForm();
         }
+        loadLogo();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
