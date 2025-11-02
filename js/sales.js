@@ -10,17 +10,22 @@
         const list = salesProductsList();
         if (!list) return;
         list.innerHTML = '';
+        const manualPricing = !!POSApp.state.settings.manualPricing;
         const products = POSApp.state.products.filter(p =>
             p.name.toLowerCase().includes(filter.toLowerCase()) ||
             p.id.toLowerCase().includes(filter.toLowerCase())
         );
         products.forEach(product => {
             const li = document.createElement('li');
+            const actionLabel = manualPricing ? 'Saisir le prix' : 'Ajouter';
+            const priceInfo = manualPricing
+                ? `<span>${POSApp.formatCurrency(product.price)} · catalogue</span>`
+                : `<span>${POSApp.formatCurrency(product.price)}</span>`;
             li.innerHTML = `
                 <strong>${product.name}</strong>
-                <span>${POSApp.formatCurrency(product.price)}</span>
+                ${priceInfo}
                 <small>Stock : ${product.stock}</small>
-                <button data-id="${product.id}">Ajouter</button>`;
+                <button data-id="${product.id}">${actionLabel}</button>`;
             li.querySelector('button').disabled = product.stock === 0;
             li.querySelector('button').addEventListener('click', () => addToCart(product.id));
             list.appendChild(li);
@@ -39,19 +44,82 @@
     function addToCart(productId) {
         const product = POSApp.state.products.find(p => p.id === productId);
         if (!product || product.stock === 0) return;
-        const existing = cart.find(item => item.id === productId);
-        if (existing) {
-            if (existing.quantity < product.stock) existing.quantity += 1;
-        } else {
-            cart.push({
-                id: productId,
-                name: product.name,
-                price: product.price,
-                basePrice: product.price,
-                quantity: 1
+        const manualPricing = !!POSApp.state.settings.manualPricing;
+
+        const commitAddition = (unitPrice, quantity) => {
+            const existing = cart.find(item => item.id === productId);
+            const safePrice = Math.max(0, Math.round(unitPrice));
+            const safeQuantity = Math.min(Math.max(1, quantity), product.stock);
+            if (existing) {
+                if (manualPricing) {
+                    existing.quantity = safeQuantity;
+                } else {
+                    existing.quantity = Math.min(existing.quantity + safeQuantity, product.stock);
+                }
+                existing.price = safePrice;
+            } else {
+                cart.push({
+                    id: productId,
+                    name: product.name,
+                    price: safePrice,
+                    basePrice: product.price,
+                    quantity: safeQuantity
+                });
+            }
+            renderCart();
+            if (!manualPricing) {
+                requestAnimationFrame(() => {
+                    const input = document.getElementById(`price-${productId}`);
+                    input?.focus();
+                    input?.select();
+                });
+            }
+        };
+
+        if (manualPricing) {
+            POSApp.openModal(`Ajouter ${product.name}`, [
+                {
+                    id: 'manual-price',
+                    label: 'Prix unitaire appliqué',
+                    type: 'number',
+                    value: product.price,
+                    min: 0,
+                    step: 1,
+                    required: true,
+                    autofocus: true
+                },
+                {
+                    id: 'manual-quantity',
+                    label: 'Quantité',
+                    type: 'number',
+                    value: 1,
+                    min: 1,
+                    max: product.stock,
+                    required: true,
+                    helpText: `Stock disponible : ${product.stock}`
+                }
+            ], (data, close) => {
+                const priceValue = Number(data['manual-price']);
+                const quantityValue = Number(data['manual-quantity']);
+                if (!Number.isFinite(priceValue) || priceValue <= 0) {
+                    POSApp.notify('Prix invalide', 'error');
+                    return;
+                }
+                if (!Number.isFinite(quantityValue) || quantityValue <= 0) {
+                    POSApp.notify('Quantité invalide', 'error');
+                    return;
+                }
+                if (quantityValue > product.stock) {
+                    POSApp.notify('Stock insuffisant pour cette quantité', 'error');
+                    return;
+                }
+                close();
+                commitAddition(priceValue, quantityValue);
             });
+            return;
         }
-        renderCart();
+
+        commitAddition(product.price, 1);
     }
 
     function removeFromCart(productId) {
@@ -183,6 +251,10 @@
     function completeSale() {
         if (!cart.length) {
             POSApp.notify('Panier vide.', 'error');
+            return;
+        }
+        if (cart.some(item => !Number.isFinite(item.price) || item.price <= 0)) {
+            POSApp.notify('Veuillez renseigner un prix pour chaque article.', 'error');
             return;
         }
         const seller = document.getElementById('sales-seller').value || 'Default';

@@ -9,6 +9,7 @@
             if (input.id === 'setting-store-name') input.value = settings.storeName || '';
             if (input.id === 'setting-currency') input.value = settings.currency || 'FCFA';
             if (input.id === 'setting-tax') input.value = settings.tax ?? 0;
+            if (input.id === 'setting-manual-pricing') input.checked = !!settings.manualPricing;
         });
     }
 
@@ -19,6 +20,7 @@
             POSApp.state.settings.storeName = data.get('setting-store-name');
             POSApp.state.settings.currency = data.get('setting-currency') || 'FCFA';
             POSApp.state.settings.tax = Number(data.get('setting-tax')) || 0;
+            POSApp.state.settings.manualPricing = data.get('setting-manual-pricing') === 'on';
             persistState();
             POSApp.notify('Paramètres enregistrés', 'success');
             POSApp.refresh();

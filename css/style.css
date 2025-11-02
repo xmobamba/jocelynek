@@ -845,6 +845,88 @@ body.dark-theme .sales-history li {
     gap: 1rem;
 }
 
+.toggle-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+body.dark-theme .toggle-control {
+    background: rgba(31, 41, 55, 0.65);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.toggle-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.toggle-title {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.field-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.3;
+    margin-top: 0.25rem;
+}
+
+body.dark-theme .field-hint {
+    color: rgba(226, 232, 240, 0.72);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    width: 54px;
+    height: 28px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: rgba(148, 163, 184, 0.5);
+    border-radius: 999px;
+    transition: background 0.3s ease;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    transition: transform 0.3s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(26px);
+}
+
 .settings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

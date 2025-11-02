@@ -39,6 +39,7 @@ const DEFAULT_STATE = {
         currency: 'FCFA',
         tax: 0,
         theme: 'light',
+        manualPricing: true,
         sellers: ['Aminata', 'Seydou', 'Default']
     }
 };
@@ -91,11 +92,22 @@ const POSApp = {
             }
             if (field.value !== undefined) input.value = field.value;
             if (field.required) input.required = true;
+            if (field.placeholder) input.placeholder = field.placeholder;
+            if (field.min !== undefined) input.min = field.min;
+            if (field.max !== undefined) input.max = field.max;
+            if (field.step !== undefined) input.step = field.step;
+            if (field.autofocus) input.autofocus = true;
             if (field.readonly) {
                 input.readOnly = true;
                 input.classList.add('readonly');
             }
             label.appendChild(input);
+            if (field.helpText) {
+                const hint = document.createElement('small');
+                hint.className = 'field-hint';
+                hint.textContent = field.helpText;
+                label.appendChild(hint);
+            }
             form.appendChild(label);
         });
         const actions = document.createElement('div');
@@ -149,6 +161,7 @@ function backupData() {
 
 function restoreData(data) {
     POSApp.state = cloneState(data);
+    ensureSettingsDefaults();
     persistState();
     POSApp.notify('Base restaurée avec succès', 'success');
     POSApp.refresh();
@@ -171,6 +184,7 @@ function loadStateFromStorage() {
             initialized = true;
         }
     });
+    ensureSettingsDefaults();
     if (!initialized) {
         persistState();
     }
@@ -185,6 +199,20 @@ function updateBackupInfo() {
             timeStyle: 'short'
         }).format(new Date(last));
         info.textContent = `Dernière sauvegarde : ${formatted}`;
+    }
+}
+
+function ensureSettingsDefaults() {
+    const defaults = DEFAULT_STATE.settings;
+    POSApp.state.settings = {
+        ...defaults,
+        ...POSApp.state.settings
+    };
+    if (!Array.isArray(POSApp.state.settings.sellers) || !POSApp.state.settings.sellers.length) {
+        POSApp.state.settings.sellers = [...defaults.sellers];
+    }
+    if (typeof POSApp.state.settings.manualPricing !== 'boolean') {
+        POSApp.state.settings.manualPricing = defaults.manualPricing;
     }
 }
 
