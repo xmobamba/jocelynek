@@ -23,6 +23,7 @@
         <aside class="sidebar">
             <div class="brand">
                 <div class="brand-logo" id="brand-logo" aria-hidden="true">JK</div>
+                <div class="brand-logo" aria-hidden="true">JK</div>
                 <h1>JOCELYNE K</h1>
                 <span>POS SYSTEM</span>
             </div>
@@ -31,6 +32,28 @@
                 <button class="nav-link" data-section="inventory">Inventaire</button>
                 <button class="nav-link" data-section="sales">Ventes</button>
                 <button class="nav-link" data-section="sellers">Vendeuses</button>
+                <button class="nav-link" data-section="finances">Finances</button>
+                <button class="nav-link" data-section="settings">Paramètres</button>
+            </nav>
+            <footer>
+                <small id="offline-status">Statut : <span>Hors ligne</span></small>
+                <small id="last-backup">Dernière sauvegarde : jamais</small>
+            </footer>
+        </aside>
+        <main>
+            <header class="topbar">
+                <div class="store-info">
+                    <div class="store-heading">
+                        <h2 id="store-name">Boutique Jocelyne</h2>
+                        <span class="status-badge" id="topbar-status">Hors ligne</span>
+                    </div>
+                    <p id="store-subtitle">Votre caisse intelligente hors ligne</p>
+            <nav>
+                <button class="nav-link active" data-section="dashboard">Dashboard</button>
+                <button class="nav-link" data-section="inventory">Inventaire</button>
+                <button class="nav-link" data-section="sales">Ventes</button>
+                <button class="nav-link" data-section="suppliers">Fournisseurs</button>
+                <button class="nav-link" data-section="clients">Clients</button>
                 <button class="nav-link" data-section="finances">Finances</button>
                 <button class="nav-link" data-section="settings">Paramètres</button>
             </nav>
@@ -106,6 +129,155 @@
                         <p class="card-meta">Alertes automatiques</p>
                     </article>
                 </div>
+                <div class="dashboard-layout">
+                    <div class="chart-card">
+                        <header>
+                            <h3>Évolution des ventes (7 jours)</h3>
+                            <button class="secondary" id="refresh-chart">Actualiser</button>
+                        </header>
+                        <canvas id="sales-chart" width="400" height="220"></canvas>
+                    </div>
+                    <div class="activity-card">
+                        <header>
+                            <h3>Activité récente</h3>
+                        </header>
+                        <ul id="activity-feed">
+                            <li class="empty-state inline">
+                                <span class="empty-icon" aria-hidden="true">🕓</span>
+                                <div>
+                                    <span class="empty-title">Aucune activité pour le moment.</span>
+                                    <span class="empty-subtitle">Les ventes et actions récentes s'afficheront ici.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            <section id="inventory" class="section">
+                <header class="section-header">
+                    <div>
+                        <h2>Inventaire</h2>
+                        <p>Suivez vos produits, stock et fournisseurs.</p>
+                    </div>
+                    <div class="section-actions">
+                        <button id="add-product-btn">Ajouter un produit</button>
+                        <button id="print-labels">Imprimer étiquettes</button>
+                        <label class="file-input">
+                            Importer CSV
+                            <input type="file" id="import-csv" accept=".csv">
+                        </label>
+                        <label class="file-input">
+                            Importer JSON
+                            <input type="file" id="import-json" accept=".json">
+                        </label>
+                        <button class="secondary" id="export-csv">Exporter CSV</button>
+                        <button class="secondary" id="export-json">Exporter JSON</button>
+                    </div>
+                </header>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Réf.</th>
+                                <th>Nom</th>
+                                <th>Catégorie</th>
+                                <th>Prix</th>
+                                <th>Stock</th>
+                                <th>Fournisseur</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table"></tbody>
+                    </table>
+                </div>
+            </section>
+            <section id="sales" class="section">
+                <header class="section-header">
+                    <div>
+                        <h2>Ventes</h2>
+                        <p>Encaissez rapidement vos clients et ajustez le prix unitaire selon chaque commande.</p>
+                    </div>
+                    <div class="section-actions">
+                        <input type="search" id="sales-search" placeholder="Rechercher un produit...">
+                        <select id="sales-seller">
+                            <option value="Default">Sélectionner vendeur</option>
+                        </select>
+                        <select id="payment-method">
+                            <option value="cash">Espèces</option>
+                            <option value="mobile">Mobile Money</option>
+                            <option value="credit">Crédit</option>
+                        </select>
+                    </div>
+                </header>
+                <div class="sales-layout">
+                    <div class="product-list">
+                        <h3>Produits</h3>
+                        <ul id="sales-products"></ul>
+                    </div>
+                    <div class="cart">
+                        <h3>Panier</h3>
+                        <div id="cart-items"></div>
+                        <div class="cart-summary">
+                            <p>Total: <span id="cart-total">0 FCFA</span></p>
+                            <label>
+                                Client:
+                                <select id="cart-client"></select>
+                            </label>
+                            <button id="checkout-btn">Encaisser</button>
+                            <button class="secondary" id="print-receipt">Imprimer le reçu</button>
+                        </div>
+                        <div class="sales-history">
+                            <h4>Historique des ventes</h4>
+                            <ul id="sales-history"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="suppliers" class="section">
+                <header class="section-header">
+                    <div>
+                        <h2>Fournisseurs</h2>
+                        <p>Gérez vos relations fournisseurs et historiques.</p>
+                    </div>
+                    <button id="add-supplier-btn">Ajouter un fournisseur</button>
+                </header>
+                <div class="cards-grid" id="suppliers-list"></div>
+            </section>
+            <section id="clients" class="section">
+                <header class="section-header">
+                    <div>
+                        <h2>Clients</h2>
+                        <p>Suivez les crédits et achats des clients.</p>
+                    </div>
+                    <button id="add-client-btn">Ajouter un client</button>
+                </header>
+                <div class="cards-grid" id="clients-list"></div>
+            </section>
+            <section id="finances" class="section">
+                <header class="section-header">
+                    <div>
+                        <h2>Finances</h2>
+                        <p>Analysez les dépenses et revenus.</p>
+                    </div>
+                    <div class="section-actions">
+                        <button id="add-expense-btn">Ajouter dépense</button>
+                        <button id="add-income-btn">Ajouter recette</button>
+                        <button class="secondary" id="export-finance-csv">Exporter CSV</button>
+                    </div>
+                </header>
+                <div class="finances-summary">
+                    <article>
+                        <h3>Dépenses du mois</h3>
+                        <p id="monthly-expenses">0 FCFA</p>
+                    </article>
+                    <article>
+                        <h3>Recettes du mois</h3>
+                        <p id="monthly-income">0 FCFA</p>
+                    </article>
+                    <article>
+                        <h3>Bénéfice net</h3>
+                        <p id="monthly-profit">0 FCFA</p>
+                    </article>
                 <div class="dashboard-layout">
                     <div class="chart-card">
                         <header>
@@ -327,6 +499,20 @@
     <script src="js/inventory.js"></script>
     <script src="js/sales.js"></script>
     <script src="js/sellers.js"></script>
+    <script src="js/finances.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/ai.js"></script>
+</body>
+    <dialog id="modal" class="modal">
+        <form method="dialog" class="modal-content" id="modal-form"></form>
+    </dialog>
+
+    <script src="js/app.js"></script>
+    <script src="js/inventory.js"></script>
+    <script src="js/sales.js"></script>
+    <script src="js/sellers.js"></script>
+    <script src="js/suppliers.js"></script>
+    <script src="js/clients.js"></script>
     <script src="js/finances.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/ai.js"></script>

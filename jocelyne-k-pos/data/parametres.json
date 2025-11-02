@@ -1,0 +1,25 @@
+{
+  "stores": [
+    {
+      "id": "cocovico",
+      "name": "Jocelyne K Cocovico",
+      "address": "",
+      "phone": ""
+    },
+    {
+      "id": "djorobite",
+      "name": "Jocelyne K Djorobité",
+      "address": "",
+      "phone": ""
+    }
+  ],
+  "users": [
+    {
+      "id": "user-1",
+      "name": "Administrateur",
+      "role": "Admin"
+    }
+  ],
+  "theme": "light",
+  "logo": "assets/img/logo.png"
+}

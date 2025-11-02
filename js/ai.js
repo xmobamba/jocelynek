@@ -7,6 +7,11 @@
         { keywords: ['paramètre', 'taxe'], answer: 'Rendez-vous dans Paramètres pour définir la TVA, la devise et le nom de la boutique.' },
         { keywords: ['vendeuse'], answer: 'Dans Vendeuses, cliquez sur "Ajouter une vendeuse" pour suivre les stocks confiés et leurs retours.' },
         { keywords: ['retour', 'stock'], answer: 'Ouvrez l\'onglet Vendeuses et utilisez "Retour stock" pour remettre les articles invendus en boutique.' },
+        { keywords: ['vendeuse'], answer: 'Dans Vendeuses, cliquez sur "Ajouter une vendeuse" pour suivre les stocks confiés et leurs retours.' },
+        { keywords: ['retour', 'stock'], answer: 'Ouvrez l\'onglet Vendeuses et utilisez "Retour stock" pour remettre les articles invendus en boutique.' },
+        { keywords: ['fournisseur'], answer: 'Dans Fournisseurs, cliquez sur "Ajouter un fournisseur" pour enregistrer vos partenaires et suivre leurs soldes.' },
+        { keywords: ['client', 'crédit'], answer: 'La section Clients vous permet d\'enregistrer des crédits et d\'encaisser les remboursements.' },
+
         { keywords: ['backup', 'sauvegarde'], answer: 'Cliquez sur "Sauvegarder" ou utilisez Paramètres > Exporter la base JSON pour créer une sauvegarde locale.' }
     ];
 
@@ -31,6 +36,9 @@
             return `Vous avez réalisé ${document.getElementById('daily-sales-count').textContent} pour un total de ${document.getElementById('daily-sales').textContent}.`;
         }
         return 'Je suis un assistant hors ligne. Posez-moi des questions sur les ventes, l\'inventaire, les vendeuses ou les paramètres.';
+        return 'Je suis un assistant hors ligne. Posez-moi des questions sur les ventes, l\'inventaire, les vendeuses ou les paramètres.';
+        return 'Je suis un assistant hors ligne. Posez-moi des questions sur les ventes, l\'inventaire ou les paramètres.';
+
     }
 
     function togglePanel(show) {
