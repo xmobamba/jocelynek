@@ -70,7 +70,6 @@
             { id: 'name', label: 'Nom du produit', required: true },
             { id: 'category', label: 'Catégorie', required: true },
             { id: 'price', label: 'Prix de vente', required: true, type: 'number' },
-            { id: 'cost', label: 'Prix d\'achat', required: true, type: 'number' },
             { id: 'stock', label: 'Stock disponible', required: true, type: 'number' },
             { id: 'supplier', label: 'Fournisseur', type: 'select', options: suppliersOptions }
         ], data => {
@@ -83,7 +82,7 @@
                 name: data.name,
                 category: data.category,
                 price: Number(data.price),
-                cost: Number(data.cost),
+                cost: Number(data.cost ?? 0) || 0,
                 stock: Number(data.stock),
                 supplier: data.supplier
             });
@@ -103,7 +102,6 @@
             { id: 'name', label: 'Nom du produit', required: true, value: product.name },
             { id: 'category', label: 'Catégorie', required: true, value: product.category },
             { id: 'price', label: 'Prix de vente', required: true, type: 'number', value: product.price },
-            { id: 'cost', label: 'Prix d\'achat', required: true, type: 'number', value: product.cost },
             { id: 'stock', label: 'Stock disponible', required: true, type: 'number', value: product.stock },
             { id: 'supplier', label: 'Fournisseur', type: 'select', options: suppliersOptions, value: product.supplier }
         ], data => {
@@ -112,7 +110,6 @@
                 name: data.name,
                 category: data.category,
                 price: Number(data.price),
-                cost: Number(data.cost),
                 stock: Number(data.stock),
                 supplier: data.supplier
             });
@@ -146,7 +143,7 @@
     function exportCSV() {
         const rows = [
             ['id', 'name', 'category', 'price', 'cost', 'stock', 'supplier'],
-            ...POSApp.state.products.map(p => [p.id, p.name, p.category, p.price, p.cost, p.stock, p.supplier])
+            ...POSApp.state.products.map(p => [p.id, p.name, p.category, p.price, p.cost ?? 0, p.stock, p.supplier])
         ];
         const csv = rows.map(r => r.join(';')).join('\n');
         downloadFile(csv, 'inventaire.csv', 'text/csv');
@@ -177,7 +174,7 @@
                 const obj = {};
                 columns.forEach((col, index) => (obj[col] = values[index]));
                 obj.price = Number(obj.price);
-                obj.cost = Number(obj.cost);
+                obj.cost = Number(obj.cost ?? 0) || 0;
                 obj.stock = Number(obj.stock);
                 return obj;
             });
