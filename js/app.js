@@ -4,7 +4,12 @@
 const STORAGE_KEYS = {
     products: 'jk_products',
     sales: 'jk_sales',
+<<<<<<< HEAD
     sellers: 'jk_sellers',
+=======
+    suppliers: 'jk_suppliers',
+    clients: 'jk_clients',
+>>>>>>> main
     finances: 'jk_finances',
     settings: 'jk_settings',
     backupDate: 'jk_last_backup'
@@ -19,6 +24,7 @@ const cloneState = data => {
 
 const DEFAULT_STATE = {
     products: [
+<<<<<<< HEAD
         { id: 'PROD001', name: 'Sac en cuir noir', category: 'Sacs', price: 13000, stock: 9, cost: 8000 },
         { id: 'PROD002', name: 'Chaussures dorées', category: 'Chaussures', price: 18000, stock: 8, cost: 11000 },
         { id: 'PROD003', name: 'Robe wax', category: 'Vêtements', price: 22000, stock: 4, cost: 15000 }
@@ -42,6 +48,19 @@ const DEFAULT_STATE = {
             assignments: [],
             history: []
         }
+=======
+        { id: 'PROD001', name: 'Sac en cuir noir', category: 'Sacs', price: 13000, stock: 12, supplier: 'FOUR001', cost: 8000 },
+        { id: 'PROD002', name: 'Chaussures dorées', category: 'Chaussures', price: 18000, stock: 8, supplier: 'FOUR002', cost: 11000 },
+        { id: 'PROD003', name: 'Robe wax', category: 'Vêtements', price: 22000, stock: 4, supplier: 'FOUR001', cost: 15000 }
+    ],
+    suppliers: [
+        { id: 'FOUR001', name: 'Abidjan Import', phone: '+225 07 12 34 56', balance: 25000, advance: 5000, photo: '', history: [] },
+        { id: 'FOUR002', name: 'Moda Paris', phone: '+33 6 11 22 33 44', balance: -8000, advance: 10000, photo: '', history: [] }
+    ],
+    clients: [
+        { id: 'CLT001', name: 'Awa Koné', phone: '+225 05 44 32 10', credit: 15000, history: [] },
+        { id: 'CLT002', name: 'Serge Traoré', phone: '+225 07 22 18 05', credit: 0, history: [] }
+>>>>>>> main
     ],
     sales: [],
     finances: [],
@@ -50,7 +69,12 @@ const DEFAULT_STATE = {
         currency: 'FCFA',
         tax: 0,
         theme: 'light',
+<<<<<<< HEAD
         manualPricing: true
+=======
+        manualPricing: true,
+        sellers: ['Aminata', 'Seydou', 'Default']
+>>>>>>> main
     }
 };
 
@@ -172,7 +196,10 @@ function backupData() {
 function restoreData(data) {
     POSApp.state = cloneState(data);
     ensureSettingsDefaults();
+<<<<<<< HEAD
     ensureSellersDefaults();
+=======
+>>>>>>> main
     persistState();
     POSApp.notify('Base restaurée avec succès', 'success');
     POSApp.refresh();
@@ -196,7 +223,10 @@ function loadStateFromStorage() {
         }
     });
     ensureSettingsDefaults();
+<<<<<<< HEAD
     ensureSellersDefaults();
+=======
+>>>>>>> main
     if (!initialized) {
         persistState();
     }
@@ -220,11 +250,18 @@ function ensureSettingsDefaults() {
         ...defaults,
         ...POSApp.state.settings
     };
+<<<<<<< HEAD
+=======
+    if (!Array.isArray(POSApp.state.settings.sellers) || !POSApp.state.settings.sellers.length) {
+        POSApp.state.settings.sellers = [...defaults.sellers];
+    }
+>>>>>>> main
     if (typeof POSApp.state.settings.manualPricing !== 'boolean') {
         POSApp.state.settings.manualPricing = defaults.manualPricing;
     }
 }
 
+<<<<<<< HEAD
 function ensureSellersDefaults() {
     if (!Array.isArray(POSApp.state.sellers) || !POSApp.state.sellers.length) {
         const legacyNames = Array.isArray(POSApp.state.settings?.sellers)
@@ -256,6 +293,8 @@ function ensureSellersDefaults() {
     }
 }
 
+=======
+>>>>>>> main
 function updateOfflineStatus() {
     const status = document.getElementById('offline-status');
     if (!status) return;

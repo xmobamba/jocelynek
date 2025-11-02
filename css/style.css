@@ -476,6 +476,7 @@ td {
     color: var(--accent);
 }
 
+<<<<<<< HEAD
 .chip.warning {
     background: rgba(255, 165, 0, 0.18);
     color: #c56a00;
@@ -505,6 +506,27 @@ body.dark-theme .chip.warning {
     color: #ffdd9c;
 }
 
+=======
+.low-stock {
+    background: rgba(255, 90, 95, 0.08);
+}
+
+body.dark-theme .chip {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+body.dark-theme .chip.danger {
+    background: rgba(255, 90, 95, 0.3);
+    color: #ffe5e6;
+}
+
+body.dark-theme .chip.success {
+    background: rgba(0, 168, 107, 0.32);
+    color: #d7ffee;
+}
+
+>>>>>>> main
 body.dark-theme .low-stock {
     background: rgba(255, 90, 95, 0.18);
 }
@@ -632,6 +654,7 @@ body.dark-theme tbody tr.low-stock:hover {
     box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
 }
 
+<<<<<<< HEAD
 .seller-card {
     display: flex;
     flex-direction: column;
@@ -669,11 +692,32 @@ body.dark-theme tbody tr.low-stock:hover {
 }
 
 .seller-actions {
+=======
+.supplier-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.supplier-header .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: rgba(0, 168, 107, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.supplier-balances {
+>>>>>>> main
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
+<<<<<<< HEAD
 .seller-assignments,
 .seller-history {
     list-style: none;
@@ -727,6 +771,13 @@ body.dark-theme .empty-card {
     background: rgba(15, 23, 42, 0.6);
     border-color: rgba(255, 255, 255, 0.08);
     color: #cbd5f5;
+=======
+.supplier-actions,
+.client-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+>>>>>>> main
 }
 
 details {
