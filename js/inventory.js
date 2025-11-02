@@ -33,7 +33,6 @@
             const assignedBadge = assignedQuantity
                 ? `<span class="chip warning">${assignedQuantity}</span>`
                 : '<span class="chip">0</span>';
-
             row.innerHTML = `
                 <td>${product.id}</td>
                 <td>${product.name}</td>
@@ -41,9 +40,6 @@
                 <td>${POSApp.formatCurrency(product.price)}</td>
                 <td>${stockBadge}</td>
                 <td>${assignedBadge}</td>
-                <td>${assignedBadge}</td>
-                <td>${findSupplierName(product.supplier)}</td>
-
                 <td>
                     <button class="secondary" data-action="edit" data-id="${product.id}">Modifier</button>
                     <button class="danger" data-action="delete" data-id="${product.id}">Supprimer</button>
@@ -60,9 +56,6 @@
             const assignment = seller.assignments?.find(item => item.productId === productId);
             return sum + (assignment?.quantity || 0);
         }, 0);
-    function findSupplierName(id) {
-        return POSApp.state.suppliers.find(s => s.id === id)?.name || 'Non défini';
-
     }
 
     function generateProductReference() {
@@ -79,18 +72,12 @@
 
     function addProduct() {
         const reference = generateProductReference();
-        const suppliersOptions = POSApp.state.suppliers.map(s => ({ value: s.id, label: s.name }));
-
         POSApp.openModal('Nouveau produit', [
             { id: 'id', label: 'Référence', required: true, value: reference, readonly: true },
             { id: 'name', label: 'Nom du produit', required: true },
             { id: 'category', label: 'Catégorie', required: true },
             { id: 'price', label: 'Prix de vente', required: true, type: 'number' },
             { id: 'stock', label: 'Stock disponible', required: true, type: 'number' }
-            { id: 'stock', label: 'Stock disponible', required: true, type: 'number' }
-            { id: 'stock', label: 'Stock disponible', required: true, type: 'number' },
-            { id: 'supplier', label: 'Fournisseur', type: 'select', options: suppliersOptions }
-
         ], data => {
             if (POSApp.state.products.some(p => p.id === data.id)) {
                 POSApp.notify('Un produit avec cette référence existe déjà.', 'error');
@@ -103,17 +90,11 @@
                 price: Number(data.price),
                 cost: Number(data.cost ?? 0) || 0,
                 stock: Number(data.stock)
-                stock: Number(data.stock)
-                stock: Number(data.stock),
-                supplier: data.supplier
-
             });
             persistState();
             POSApp.notify('Produit ajouté avec succès', 'success');
             POSApp.refresh('inventory');
             POSApp.refresh('sales');
-            POSApp.refresh('sales');
-
             document.getElementById('modal').close();
         });
     }
@@ -121,18 +102,12 @@
     function editProduct(id) {
         const product = POSApp.state.products.find(p => p.id === id);
         if (!product) return;
-        const suppliersOptions = POSApp.state.suppliers.map(s => ({ value: s.id, label: s.name }));
-
         POSApp.openModal('Modifier le produit', [
             { id: 'id', label: 'Référence', required: true, value: product.id, readonly: true },
             { id: 'name', label: 'Nom du produit', required: true, value: product.name },
             { id: 'category', label: 'Catégorie', required: true, value: product.category },
             { id: 'price', label: 'Prix de vente', required: true, type: 'number', value: product.price },
             { id: 'stock', label: 'Stock disponible', required: true, type: 'number', value: product.stock }
-            { id: 'stock', label: 'Stock disponible', required: true, type: 'number', value: product.stock }
-            { id: 'stock', label: 'Stock disponible', required: true, type: 'number', value: product.stock },
-            { id: 'supplier', label: 'Fournisseur', type: 'select', options: suppliersOptions, value: product.supplier }
-
         ], data => {
             Object.assign(product, {
                 id: data.id,
@@ -140,17 +115,11 @@
                 category: data.category,
                 price: Number(data.price),
                 stock: Number(data.stock)
-                stock: Number(data.stock)
-                stock: Number(data.stock),
-                supplier: data.supplier
-          
             });
             persistState();
             POSApp.notify('Produit mis à jour', 'success');
             POSApp.refresh('inventory');
             POSApp.refresh('sales');
-            POSApp.refresh('sales');
-
             document.getElementById('modal').close();
         });
     }
@@ -165,10 +134,6 @@
         POSApp.refresh('inventory');
         POSApp.refresh('sellers');
         POSApp.refresh('sales');
-        persistState();
-        POSApp.notify('Produit supprimé', 'success');
-        POSApp.refresh('inventory');
-
     }
 
     function handleTableActions(event) {
@@ -188,11 +153,6 @@
         const rows = [
             ['id', 'name', 'category', 'price', 'cost', 'stock'],
             ...POSApp.state.products.map(p => [p.id, p.name, p.category, p.price, p.cost ?? 0, p.stock])
-            ['id', 'name', 'category', 'price', 'cost', 'stock'],
-            ...POSApp.state.products.map(p => [p.id, p.name, p.category, p.price, p.cost ?? 0, p.stock])
-            ['id', 'name', 'category', 'price', 'cost', 'stock', 'supplier'],
-            ...POSApp.state.products.map(p => [p.id, p.name, p.category, p.price, p.cost ?? 0, p.stock, p.supplier])
-
         ];
         const csv = rows.map(r => r.join(';')).join('\n');
         downloadFile(csv, 'inventaire.csv', 'text/csv');
@@ -226,10 +186,6 @@
                 obj.cost = Number(obj.cost ?? 0) || 0;
                 obj.stock = Number(obj.stock ?? 0) || 0;
                 delete obj.supplier;
-                obj.price = Number(obj.price);
-                obj.cost = Number(obj.cost ?? 0) || 0;
-                obj.stock = Number(obj.stock);
-
                 return obj;
             });
             POSApp.state.products = items;
@@ -238,9 +194,6 @@
             POSApp.refresh('inventory');
             POSApp.refresh('sellers');
             POSApp.refresh('sales');
-            POSApp.refresh('sellers');
-            POSApp.refresh('sales');
-
         };
         reader.readAsText(file, 'utf-8');
     }
@@ -261,11 +214,6 @@
             POSApp.refresh('inventory');
             POSApp.refresh('sellers');
             POSApp.refresh('sales');
-            POSApp.state.products = JSON.parse(e.target.result);
-            persistState();
-            POSApp.notify('Import JSON réussi', 'success');
-            POSApp.refresh('inventory');
-
         };
         reader.readAsText(file, 'utf-8');
     }

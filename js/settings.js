@@ -105,8 +105,6 @@
                 const dataUrl = event.target.result;
                 localStorage.setItem('jk_logo', dataUrl);
                 applyLogo(dataUrl);
-                localStorage.setItem('jk_logo', event.target.result);
-                document.querySelector('.brand img')?.setAttribute('src', event.target.result);
                 POSApp.notify('Logo mis à jour', 'success');
             };
             reader.readAsDataURL(file);
@@ -119,7 +117,6 @@
             applyLogo(stored);
         } else {
             resetLogo();
-            document.querySelector('.brand img')?.setAttribute('src', stored);
         }
     }
 
