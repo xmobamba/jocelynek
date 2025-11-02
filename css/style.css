@@ -171,11 +171,15 @@ label {
 }
 
 .sidebar .brand-logo {
+    --logo-image: none;
     width: 64px;
     height: 64px;
     margin: 0 auto;
     border-radius: 20px;
     background: linear-gradient(135deg, var(--accent), var(--success));
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: #fff;
     display: grid;
     place-items: center;
@@ -183,6 +187,27 @@ label {
     font-size: 1.5rem;
     letter-spacing: 0.05em;
     box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar .brand-logo.has-image {
+    background-image: var(--logo-image);
+    background-color: #fff;
+    color: transparent;
+    text-shadow: none;
+}
+
+body.dark-theme .sidebar .brand-logo.has-image {
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.sidebar .brand-logo.has-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.18), rgba(0, 168, 107, 0.18));
+    pointer-events: none;
 }
 
 body.dark-theme .sidebar {
