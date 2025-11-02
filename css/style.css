@@ -476,6 +476,12 @@ td {
     color: var(--accent);
 }
 
+<<<<<<< HEAD
+.chip.warning {
+    background: rgba(255, 165, 0, 0.18);
+    color: #c56a00;
+}
+
 .low-stock {
     background: rgba(255, 90, 95, 0.08);
 }
@@ -495,6 +501,32 @@ body.dark-theme .chip.success {
     color: #d7ffee;
 }
 
+body.dark-theme .chip.warning {
+    background: rgba(255, 165, 0, 0.32);
+    color: #ffdd9c;
+}
+
+=======
+.low-stock {
+    background: rgba(255, 90, 95, 0.08);
+}
+
+body.dark-theme .chip {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+body.dark-theme .chip.danger {
+    background: rgba(255, 90, 95, 0.3);
+    color: #ffe5e6;
+}
+
+body.dark-theme .chip.success {
+    background: rgba(0, 168, 107, 0.32);
+    color: #d7ffee;
+}
+
+>>>>>>> main
 body.dark-theme .low-stock {
     background: rgba(255, 90, 95, 0.18);
 }
@@ -622,6 +654,45 @@ body.dark-theme tbody tr.low-stock:hover {
     box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
 }
 
+<<<<<<< HEAD
+.seller-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.seller-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.seller-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.22), rgba(0, 168, 107, 0.32));
+    color: #fff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+}
+
+.seller-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.seller-notes {
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+.seller-actions {
+=======
 .supplier-header {
     display: flex;
     align-items: center;
@@ -640,16 +711,73 @@ body.dark-theme tbody tr.low-stock:hover {
 }
 
 .supplier-balances {
+>>>>>>> main
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
+<<<<<<< HEAD
+.seller-assignments,
+.seller-history {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0;
+    margin: 0;
+}
+
+.seller-assignments li,
+.seller-history li {
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.empty-card {
+    text-align: center;
+    padding: 1.5rem;
+    display: grid;
+    gap: 0.4rem;
+    place-items: center;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.empty-card .empty-icon {
+    font-size: 2rem;
+}
+
+.empty-card .empty-title {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.empty-card .empty-subtitle {
+    font-size: 0.9rem;
+}
+
+body.dark-theme .seller-avatar {
+    background: linear-gradient(135deg, rgba(255, 184, 0, 0.4), rgba(16, 185, 129, 0.55));
+}
+
+body.dark-theme .seller-assignments li,
+body.dark-theme .seller-history li {
+    color: #e2e8f0;
+}
+
+body.dark-theme .empty-card {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #cbd5f5;
+=======
 .supplier-actions,
 .client-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+>>>>>>> main
 }
 
 details {

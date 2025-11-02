@@ -223,6 +223,17 @@
 
     function populateSelectors() {
         const sellerSelect = document.getElementById('sales-seller');
+<<<<<<< HEAD
+        if (!sellerSelect) return;
+        sellerSelect.innerHTML = '<option value="">Vente boutique</option>';
+        const sellers = Array.isArray(POSApp.state.sellers) ? POSApp.state.sellers : [];
+        sellers.forEach(seller => {
+            const option = document.createElement('option');
+            option.value = seller.id;
+            option.textContent = seller.name;
+            sellerSelect.appendChild(option);
+        });
+=======
         sellerSelect.innerHTML = '<option value="">Sélectionner vendeur</option>';
         POSApp.state.settings.sellers.forEach(seller => {
             const option = document.createElement('option');
@@ -238,6 +249,7 @@
             option.textContent = `${client.name} (${client.credit} FCFA crédit)`;
             clientSelect.appendChild(option);
         });
+>>>>>>> main
     }
 
     function bindEvents() {
@@ -257,9 +269,18 @@
             POSApp.notify('Veuillez renseigner un prix pour chaque article.', 'error');
             return;
         }
+<<<<<<< HEAD
+        const sellerSelect = document.getElementById('sales-seller');
+        const sellerId = sellerSelect?.value || '';
+        const sellers = Array.isArray(POSApp.state.sellers) ? POSApp.state.sellers : [];
+        const sellerRecord = sellers.find(s => s.id === sellerId);
+        const sellerName = sellerRecord?.name || 'Boutique';
+        const payment = document.getElementById('payment-method').value;
+=======
         const seller = document.getElementById('sales-seller').value || 'Default';
         const payment = document.getElementById('payment-method').value;
         const clientId = document.getElementById('cart-client').value;
+>>>>>>> main
         const total = updateCartTotal();
         const taxRate = Number(POSApp.state.settings.tax || 0) / 100;
         const taxAmount = Math.round(total * taxRate);
@@ -267,9 +288,15 @@
         const sale = {
             id: `VENTE-${Date.now()}`,
             date: new Date().toISOString(),
+<<<<<<< HEAD
+            seller: sellerName,
+            sellerId: sellerRecord?.id || null,
+            payment,
+=======
             seller,
             payment,
             clientId: clientId || null,
+>>>>>>> main
             taxAmount,
             total: grandTotal,
             items: cart.map(({ id, name, price, quantity }) => ({ id, name, price, quantity }))
@@ -279,6 +306,23 @@
             const product = POSApp.state.products.find(p => p.id === item.id);
             if (product) product.stock -= item.quantity;
         });
+<<<<<<< HEAD
+        if (sellerRecord) {
+            sellerRecord.assignments = sellerRecord.assignments || [];
+            sellerRecord.history = sellerRecord.history || [];
+            sellerRecord.history.push({
+                type: 'sale',
+                saleId: sale.id,
+                amount: grandTotal,
+                date: sale.date
+            });
+            sellerRecord.assignments = sellerRecord.assignments.map(assignment => {
+                const soldItem = cart.find(item => item.id === assignment.productId);
+                if (!soldItem) return assignment;
+                const remaining = Math.max(0, assignment.quantity - soldItem.quantity);
+                return { ...assignment, quantity: remaining };
+            }).filter(assignment => assignment.quantity > 0);
+=======
         if (payment === 'credit' && clientId) {
             const client = POSApp.state.clients.find(c => c.id === clientId);
             if (client) {
@@ -289,6 +333,7 @@
                     date: sale.date
                 });
             }
+>>>>>>> main
         }
         POSApp.state.finances.push({
             id: sale.id,
@@ -296,16 +341,27 @@
             amount: grandTotal,
             category: 'Vente',
             date: sale.date,
+<<<<<<< HEAD
+            notes: `${payment} - ${sellerName}`
+        });
+        persistState();
+        appendActivity(`Vente ${sale.id} ${POSApp.formatCurrency(grandTotal)} (${sellerName})`);
+=======
             notes: `${payment} - ${seller}`
         });
         persistState();
         appendActivity(`Vente ${sale.id} ${POSApp.formatCurrency(grandTotal)}`);
+>>>>>>> main
         POSApp.notify('Vente enregistrée', 'success');
         cart = [];
         renderCart();
         renderProductList(document.getElementById('sales-search').value || '');
         populateSelectors();
         renderSalesHistory();
+<<<<<<< HEAD
+        POSApp.refresh('sellers');
+=======
+>>>>>>> main
         POSApp.refresh();
     }
 
@@ -326,7 +382,12 @@
         sales.forEach(sale => {
             const li = document.createElement('li');
             const date = new Date(sale.date).toLocaleString('fr-FR');
+<<<<<<< HEAD
+            const sellerLabel = sale.seller || sale.sellerName || 'Boutique';
+            li.textContent = `${date} - ${POSApp.formatCurrency(sale.total)} (${sale.payment} · ${sellerLabel})`;
+=======
             li.textContent = `${date} - ${POSApp.formatCurrency(sale.total)} (${sale.payment})`;
+>>>>>>> main
             history.appendChild(li);
         });
     }

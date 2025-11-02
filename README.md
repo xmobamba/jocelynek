@@ -1,14 +1,13 @@
 # JOCELYNE K POS SYSTEM
 
-Application de point de vente 100 % hors ligne, pensée pour les boutiques Jocelyne K. Le projet est un tableau de bord moderne en HTML, CSS et JavaScript pur avec stockage des données dans `localStorage`. Toutes les opérations (inventaire, encaissement, finances, fournisseurs, clients et paramètres) se font dans une seule page responsive.
+Application de point de vente 100 % hors ligne, pensée pour les boutiques Jocelyne K. Le projet est un tableau de bord moderne en HTML, CSS et JavaScript pur avec stockage des données dans `localStorage`. Toutes les opérations (inventaire, encaissement, gestion des vendeuses, finances et paramètres) se font dans une seule page responsive.
 
 ## ✨ Fonctionnalités clés
 
 - **Tableau de bord** : cartes de synthèse, fil d'activité et graphique animé des ventes des 7 derniers jours.
 - **Inventaire** : ajout/modification/suppression, import/export CSV/JSON, alertes visuelles de stocks faibles, génération d'étiquettes 15×7 mm avec pseudo-QR code.
-- **Ventes (POS)** : recherche rapide, panier interactif, sélection du vendeur et du client, paiements espèces/mobile money/crédit, impression de reçu.
-- **Fournisseurs** : fiches détaillées (solde, avance, historique) et liens automatiques avec les produits associés.
-- **Clients** : suivi des coordonnées, crédits et historiques d'achats, encaissement des règlements.
+- **Ventes (POS)** : recherche rapide, panier interactif, sélection de la vendeuse, paiements espèces/mobile money/crédit, impression de reçu.
+- **Vendeuses** : fiches de suivi des collaboratrices, stocks confiés, retours en boutique et historique des ventes réalisées.
 - **Finances** : journal recettes/dépenses, synthèse mensuelle, export comptable CSV.
 - **Paramètres** : identité de la boutique, devise FCFA (personnalisable), TVA, gestion du logo, export/import complet de la base JSON, remise à zéro.
 - **Assistant IA local** : widget flottant avec réponses contextuelles pré-enregistrées sur les ventes, l'inventaire et la configuration.
@@ -27,8 +26,7 @@ Application de point de vente 100 % hors ligne, pensée pour les boutiques Joce
 │   ├── app.js
 │   ├── inventory.js
 │   ├── sales.js
-│   ├── suppliers.js
-│   ├── clients.js
+│   ├── sellers.js
 │   ├── finances.js
 │   ├── settings.js
 │   └── ai.js
