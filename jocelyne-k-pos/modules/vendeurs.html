@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendeurs | JOCELYNE K POS</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="../assets/js/app.js"></script>
+    <script defer src="../assets/js/vendeurs.js"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <img src="../assets/img/logo.png" alt="Logo Jocelyne K" class="brand__logo">
+                <span class="brand__name">Jocelyne K POS</span>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="dashboard.html" class="nav__link">Tableau de bord</a>
+                <a href="inventaire.html" class="nav__link">Inventaire</a>
+                <a href="ventes.html" class="nav__link">Ventes</a>
+                <a href="vendeurs.html" class="nav__link nav__link--active">Vendeurs</a>
+                <a href="parametres.html" class="nav__link">Paramètres</a>
+                <a href="../index.html" class="nav__link nav__link--home">Accueil</a>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Vendeurs &amp; marchandises confiées</h1>
+                <p>Suivez les performances et les stocks confiés aux vendeurs.</p>
+            </header>
+            <section class="card">
+                <h2>Ajouter un vendeur</h2>
+                <form id="vendorForm" class="form-grid">
+                    <div class="form-group">
+                        <label for="vendorName">Nom</label>
+                        <input type="text" id="vendorName" required>
+                    </div>
+                    <button type="submit" class="btn">Ajouter</button>
+                </form>
+            </section>
+            <section class="grid grid--2">
+                <article class="card">
+                    <h2>Vendeurs actifs</h2>
+                    <ul class="list" id="vendorList"></ul>
+                </article>
+                <article class="card">
+                    <h2>Marchandises confiées</h2>
+                    <table class="table" id="delegatedTable">
+                        <thead>
+                            <tr>
+                                <th>Vendeur</th>
+                                <th>Produit</th>
+                                <th>Quantité</th>
+                                <th>Valeur totale</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </article>
+            </section>
+            <section class="card">
+                <h2>Suivi des ventes par vendeur</h2>
+                <table class="table" id="vendorSalesTable">
+                    <thead>
+                        <tr>
+                            <th>Vendeur</th>
+                            <th>Ventes</th>
+                            <th>Avances</th>
+                            <th>Solde</th>
+                            <th>Retours</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
