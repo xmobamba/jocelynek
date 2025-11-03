@@ -1,203 +1,155 @@
-// Module Résumé intelligent : synthèse automatique des indicateurs clés
-
 (function () {
-    const overviewEl = () => document.getElementById('insights-overview');
-    const listEl = () => document.getElementById('insights-list');
-    const refreshButton = () => document.getElementById('refresh-insights');
+  let app;
+  let ctx;
+  let initialized = false;
 
-    function sanitizeText(text, fallback = '') {
-        if (!text) return fallback;
-        if (text.includes('<<<<<<<') || text.includes('=======') || text.includes('>>>>>>>')) {
-            return fallback;
-        }
-        return text;
+  function init(api) {
+    app = api;
+    if (!initialized) {
+      document.getElementById("refresh-insights").addEventListener("click", () => render(app.getState()));
+      document.getElementById("refresh-chart").addEventListener("click", () => drawChart());
+      ctx = document.getElementById("sales-chart").getContext("2d");
+      app.on("state:changed", render);
+      initialized = true;
     }
+    render(app.getState());
+  }
 
-    function plural(count, singular = '', pluralSuffix = 's') {
-        return count > 1 ? pluralSuffix : singular;
+  function render(state) {
+    updateMetrics(state);
+    updateInsights(state);
+    updateActivity(state);
+    drawChart(state);
+  }
+
+  function updateMetrics(state) {
+    const today = new Date().toISOString().slice(0, 10);
+    const dailySales = state.sales.filter((sale) => sale.date.slice(0, 10) === today);
+    const totalDaily = dailySales.reduce((sum, sale) => sum + Number(sale.total || 0), 0);
+    document.getElementById("metric-sales").textContent = formatCurrency(totalDaily, state.settings.currency);
+    document.getElementById("metric-sales-count").textContent = `${dailySales.length} vente${dailySales.length > 1 ? "s" : ""}`;
+
+    const stock = state.inventory.reduce((sum, product) => sum + Number(product.stock || 0), 0);
+    const consigned = state.inventory.reduce((sum, product) =>
+      sum + Object.values(product.consigned || {}).reduce((sub, qty) => sub + Number(qty || 0), 0), 0
+    );
+    const lowStock = state.inventory.filter((product) => product.stock <= state.settings.lowStock).length;
+    document.getElementById("metric-stock").textContent = `${stock} produits`;
+    document.getElementById("metric-low-stock").textContent = `${lowStock} alertes · ${consigned} confiés`;
+
+    const incomes = state.finances.filter((item) => item.type === "income").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const expenses = state.finances.filter((item) => item.type === "expense").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    document.getElementById("metric-profit").textContent = formatCurrency(incomes - expenses, state.settings.currency);
+    document.getElementById("metric-expense").textContent = `${formatCurrency(expenses, state.settings.currency)} de dépenses`;
+  }
+
+  function updateInsights(state) {
+    const intro = document.getElementById("insights-intro");
+    const list = document.getElementById("insights-list");
+    if (!state.inventory.length && !state.sales.length && !state.sellers.length) {
+      intro.textContent = "Ajoutez vos premiers produits et ventes pour générer la synthèse.";
+      list.innerHTML = '<li class="empty">Les informations s\'afficheront ici.</li>';
+      return;
     }
+    intro.textContent = `Analyse réalisée le ${new Date().toLocaleString("fr-FR")}`;
+    const stock = state.inventory.reduce((sum, item) => sum + item.stock, 0);
+    const consigned = state.inventory.reduce((sum, item) =>
+      sum + Object.values(item.consigned || {}).reduce((sub, qty) => sub + Number(qty || 0), 0), 0
+    );
+    const lastSale = state.sales[0];
+    const topSeller = [...state.sellers].sort((a, b) => b.balance - a.balance)[0];
+    list.innerHTML = `
+      <li><strong>Inventaire</strong><span>${stock} articles en boutique et ${consigned} confiés aux vendeuses.</span></li>
+      <li><strong>Ventes</strong><span>${state.sales.length} transaction(s) au total${lastSale ? ` • dernière ${new Date(lastSale.date).toLocaleString("fr-FR")}` : ""}.</span></li>
+      <li><strong>Vendeuses</strong><span>${state.sellers.length} active(s)${topSeller ? ` • ${topSeller.name} doit ${formatCurrency(topSeller.balance, state.settings.currency)}` : ""}.</span></li>
+      <li><strong>Finances</strong><span>Bénéfice net ${formatCurrency(sumBy(state.finances, "income") - sumBy(state.finances, "expense"), state.settings.currency)}.</span></li>`;
+  }
 
-    function formatPieces(count) {
-        return `${count} pièce${plural(count)}`;
+  function updateActivity(state) {
+    const feed = document.getElementById("activity-feed");
+    feed.innerHTML = "";
+    if (!state.activities.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.innerHTML = "<span aria-hidden=\"true\">🕒</span><div><strong>Aucune activité</strong><p>Les actions apparaîtront ici.</p></div>";
+      feed.appendChild(li);
+      return;
     }
+    state.activities
+      .slice()
+      .reverse()
+      .slice(0, 6)
+      .forEach((entry) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${new Date(entry.createdAt).toLocaleString("fr-FR")}</strong><span>${entry.message}</span>`;
+        feed.appendChild(li);
+      });
+  }
 
-    function sumAssignedByProduct() {
-        const map = new Map();
-        (POSApp.state.sellers || []).forEach(seller => {
-            (seller.assignments || []).forEach(item => {
-                const qty = Number(item.quantity) || 0;
-                if (!map.has(item.productId)) {
-                    map.set(item.productId, 0);
-                }
-                map.set(item.productId, map.get(item.productId) + qty);
-            });
-        });
-        return map;
-    }
-
-    function computeHighlights(now) {
-        const todayIso = now.toISOString().slice(0, 10);
-        const monthIso = now.toISOString().slice(0, 7);
-        const products = POSApp.state.products || [];
-        const sales = POSApp.state.sales || [];
-        const sellers = POSApp.state.sellers || [];
-        const finances = POSApp.state.finances || [];
-
-        const lowStock = products.filter(product => (Number(product.stock) || 0) <= 3).length;
-        const stockBoutique = products.reduce((sum, product) => sum + (Number(product.stock) || 0), 0);
-        const assignedMap = sumAssignedByProduct();
-        const assignedTotal = Array.from(assignedMap.values()).reduce((sum, qty) => sum + qty, 0);
-        const consignedValue = Array.from(assignedMap.entries()).reduce((total, [productId, qty]) => {
-            const product = products.find(p => p.id === productId);
-            return total + ((product?.price || 0) * qty);
-        }, 0);
-        const inventoryValueBoutique = products.reduce((sum, product) => {
-            return sum + ((product?.price || 0) * (Number(product.stock) || 0));
-        }, 0);
-
-        const salesToday = sales.filter(sale => (sale.date || '').slice(0, 10) === todayIso);
-        const salesTodayTotal = salesToday.reduce((sum, sale) => sum + (Number(sale.total) || 0), 0);
-        const salesMonth = sales.filter(sale => (sale.date || '').slice(0, 7) === monthIso);
-        const salesMonthTotal = salesMonth.reduce((sum, sale) => sum + (Number(sale.total) || 0), 0);
-
-        const sellerTotals = salesMonth.reduce((acc, sale) => {
-            const label = sale.seller || 'Boutique';
-            acc[label] = (acc[label] || 0) + (Number(sale.total) || 0);
-            return acc;
-        }, {});
-        const topSeller = Object.entries(sellerTotals).sort((a, b) => b[1] - a[1])[0];
-
-        let expensesMonth = 0;
-        let incomeMonth = 0;
-        finances.forEach(entry => {
-            if ((entry.date || '').slice(0, 7) !== monthIso) return;
-            if (entry.type === 'expense') expensesMonth += Number(entry.amount) || 0;
-            if (entry.type === 'income') incomeMonth += Number(entry.amount) || 0;
-        });
-
-        return {
-            lowStock,
-            stockBoutique,
-            assignedTotal,
-            consignedValue,
-            inventoryValue: inventoryValueBoutique,
-            totalProducts: products.length,
-            salesTodayCount: salesToday.length,
-            salesTodayTotal,
-            salesMonthCount: salesMonth.length,
-            salesMonthTotal,
-            sellersCount: sellers.length,
-            topSeller,
-            incomeMonth,
-            expensesMonth
-        };
-    }
-
-    function buildOverview(now, highlights) {
-        const parts = [];
-        if (highlights.salesMonthTotal > 0) {
-            parts.push(`Le chiffre d'affaires du mois atteint ${POSApp.formatCurrency(highlights.salesMonthTotal)}.`);
-        }
-        if (highlights.topSeller) {
-            const [name, amount] = highlights.topSeller;
-            parts.push(`${name} mène les ventes avec ${POSApp.formatCurrency(amount)}.`);
-        }
-        if (highlights.lowStock > 0) {
-            parts.push(`${highlights.lowStock} référence${plural(highlights.lowStock)} demandent un réassort.`);
-        }
-        if (highlights.assignedTotal > 0) {
-            parts.push(`Les vendeuses ont ${formatPieces(highlights.assignedTotal)} en circulation.`);
-        }
-        if (!parts.length) {
-            parts.push('Ajoutez vos premières données pour générer une synthèse automatique de votre activité.');
-        }
-        const summary = `Résumé du ${now.toLocaleDateString('fr-FR')} · ${parts.join(' ')}`;
-        return sanitizeText(summary, 'Ajoutez vos premières données pour générer une synthèse automatique de votre activité.');
-    }
-
-    function buildLines(now, highlights) {
-        const lines = [];
-        if (highlights.totalProducts === 0) {
-            lines.push('Inventaire : aucun produit enregistré pour le moment.');
-        } else {
-            let line = `Inventaire : ${highlights.totalProducts} référence${plural(highlights.totalProducts)} pour ${formatPieces(highlights.stockBoutique)} en boutique (${POSApp.formatCurrency(highlights.inventoryValue)}).`;
-            if (highlights.lowStock > 0) {
-                line += ` ${highlights.lowStock} alerte${plural(highlights.lowStock)} stock à traiter.`;
-            }
-            if (highlights.assignedTotal > 0) {
-                line += ` ${formatPieces(highlights.assignedTotal)} confiée${plural(highlights.assignedTotal)} aux vendeuses.`;
-            }
-            lines.push(line);
-        }
-
-        if (highlights.salesMonthCount === 0) {
-            lines.push('Ventes : aucune vente enregistrée ce mois.');
-        } else {
-            let line = `Ventes : ${highlights.salesMonthCount} vente${plural(highlights.salesMonthCount)} ce mois pour ${POSApp.formatCurrency(highlights.salesMonthTotal)}.`;
-            if (highlights.salesTodayCount > 0) {
-                line += ` Dont ${highlights.salesTodayCount} aujourd'hui (${POSApp.formatCurrency(highlights.salesTodayTotal)}).`;
-            }
-            lines.push(line);
-        }
-
-        if (highlights.sellersCount === 0) {
-            lines.push('Vendeuses : aucune collaboratrice suivie.');
-        } else {
-            let line = `Vendeuses : ${highlights.sellersCount} collaboratrice${plural(highlights.sellersCount, '', 's')} actives.`;
-            if (highlights.assignedTotal > 0) {
-                line += ` ${formatPieces(highlights.assignedTotal)} confiée${plural(highlights.assignedTotal)} (${POSApp.formatCurrency(highlights.consignedValue)}).`;
-            } else {
-                line += ' Aucun stock confié pour le moment.';
-            }
-            lines.push(line);
-        }
-
-        if (highlights.incomeMonth === 0 && highlights.expensesMonth === 0) {
-            lines.push('Finances : aucun mouvement enregistré pour le mois en cours.');
-        } else {
-            const monthLabel = now.toLocaleDateString('fr-FR', { month: 'long' });
-            const monthDisplay = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
-            lines.push(`Finances : recettes ${POSApp.formatCurrency(highlights.incomeMonth)}, dépenses ${POSApp.formatCurrency(highlights.expensesMonth)}, solde ${POSApp.formatCurrency(highlights.incomeMonth - highlights.expensesMonth)} pour ${monthDisplay}.`);
-        }
-
-        return lines
-            .map(line => sanitizeText(line))
-            .filter(Boolean);
-    }
-
-    function renderInsights() {
-        const overview = overviewEl();
-        const list = listEl();
-        if (!overview || !list) return;
-        const now = new Date();
-        const highlights = computeHighlights(now);
-        overview.textContent = buildOverview(now, highlights);
-        list.innerHTML = '';
-        const lines = buildLines(now, highlights);
-        if (!lines.length) {
-            const empty = document.createElement('li');
-            empty.textContent = 'Ajoutez des produits, ventes ou vendeuses pour générer un résumé.';
-            list.appendChild(empty);
-            return;
-        }
-        lines.forEach(text => {
-            const item = document.createElement('li');
-            item.textContent = text;
-            list.appendChild(item);
-        });
-    }
-
-    document.addEventListener('pos:refresh', ({ detail }) => {
-        if (!detail?.section || detail.section === 'dashboard') {
-            renderInsights();
-        }
+  function drawChart(state = app.getState()) {
+    const canvas = ctx.canvas;
+    const width = canvas.clientWidth || canvas.width;
+    const height = canvas.clientHeight || canvas.height;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.clearRect(0, 0, width, height);
+    const days = Array.from({ length: 7 }).map((_, index) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - index));
+      return date;
     });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        refreshButton()?.addEventListener('click', () => {
-            renderInsights();
-            POSApp.notify('Résumé actualisé', 'info');
-        });
-        renderInsights();
+    const totals = days.map((day) => {
+      const key = day.toISOString().slice(0, 10);
+      return state.sales
+        .filter((sale) => sale.date.slice(0, 10) === key)
+        .reduce((sum, sale) => sum + Number(sale.total || 0), 0);
     });
+    const max = Math.max(...totals, 10);
+    const padding = 32;
+    const chartWidth = width - padding * 2;
+    const chartHeight = height - padding * 2;
+    ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, height - padding);
+    ctx.lineTo(width - padding, height - padding);
+    ctx.stroke();
+
+    const barWidth = chartWidth / totals.length - 12;
+    const textColor = getComputedStyle(document.body).color || "#0f172a";
+    totals.forEach((value, index) => {
+      const x = padding + index * (barWidth + 12) + 6;
+      const barHeight = (value / max) * chartHeight;
+      const y = height - padding - barHeight;
+      const gradient = ctx.createLinearGradient(0, y, 0, height - padding);
+      gradient.addColorStop(0, "rgba(255, 165, 0, 0.8)");
+      gradient.addColorStop(1, "rgba(0, 168, 107, 0.6)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      const radius = 6;
+      ctx.moveTo(x, height - padding);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.lineTo(x + barWidth - radius, y);
+      ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
+      ctx.lineTo(x + barWidth, height - padding);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = textColor;
+      ctx.font = "12px Inter";
+      ctx.fillText(days[index].toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), x, height - padding + 16);
+    });
+  }
+
+  function sumBy(list, type) {
+    return list
+      .filter((item) => item.type === type)
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }
+
+  function formatCurrency(value, currency) {
+    return `${Number(value || 0).toLocaleString("fr-FR")} ${currency}`;
+  }
+
+  app.register(init);
 })();

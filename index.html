@@ -7,168 +7,150 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/print.css" media="print">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23FFA500'/%3E%3Ctext x='32' y='38' font-size='28' text-anchor='middle' fill='white' font-family='Inter, Arial, sans-serif'%3EJK%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23FFA500'/%3E%3Ctext x='32' y='38' font-size='28' text-anchor='middle' fill='white' font-family='Inter,Arial,sans-serif'%3EJK%3C/text%3E%3C/svg%3E">
 </head>
-<body class="light-theme">
-    <div id="loader" role="alert" aria-live="polite">
-        <div class="loader-panel">
-            <div class="loader-icon" aria-hidden="true">JK</div>
-            <div class="loader-progress" aria-hidden="true">
-                <span></span>
-            </div>
-            <p>Chargement du système POS...</p>
+<body>
+    <div id="loader" aria-live="polite" aria-label="Chargement">
+        <div class="loader-card">
+            <div class="loader-logo">JK</div>
+            <p>Démarrage de la caisse...</p>
+            <div class="loader-bar"><span></span></div>
         </div>
     </div>
-    <div class="app hidden" id="app">
+    <div class="app" id="app" hidden>
         <aside class="sidebar">
-            <div class="brand">
+            <div class="brand" id="brand-badge">
                 <div class="brand-logo" id="brand-logo" aria-hidden="true">JK</div>
-                <h1>JOCELYNE K</h1>
-                <span>POS SYSTEM</span>
+                <div class="brand-text">
+                    <h1>JOCELYNE K</h1>
+                    <span>POS SYSTEM</span>
+                </div>
             </div>
-            <nav>
-                <button class="nav-link active" data-section="dashboard">Dashboard</button>
-                <button class="nav-link" data-section="inventory">Inventaire</button>
-                <button class="nav-link" data-section="sales">Ventes</button>
-                <button class="nav-link" data-section="sellers">Vendeuses</button>
-                <button class="nav-link" data-section="finances">Finances</button>
-                <button class="nav-link" data-section="settings">Paramètres</button>
+            <nav class="menu" aria-label="Sections">
+                <button class="menu-item active" data-section="dashboard">Dashboard</button>
+                <button class="menu-item" data-section="inventory">Inventaire</button>
+                <button class="menu-item" data-section="sales">Ventes</button>
+                <button class="menu-item" data-section="sellers">Vendeuses</button>
+                <button class="menu-item" data-section="finances">Finances</button>
+                <button class="menu-item" data-section="settings">Paramètres</button>
             </nav>
-            <footer>
-                <small id="offline-status">Statut : <span>Hors ligne</span></small>
-                <small id="last-backup">Dernière sauvegarde : jamais</small>
+            <footer class="sidebar-footer">
+                <span id="connection-badge">Hors ligne</span>
+                <small id="backup-indicator">Dernière sauvegarde : jamais</small>
             </footer>
         </aside>
-        <main>
+        <main class="workspace" id="workspace">
             <header class="topbar">
-                <div class="store-info">
-                    <div class="store-heading">
-                        <h2 id="store-name">Boutique Jocelyne</h2>
-                        <span class="status-badge" id="topbar-status">Hors ligne</span>
-                    </div>
-                    <p id="store-subtitle">Votre caisse intelligente hors ligne</p>
+                <div>
+                    <h2 id="store-name">Boutique Jocelyne</h2>
+                    <p id="store-tagline">Caisse intelligente hors ligne</p>
                 </div>
                 <div class="topbar-actions">
+                    <span class="chip" id="topbar-status">Hors ligne</span>
                     <button id="toggle-theme" class="secondary">Mode sombre</button>
-                    <button id="backup-btn">Sauvegarder</button>
+                    <button id="trigger-backup">Sauvegarder</button>
                 </div>
             </header>
-            <section id="dashboard" class="section active">
-                <div class="cards-grid">
-                    <article class="card metric-card accent-sales">
-                        <div class="card-header">
-                            <span class="card-icon" aria-hidden="true">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M4 12.5L9.5 6L14 10L19.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M4 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                </svg>
-                            </span>
+
+            <section id="dashboard" class="section active" aria-labelledby="dashboard-title">
+                <div class="metrics-grid">
+                    <article class="metric-card accent-sales">
+                        <header>
+                            <span aria-hidden="true">💰</span>
                             <div>
-                                <h3>Ventes du jour</h3>
-                                <p class="card-subtitle">Chiffre d'affaires</p>
+                                <h3 id="dashboard-title">Ventes du jour</h3>
+                                <p>Montant total encaissé</p>
                             </div>
-                        </div>
-                        <p class="metric" id="daily-sales">0 FCFA</p>
-                        <p class="card-meta" id="daily-sales-count">0 ventes</p>
+                        </header>
+                        <p class="metric-value" id="metric-sales">0 FCFA</p>
+                        <small id="metric-sales-count">0 ventes</small>
                     </article>
-                    <article class="card metric-card accent-profit">
-                        <div class="card-header">
-                            <span class="card-icon" aria-hidden="true">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M6 19C6 15.13 9.13 12 13 12H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    <path d="M14 7L18 3L22 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M4 5H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    <path d="M4 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                </svg>
-                            </span>
+                    <article class="metric-card accent-stock">
+                        <header>
+                            <span aria-hidden="true">📦</span>
                             <div>
-                                <h3>Bénéfices nets</h3>
-                                <p class="card-subtitle">Mois en cours</p>
+                                <h3>Stock boutique</h3>
+                                <p>Disponibilités hors consignation</p>
                             </div>
-                        </div>
-                        <p class="metric" id="net-profit">0 FCFA</p>
+                        </header>
+                        <p class="metric-value" id="metric-stock">0 produits</p>
+                        <small id="metric-low-stock">0 alertes</small>
                     </article>
-                    <article class="card metric-card accent-stock" id="low-stock-card">
-                        <div class="card-header">
-                            <span class="card-icon" aria-hidden="true">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    <path d="M4.93 19.07C3.12 17.26 2 14.76 2 12C2 6.48 6.48 2 12 2C14.76 2 17.26 3.12 19.07 4.93C20.88 6.74 22 9.24 22 12C22 17.52 17.52 22 12 22C9.24 22 6.74 20.88 4.93 19.07Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </span>
+                    <article class="metric-card accent-profit">
+                        <header>
+                            <span aria-hidden="true">📈</span>
                             <div>
-                                <h3>Produits en rupture</h3>
-                                <p class="card-subtitle">Surveiller les stocks</p>
+                                <h3>Bénéfice net</h3>
+                                <p>Mois en cours</p>
                             </div>
-                        </div>
-                        <p class="metric" id="low-stock-count">0</p>
-                        <p class="card-meta">Alertes automatiques</p>
+                        </header>
+                        <p class="metric-value" id="metric-profit">0 FCFA</p>
+                        <small id="metric-expense">0 dépenses</small>
                     </article>
                 </div>
                 <div class="dashboard-layout">
-                    <article class="card insights-card" id="insights-card">
+                    <article class="card insights-card">
                         <header>
                             <div>
                                 <h3>Résumé intelligent</h3>
-                                <p class="card-subtitle">Synthèse automatique des modules clés</p>
+                                <p>Analyse automatique des modules</p>
                             </div>
                             <button class="secondary" id="refresh-insights">Actualiser</button>
                         </header>
-                        <p id="insights-overview">Analyse des données en cours...</p>
+                        <p id="insights-intro">Analyse des données en cours...</p>
                         <ul id="insights-list">
-                            <li>Les indicateurs apparaîtront ici après le chargement de l'application.</li>
+                            <li class="empty">Les informations s'afficheront ici.</li>
                         </ul>
                     </article>
-                    <div class="chart-card">
+                    <article class="card chart-card">
                         <header>
-                            <h3>Évolution des ventes (7 jours)</h3>
+                            <h3>Ventes des 7 derniers jours</h3>
                             <button class="secondary" id="refresh-chart">Actualiser</button>
                         </header>
-                        <canvas id="sales-chart" width="400" height="220"></canvas>
-                    </div>
-                    <div class="activity-card">
+                        <canvas id="sales-chart" width="600" height="280" role="img" aria-label="Historique des ventes"></canvas>
+                    </article>
+                    <article class="card activity-card">
                         <header>
                             <h3>Activité récente</h3>
                         </header>
                         <ul id="activity-feed">
-                            <li class="empty-state inline">
-                                <span class="empty-icon" aria-hidden="true">🕓</span>
+                            <li class="empty">
+                                <span aria-hidden="true">🕒</span>
                                 <div>
-                                    <span class="empty-title">Aucune activité pour le moment.</span>
-                                    <span class="empty-subtitle">Les ventes et actions récentes s'afficheront ici.</span>
+                                    <strong>Aucune activité</strong>
+                                    <p>Les actions apparaîtront ici.</p>
                                 </div>
                             </li>
                         </ul>
-                    </div>
+                    </article>
                 </div>
             </section>
-            <section id="inventory" class="section">
+
+            <section id="inventory" class="section" aria-labelledby="inventory-title">
                 <header class="section-header">
                     <div>
-                        <h2>Inventaire</h2>
-                        <p>Suivez vos produits, stock boutique et quantités confiées.</p>
+                        <h2 id="inventory-title">Inventaire</h2>
+                        <p>Gérez les produits et surveillez les stocks.</p>
                     </div>
                     <div class="section-actions">
-                        <button id="add-product-btn">Ajouter un produit</button>
-                        <button id="print-labels">Imprimer étiquettes</button>
+                        <button id="add-product">Ajouter un produit</button>
+                        <button class="secondary" id="print-labels">Imprimer étiquettes</button>
                         <label class="file-input">
                             Importer CSV
                             <input type="file" id="import-csv" accept=".csv">
                         </label>
                         <label class="file-input">
                             Importer JSON
-                            <input type="file" id="import-json" accept=".json">
+                            <input type="file" id="import-json" accept="application/json">
                         </label>
                         <button class="secondary" id="export-csv">Exporter CSV</button>
-                        <button class="secondary" id="export-json">Exporter JSON</button>
                     </div>
                 </header>
                 <div class="table-wrapper">
                     <table>
                         <thead>
                             <tr>
-                                <th>Réf.</th>
+                                <th>Référence</th>
                                 <th>Nom</th>
                                 <th>Catégorie</th>
                                 <th>Prix</th>
@@ -177,151 +159,197 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="inventory-table"></tbody>
+                        <tbody id="inventory-body">
+                            <tr class="empty">
+                                <td colspan="7">Aucun produit enregistré.</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </section>
-            <section id="sales" class="section">
+
+            <section id="sales" class="section" aria-labelledby="sales-title">
                 <header class="section-header">
                     <div>
-                        <h2>Ventes</h2>
-                        <p>Encaissez rapidement, ajustez le prix unitaire et rattachez chaque vente à votre vendeuse.</p>
+                        <h2 id="sales-title">Ventes</h2>
+                        <p>Encaissez rapidement et ajustez les prix au besoin.</p>
                     </div>
                     <div class="section-actions">
-                        <input type="search" id="sales-search" placeholder="Rechercher un produit...">
-                        <select id="sales-seller">
-                            <option value="">Vente boutique</option>
-                        </select>
-                        <input type="datetime-local" id="sale-date" aria-label="Date de la vente">
-                        <select id="payment-method">
-                            <option value="cash">Espèces</option>
-                            <option value="mobile">Mobile Money</option>
-                            <option value="credit">Crédit</option>
-                        </select>
+                        <label>Vendeuse
+                            <select id="sale-seller"></select>
+                        </label>
+                        <label>Date de vente
+                            <input type="date" id="sale-date">
+                        </label>
+                        <label>Paiement
+                            <select id="sale-payment">
+                                <option value="cash">Espèces</option>
+                                <option value="mobile">Mobile money</option>
+                                <option value="credit">Crédit</option>
+                            </select>
+                        </label>
+                        <button id="reset-sale" class="secondary">Réinitialiser</button>
                     </div>
                 </header>
                 <div class="sales-layout">
-                    <div class="product-list">
-                        <h3>Produits</h3>
-                        <ul id="sales-products"></ul>
+                    <div class="catalog">
+                        <div class="catalog-header">
+                            <input type="search" id="search-product" placeholder="Rechercher un produit">
+                            <button id="toggle-manual-price" class="secondary">Prix manuel : oui</button>
+                        </div>
+                        <ul id="product-list" class="product-list">
+                            <li class="empty">Ajoutez des produits pour démarrer.</li>
+                        </ul>
                     </div>
-                    <div class="cart">
-                        <h3>Panier</h3>
-                        <div id="cart-items"></div>
-                        <div class="cart-summary">
-                            <p>Total: <span id="cart-total">0 FCFA</span></p>
-                            <button id="checkout-btn">Encaisser</button>
+                    <div class="cart" id="sale-cart">
+                        <header>
+                            <h3>Panier</h3>
+                            <span id="cart-total">0 FCFA</span>
+                        </header>
+                        <ul id="cart-items">
+                            <li class="empty">Aucun article.</li>
+                        </ul>
+                        <div class="cart-actions">
+                            <button id="complete-sale">Valider la vente</button>
                             <button class="secondary" id="print-receipt">Imprimer le reçu</button>
                         </div>
-                        <div class="sales-history">
+                        <div class="history">
                             <h4>Historique des ventes</h4>
-                            <ul id="sales-history"></ul>
+                            <ul id="sales-history">
+                                <li class="empty">Aucune vente enregistrée.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </section>
-            <section id="sellers" class="section">
+
+            <section id="sellers" class="section" aria-labelledby="sellers-title">
                 <header class="section-header">
                     <div>
-                        <h2>Vendeuses</h2>
-                        <p>Confiez des articles à vos vendeuses ambulantes et suivez les retours.</p>
-                    </div>
-                    <button id="add-seller-btn">Ajouter une vendeuse</button>
-                </header>
-                <div class="cards-grid" id="sellers-list"></div>
-            </section>
-            <section id="finances" class="section">
-                <header class="section-header">
-                    <div>
-                        <h2>Finances</h2>
-                        <p>Analysez les dépenses et revenus.</p>
+                        <h2 id="sellers-title">Vendeuses</h2>
+                        <p>Suivez la marchandise confiée et les règlements.</p>
                     </div>
                     <div class="section-actions">
-                        <button id="add-expense-btn">Ajouter dépense</button>
-                        <button id="add-income-btn">Ajouter recette</button>
-                        <button class="secondary" id="export-finance-csv">Exporter CSV</button>
+                        <button id="add-seller">Ajouter une vendeuse</button>
                     </div>
                 </header>
-                <div class="finances-summary">
-                    <article>
-                        <h3>Dépenses du mois</h3>
-                        <p id="monthly-expenses">0 FCFA</p>
-                    </article>
-                    <article>
-                        <h3>Recettes du mois</h3>
-                        <p id="monthly-income">0 FCFA</p>
-                    </article>
-                    <article>
-                        <h3>Bénéfice net</h3>
-                        <p id="monthly-profit">0 FCFA</p>
-                    </article>
-                </div>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Montant</th>
-                                <th>Catégorie</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="finances-table"></tbody>
-                    </table>
+                <div id="seller-list" class="card-list empty">
+                    <p>Aucune vendeuse enregistrée.</p>
                 </div>
             </section>
-            <section id="settings" class="section">
+
+            <section id="finances" class="section" aria-labelledby="finances-title">
                 <header class="section-header">
                     <div>
-                        <h2>Paramètres</h2>
-                        <p>Personnalisez votre application POS hors ligne.</p>
+                        <h2 id="finances-title">Finances</h2>
+                        <p>Suivez recettes, dépenses et bénéfices.</p>
+                    </div>
+                    <div class="section-actions">
+                        <button id="add-income">Ajouter une recette</button>
+                        <button id="add-expense" class="secondary">Ajouter une dépense</button>
+                        <button id="export-finances" class="secondary">Exporter CSV</button>
                     </div>
                 </header>
-                <div class="settings-grid">
-                    <form id="store-settings" class="card form-card">
-                        <h3>Identité de la boutique</h3>
-                        <label>Nom de la boutique
-                            <input type="text" id="setting-store-name" required>
-                        </label>
-                        <label>Devise
-                            <input type="text" id="setting-currency" value="FCFA">
-                        </label>
-                        <label>TVA (%)
-                            <input type="number" id="setting-tax" min="0" value="0">
-                        </label>
-                        <div class="toggle-control">
-                            <div class="toggle-copy">
-                                <span class="toggle-title">Saisir le prix pendant la vente</span>
-                                <span class="field-hint">Demande un prix et une quantité à l'ajout dans le panier pour gérer les commandes en gros.</span>
-                            </div>
-                            <label class="toggle-switch" for="setting-manual-pricing">
-                                <input type="checkbox" id="setting-manual-pricing" name="setting-manual-pricing" checked>
-                                <span class="toggle-slider" aria-hidden="true"></span>
-                            </label>
-                        </div>
-                        <label>Logo
-                            <input type="file" id="setting-logo" accept="image/*">
-                        </label>
-                        <button type="submit">Enregistrer</button>
-                    </form>
-                    <div class="card form-card">
-                        <h3>Base de données locale</h3>
-                        <button id="download-backup">Exporter la base JSON</button>
-                        <label class="file-input">
-                            Importer une base JSON
-                            <input type="file" id="upload-backup" accept=".json">
-                        </label>
-                        <button class="danger" id="reset-data">Réinitialiser les données</button>
-                    </div>
+                <div class="finances-grid">
+                    <article class="card">
+                        <h3>Résumé</h3>
+                        <ul class="finance-summary" id="finance-summary">
+                            <li>Total recettes : 0 FCFA</li>
+                            <li>Total dépenses : 0 FCFA</li>
+                            <li>Bénéfice net : 0 FCFA</li>
+                        </ul>
+                    </article>
+                    <article class="card">
+                        <h3>Mouvements financiers</h3>
+                        <ul id="finance-history">
+                            <li class="empty">Aucun mouvement enregistré.</li>
+                        </ul>
+                    </article>
                 </div>
+            </section>
+
+            <section id="settings" class="section" aria-labelledby="settings-title">
+                <header class="section-header">
+                    <div>
+                        <h2 id="settings-title">Paramètres</h2>
+                        <p>Personnalisez votre système POS.</p>
+                    </div>
+                </header>
+                <form id="settings-form" class="settings-form">
+                    <div class="form-group">
+                        <label for="setting-name">Nom de la boutique</label>
+                        <input type="text" id="setting-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-tagline">Slogan</label>
+                        <input type="text" id="setting-tagline">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-currency">Devise</label>
+                        <input type="text" id="setting-currency" maxlength="6" placeholder="FCFA">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-vat">TVA (%)</label>
+                        <input type="number" id="setting-vat" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="setting-threshold">Seuil alerte stock</label>
+                        <input type="number" id="setting-threshold" min="0" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="switch">
+                            <input type="checkbox" id="setting-manual-price">
+                            <span>Demander le prix à chaque vente</span>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit">Enregistrer</button>
+                        <button type="button" class="secondary" id="reset-data">Réinitialiser les données</button>
+                        <label class="file-input">
+                            Restaurer JSON
+                            <input type="file" id="restore-json" accept="application/json">
+                        </label>
+                    </div>
+                </form>
             </section>
         </main>
     </div>
 
-    <dialog id="modal" class="modal">
-        <form method="dialog" class="modal-content" id="modal-form"></form>
-    </dialog>
+    <div id="modal" class="modal" hidden aria-hidden="true" role="dialog">
+        <div class="modal-content" role="document">
+            <header>
+                <h3 id="modal-title">Titre</h3>
+                <button id="close-modal" aria-label="Fermer">×</button>
+            </header>
+            <form id="modal-form"></form>
+        </div>
+    </div>
+
+    <template id="label-template">
+        <section class="print-labels">
+            <h1>Étiquettes produits</h1>
+            <div id="label-grid"></div>
+        </section>
+    </template>
+
+    <template id="receipt-template">
+        <section class="print-receipt">
+            <h1 id="receipt-store">Boutique</h1>
+            <p id="receipt-date">Date</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Qté</th>
+                        <th>Prix</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="receipt-items"></tbody>
+            </table>
+            <p id="receipt-total">Total : 0</p>
+        </section>
+    </template>
 
     <script src="js/app.js"></script>
     <script src="js/inventory.js"></script>

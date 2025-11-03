@@ -1,519 +1,370 @@
-// Module Ventes : interface POS, panier et reçus imprimables
-
 (function () {
-    const salesProductsList = () => document.getElementById('sales-products');
-    const saleDateField = () => document.getElementById('sale-date');
-    let cart = [];
-    let chartAnimationFrame = null;
-    let chartProgress = 0;
+  let app;
+  let initialized = false;
+  let subscribed = false;
+  let cart = [];
+  let lastSale = null;
 
-    function currentLocalDateTimeValue(date = new Date()) {
-        const offset = date.getTimezoneOffset();
-        const local = new Date(date.getTime() - offset * 60000);
-        return local.toISOString().slice(0, 16);
+  function init(api) {
+    app = api;
+    if (!subscribed) {
+      app.on("state:changed", render);
+      subscribed = true;
     }
+    if (!initialized) {
+      bindEvents();
+      initialized = true;
+    }
+    render(app.getState());
+  }
 
-    function ensureSaleDateValue() {
-        const input = saleDateField();
-        if (!input) return;
-        if (!input.value) {
-            input.value = currentLocalDateTimeValue();
+  function bindEvents() {
+    document.getElementById("search-product").addEventListener("input", renderProducts);
+    document.getElementById("toggle-manual-price").addEventListener("click", toggleManualPrice);
+    document.getElementById("complete-sale").addEventListener("click", completeSale);
+    document.getElementById("print-receipt").addEventListener("click", printReceipt);
+    document.getElementById("reset-sale").addEventListener("click", resetSale);
+    document.getElementById("sale-date").value = currentDate();
+  }
+
+  function render(state) {
+    updateManualPriceButton(state.settings.manualPrice);
+    populateSellers(state);
+    renderProducts();
+    renderCart();
+    renderHistory(state);
+  }
+
+  function renderProducts() {
+    const list = document.getElementById("product-list");
+    const state = app.getState();
+    const query = document.getElementById("search-product").value.toLowerCase();
+    list.innerHTML = "";
+    const products = state.inventory.filter((product) =>
+      product.name.toLowerCase().includes(query) || product.id.toLowerCase().includes(query)
+    );
+    if (!products.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "Aucun produit";
+      list.appendChild(li);
+      return;
+    }
+    products.forEach((product) => {
+      const sellerId = document.getElementById("sale-seller").value;
+      const available = sellerId ? product.consigned?.[sellerId] || 0 : product.stock;
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <div class="info">
+          <strong>${product.name}</strong>
+          <small>${product.id} • ${product.category}</small>
+          <div>
+            <span class="badge">Stock ${sellerId ? "confié" : "boutique"} : ${available}</span>
+          </div>
+        </div>
+        <button data-id="${product.id}">Ajouter</button>`;
+      const button = li.querySelector("button");
+      button.disabled = available <= 0;
+      button.addEventListener("click", () => addToCart(product));
+      list.appendChild(li);
+    });
+  }
+
+  function addToCart(product) {
+    const state = app.getState();
+    const sellerId = document.getElementById("sale-seller").value;
+    const available = sellerId ? product.consigned?.[sellerId] || 0 : product.stock;
+    if (available <= 0) {
+      alert("Stock insuffisant");
+      return;
+    }
+    const manual = state.settings.manualPrice;
+    if (manual) {
+      app.openModal({
+        title: `Ajouter ${product.name}`,
+        fields: [
+          {
+            label: "Quantité",
+            name: "quantity",
+            type: "number",
+            min: 1,
+            value: 1,
+            hint: `Disponible : ${available}`
+          },
+          {
+            label: "Prix unitaire",
+            name: "price",
+            type: "number",
+            min: 0,
+            step: "0.01",
+            value: product.price || 0
+          }
+        ],
+        submitLabel: "Ajouter",
+        onSubmit: (values, close) => {
+          const quantity = Number(values.quantity) || 0;
+          const price = Number(values.price) || 0;
+          if (quantity <= 0 || price <= 0) return;
+          pushCartItem(product, quantity, price, sellerId || null);
+          close();
         }
+      });
+    } else {
+      pushCartItem(product, 1, product.price || 0, sellerId || null);
     }
+  }
 
-    function renderProductList(filter = '') {
-        const list = salesProductsList();
-        if (!list) return;
-        list.innerHTML = '';
-        const manualPricing = !!POSApp.state.settings.manualPricing;
-        const products = POSApp.state.products.filter(p =>
-            p.name.toLowerCase().includes(filter.toLowerCase()) ||
-            p.id.toLowerCase().includes(filter.toLowerCase())
-        );
-        products.forEach(product => {
-            const li = document.createElement('li');
-            const actionLabel = manualPricing ? 'Saisir le prix' : 'Ajouter';
-            const priceInfo = manualPricing
-                ? `<span>${POSApp.formatCurrency(product.price)} · catalogue</span>`
-                : `<span>${POSApp.formatCurrency(product.price)}</span>`;
-            li.innerHTML = `
-                <strong>${product.name}</strong>
-                ${priceInfo}
-                <small>Stock : ${product.stock}</small>
-                <button data-id="${product.id}">${actionLabel}</button>`;
-            li.querySelector('button').disabled = product.stock === 0;
-            li.querySelector('button').addEventListener('click', () => addToCart(product.id));
-            list.appendChild(li);
-        });
-        if (!products.length) {
-            list.innerHTML = `<li class="empty-state mini">
-                <span class="empty-icon" aria-hidden="true">🛒</span>
-                <div>
-                    <span class="empty-title">Aucun produit disponible.</span>
-                    <span class="empty-subtitle">Ajoutez des articles depuis l'inventaire pour commencer.</span>
-                </div>
-            </li>`;
-        }
+  function pushCartItem(product, quantity, price, sellerId) {
+    const existing = cart.find((item) => item.productId === product.id && item.sellerId === sellerId);
+    if (existing) {
+      existing.quantity += quantity;
+      existing.unitPrice = price;
+    } else {
+      cart.push({
+        productId: product.id,
+        name: product.name,
+        unitPrice: price,
+        quantity,
+        sellerId
+      });
     }
+    renderCart();
+  }
 
-    function addToCart(productId) {
-        const product = POSApp.state.products.find(p => p.id === productId);
-        if (!product || product.stock === 0) return;
-        const manualPricing = !!POSApp.state.settings.manualPricing;
-
-        const commitAddition = (unitPrice, quantity) => {
-            const existing = cart.find(item => item.id === productId);
-            const safePrice = Math.max(0, Math.round(unitPrice));
-            const safeQuantity = Math.min(Math.max(1, quantity), product.stock);
-            if (existing) {
-                if (manualPricing) {
-                    existing.quantity = safeQuantity;
-                } else {
-                    existing.quantity = Math.min(existing.quantity + safeQuantity, product.stock);
-                }
-                existing.price = safePrice;
-            } else {
-                cart.push({
-                    id: productId,
-                    name: product.name,
-                    price: safePrice,
-                    basePrice: product.price,
-                    quantity: safeQuantity
-                });
-            }
-            renderCart();
-            if (!manualPricing) {
-                requestAnimationFrame(() => {
-                    const input = document.getElementById(`price-${productId}`);
-                    input?.focus();
-                    input?.select();
-                });
-            }
-        };
-
-        if (manualPricing) {
-            POSApp.openModal(`Ajouter ${product.name}`, [
-                {
-                    id: 'manual-price',
-                    label: 'Prix unitaire appliqué',
-                    type: 'number',
-                    value: product.price,
-                    min: 0,
-                    step: 1,
-                    required: true,
-                    autofocus: true
-                },
-                {
-                    id: 'manual-quantity',
-                    label: 'Quantité',
-                    type: 'number',
-                    value: 1,
-                    min: 1,
-                    max: product.stock,
-                    required: true,
-                    helpText: `Stock disponible : ${product.stock}`
-                }
-            ], (data, close) => {
-                const priceValue = Number(data['manual-price']);
-                const quantityValue = Number(data['manual-quantity']);
-                if (!Number.isFinite(priceValue) || priceValue <= 0) {
-                    POSApp.notify('Prix invalide', 'error');
-                    return;
-                }
-                if (!Number.isFinite(quantityValue) || quantityValue <= 0) {
-                    POSApp.notify('Quantité invalide', 'error');
-                    return;
-                }
-                if (quantityValue > product.stock) {
-                    POSApp.notify('Stock insuffisant pour cette quantité', 'error');
-                    return;
-                }
-                close();
-                commitAddition(priceValue, quantityValue);
-            });
-            return;
-        }
-
-        commitAddition(product.price, 1);
+  function renderHistory(state) {
+    const history = document.getElementById("sales-history");
+    history.innerHTML = "";
+    if (!state.sales.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "Aucune vente enregistrée.";
+      history.appendChild(li);
+      return;
     }
+    state.sales.slice(0, 6).forEach((sale) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>${sale.id}</strong><span>${new Date(sale.date).toLocaleDateString()}</span><span>${formatCurrency(sale.total, state.settings.currency)}</span>`;
+      history.appendChild(li);
+    });
+  }
 
-    function removeFromCart(productId) {
-        cart = cart.filter(item => item.id !== productId);
+  function populateSellers(state) {
+    const select = document.getElementById("sale-seller");
+    const prev = select.value;
+    select.innerHTML = "";
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Boutique";
+    select.appendChild(defaultOption);
+    state.sellers.forEach((seller) => {
+      const option = document.createElement("option");
+      option.value = seller.id;
+      option.textContent = seller.name;
+      if (seller.id === prev) option.selected = true;
+      select.appendChild(option);
+    });
+    if (!select.dataset.bound) {
+      select.addEventListener("change", () => {
+        renderProducts();
         renderCart();
+      });
+      select.dataset.bound = "true";
     }
+  }
 
-    function changeQuantity(productId, delta) {
-        const item = cart.find(i => i.id === productId);
-        if (!item) return;
-        const product = POSApp.state.products.find(p => p.id === productId);
-        const newQty = Math.min(Math.max(1, item.quantity + delta), product.stock);
-        item.quantity = newQty;
-        renderCart();
+  function toggleManualPrice() {
+    const state = app.getState();
+    app.updateState((draft) => {
+      draft.settings.manualPrice = !state.settings.manualPrice;
+    });
+    render(app.getState());
+  }
+
+  function updateManualPriceButton(enabled) {
+    const btn = document.getElementById("toggle-manual-price");
+    btn.textContent = `Prix manuel : ${enabled ? "oui" : "non"}`;
+  }
+
+  function cartTotal() {
+    return cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  }
+
+  function completeSale() {
+    if (!cart.length) return;
+    const state = app.getState();
+    const sellerId = document.getElementById("sale-seller").value || null;
+    const payment = document.getElementById("sale-payment").value;
+    const rawDate = document.getElementById("sale-date").value;
+    const date = rawDate ? new Date(rawDate) : new Date();
+    const validDate = Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
+    const invalidItem = cart.find((item) => {
+      const product = state.inventory.find((prod) => prod.id === item.productId);
+      if (!product) return true;
+      const available = item.sellerId
+        ? product.consigned?.[item.sellerId] || 0
+        : product.stock;
+      return available < item.quantity;
+    });
+    if (invalidItem) {
+      alert("Stock insuffisant pour valider cette vente");
+      return;
     }
-
-    function renderCart() {
-        const container = document.getElementById('cart-items');
-        container.innerHTML = '';
-        if (!cart.length) {
-            container.innerHTML = `<div class="empty-state">
-                <span class="empty-icon" aria-hidden="true">🛍️</span>
-                <div>
-                    <span class="empty-title">Panier vide</span>
-                    <span class="empty-subtitle">Sélectionnez un produit dans la liste pour créer une vente.</span>
-                </div>
-            </div>`;
-            updateCartTotal();
-            return;
-        }
-        cart.forEach(item => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'cart-item';
-            const basePriceInfo = item.basePrice !== undefined
-                ? `<small class="price-reference${item.price !== item.basePrice ? ' adjusted' : ''}">Tarif catalogue : ${POSApp.formatCurrency(item.basePrice)}</small>`
-                : '';
-            wrapper.innerHTML = `
-                <div>
-                    <strong>${item.name}</strong>
-                    <label class="price-editor" for="price-${item.id}">
-                        <span>Prix unitaire</span>
-                        <div class="price-editor-field">
-                            <input type="number" id="price-${item.id}" class="cart-price${item.basePrice !== undefined && item.price !== item.basePrice ? ' adjusted' : ''}" data-id="${item.id}" value="${item.price}" min="0" step="1">
-                            <span class="price-suffix">${POSApp.currency()}</span>
-                        </div>
-                    </label>
-                    ${basePriceInfo}
-                </div>
-                <div class="cart-quantity">
-                    <button class="secondary" data-action="minus" data-id="${item.id}">-</button>
-                    <span>${item.quantity}</span>
-                    <button class="secondary" data-action="plus" data-id="${item.id}">+</button>
-                </div>
-                <button class="danger" data-action="remove" data-id="${item.id}">×</button>`;
-            container.appendChild(wrapper);
-
-            wrapper.querySelectorAll('button').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.dataset.id;
-                    if (btn.dataset.action === 'minus') changeQuantity(id, -1);
-                    if (btn.dataset.action === 'plus') changeQuantity(id, 1);
-                    if (btn.dataset.action === 'remove') removeFromCart(id);
-                });
-            });
-
-            const priceInput = wrapper.querySelector('.cart-price');
-            priceInput.inputMode = 'numeric';
-            priceInput.addEventListener('input', event => {
-                if (event.target.value === '') return;
-                updateItemPrice(item.id, event.target.value);
-            });
-            priceInput.addEventListener('change', event => {
-                updateItemPrice(item.id, event.target.value);
-                renderCart();
-            });
-            priceInput.addEventListener('blur', event => {
-                if (event.target.value === '') {
-                    event.target.value = item.price;
-                }
-            });
-        });
-        updateCartTotal();
-    }
-
-    function updateCartTotal() {
-        const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        document.getElementById('cart-total').textContent = POSApp.formatCurrency(total);
-        return total;
-    }
-
-    function updateItemPrice(productId, value) {
-        const item = cart.find(i => i.id === productId);
-        if (!item) return false;
-        if (value === '' || value === null) return false;
-        const numeric = Number(value);
-        if (!Number.isFinite(numeric) || numeric < 0) return false;
-        item.price = Math.max(0, Math.round(numeric));
-        updateCartTotal();
-        return true;
-    }
-
-    function populateSelectors() {
-        const sellerSelect = document.getElementById('sales-seller');
-        if (!sellerSelect) return;
-        sellerSelect.innerHTML = '<option value="">Vente boutique</option>';
-        const sellers = Array.isArray(POSApp.state.sellers) ? POSApp.state.sellers : [];
-        sellers.forEach(seller => {
-            const option = document.createElement('option');
-            option.value = seller.id;
-            option.textContent = seller.name;
-            sellerSelect.appendChild(option);
-        });
-    }
-
-    function bindEvents() {
-        document.getElementById('sales-search')?.addEventListener('input', e => {
-            renderProductList(e.target.value);
-        });
-        document.getElementById('checkout-btn')?.addEventListener('click', completeSale);
-        document.getElementById('print-receipt')?.addEventListener('click', printReceipt);
-    }
-
-    function completeSale() {
-        if (!cart.length) {
-            POSApp.notify('Panier vide.', 'error');
-            return;
-        }
-        if (cart.some(item => !Number.isFinite(item.price) || item.price <= 0)) {
-            POSApp.notify('Veuillez renseigner un prix pour chaque article.', 'error');
-            return;
-        }
-        const sellerSelect = document.getElementById('sales-seller');
-        const sellerId = sellerSelect?.value || '';
-        const sellers = Array.isArray(POSApp.state.sellers) ? POSApp.state.sellers : [];
-        const sellerRecord = sellers.find(s => s.id === sellerId);
-        const sellerName = sellerRecord?.name || 'Boutique';
-        const payment = document.getElementById('payment-method').value;
-        const total = updateCartTotal();
-        const taxRate = Number(POSApp.state.settings.tax || 0) / 100;
-        const taxAmount = Math.round(total * taxRate);
-        const grandTotal = total + taxAmount;
-        const dateInput = saleDateField();
-        let saleDate = new Date();
-        if (dateInput?.value) {
-            const parsed = new Date(dateInput.value);
-            if (!Number.isNaN(parsed.getTime())) {
-                saleDate = parsed;
-            } else {
-                POSApp.notify('Date de vente invalide. Utilisation de la date actuelle.', 'warning');
-                dateInput.value = currentLocalDateTimeValue();
-            }
+    const saleId = app.nextId("sale");
+    const financeId = app.nextId("finance");
+    const saleItems = cart.map((item) => ({ ...item }));
+    const total = cartTotal();
+    app.updateState((draft) => {
+      saleItems.forEach((item) => {
+        const product = draft.inventory.find((prod) => prod.id === item.productId);
+        if (!product) return;
+        if (sellerId) {
+          const seller = draft.sellers.find((s) => s.id === sellerId);
+          if (!seller) return;
+          const consign = seller.consignments.find((c) => c.productId === item.productId);
+          if (consign) consign.quantity = Math.max(0, consign.quantity - item.quantity);
+          product.consigned[sellerId] = Math.max(0, (product.consigned[sellerId] || 0) - item.quantity);
+          seller.history.push({
+            type: "sale",
+            saleId,
+            productId: item.productId,
+            quantity: item.quantity,
+            at: new Date().toISOString()
+          });
+          seller.balance += total;
         } else {
-            ensureSaleDateValue();
+          product.stock = Math.max(0, product.stock - item.quantity);
         }
-        const saleDateIso = saleDate.toISOString();
-        const sale = {
-            id: `VENTE-${Date.now()}`,
-            date: saleDateIso,
-            seller: sellerName,
-            sellerId: sellerRecord?.id || null,
-            payment,
-            taxAmount,
-            total: grandTotal,
-            items: cart.map(({ id, name, price, quantity }) => ({ id, name, price, quantity }))
-        };
-        POSApp.state.sales.push(sale);
-        cart.forEach(item => {
-            const product = POSApp.state.products.find(p => p.id === item.id);
-            if (product) product.stock -= item.quantity;
-        });
-        if (sellerRecord) {
-            sellerRecord.assignments = sellerRecord.assignments || [];
-            sellerRecord.history = sellerRecord.history || [];
-            sellerRecord.history.push({
-                type: 'sale',
-                saleId: sale.id,
-                amount: grandTotal,
-                date: sale.date
-            });
-            sellerRecord.assignments = sellerRecord.assignments.map(assignment => {
-                const soldItem = cart.find(item => item.id === assignment.productId);
-                if (!soldItem) return assignment;
-                const remaining = Math.max(0, assignment.quantity - soldItem.quantity);
-                return { ...assignment, quantity: remaining };
-            }).filter(assignment => assignment.quantity > 0);
-        }
-        POSApp.state.finances.push({
-            id: sale.id,
-            type: 'income',
-            amount: grandTotal,
-            category: 'Vente',
-            date: sale.date,
-            notes: `${payment} - ${sellerName}`
-        });
-        persistState();
-        appendActivity(`Vente ${sale.id} ${POSApp.formatCurrency(grandTotal)} (${sellerName})`);
-        POSApp.notify('Vente enregistrée', 'success');
-        cart = [];
+      });
+      draft.sales.unshift({
+        id: saleId,
+        date: validDate,
+        sellerId,
+        payment,
+        items: saleItems,
+        total,
+        createdAt: new Date().toISOString()
+      });
+      draft.finances.unshift({
+        id: financeId,
+        type: "income",
+        label: `Vente ${saleId}`,
+        amount: total,
+        date: validDate
+      });
+    });
+    app.addActivity(`Vente ${saleId} enregistrée (${formatCurrency(total, state.settings.currency)})`);
+    lastSale = { id: saleId, items: saleItems, total, date: validDate, sellerId, payment };
+    cart = [];
+    renderCart();
+    document.getElementById("sale-date").value = currentDate();
+  }
+
+  function printReceipt() {
+    if (!lastSale) {
+      alert("Aucune vente à imprimer");
+      return;
+    }
+    const state = app.getState();
+    const win = window.open("", "_blank", "width=600,height=700");
+    const rows = lastSale.items
+      .map(
+        (item) => `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.quantity}</td>
+          <td>${formatCurrency(item.unitPrice)}</td>
+          <td>${formatCurrency(item.unitPrice * item.quantity)}</td>
+        </tr>`
+      )
+      .join("");
+    const date = new Date(lastSale.date).toLocaleString();
+    win.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <title>Reçu ${lastSale.id}</title>
+        <style>
+          body { font-family: 'Inter', sans-serif; padding: 1.5rem; }
+          table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+          th, td { border: 1px solid #111; padding: 0.5rem; font-size: 0.85rem; }
+        </style>
+      </head>
+      <body>
+        <h1>${state.settings.storeName}</h1>
+        <p>${date}</p>
+        <table>
+          <thead><tr><th>Article</th><th>Qté</th><th>Prix</th><th>Total</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p>Total : ${formatCurrency(lastSale.total)}</p>
+        <script>window.print();</script>
+      </body>
+      </html>`);
+    win.document.close();
+  }
+
+  function resetSale() {
+    cart = [];
+    renderCart();
+    document.getElementById("sale-date").value = currentDate();
+  }
+
+  function renderCart() {
+    const list = document.getElementById("cart-items");
+    list.innerHTML = "";
+    if (!cart.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "Aucun article.";
+      list.appendChild(li);
+      document.getElementById("cart-total").textContent = formatCurrency(0);
+      return;
+    }
+    cart.forEach((item, index) => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <header>
+          <strong>${item.name}</strong>
+          <button class="secondary" data-index="${index}">Retirer</button>
+        </header>
+        <footer>
+          <label>Qté <input type="number" min="1" value="${item.quantity}" data-field="quantity" data-index="${index}"></label>
+          <label>Prix <input type="number" min="0" step="0.01" value="${item.unitPrice}" data-field="unitPrice" data-index="${index}"></label>
+          <span>Total ${formatCurrency(item.quantity * item.unitPrice)}</span>
+        </footer>`;
+      list.appendChild(li);
+    });
+    list.querySelectorAll("button[data-index]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        const idx = Number(event.currentTarget.dataset.index);
+        cart.splice(idx, 1);
         renderCart();
-        if (dateInput) {
-            dateInput.value = currentLocalDateTimeValue();
-        }
-        renderProductList(document.getElementById('sales-search').value || '');
-        populateSelectors();
-        renderSalesHistory();
-        POSApp.refresh('sellers');
-        POSApp.refresh();
-    }
-
-    function renderSalesHistory() {
-        const history = document.getElementById('sales-history');
-        history.innerHTML = '';
-        const sales = POSApp.state.sales.slice(-5).reverse();
-        if (!sales.length) {
-            history.innerHTML = `<li class="empty-state mini">
-                <span class="empty-icon" aria-hidden="true">📄</span>
-                <div>
-                    <span class="empty-title">Aucune vente récente.</span>
-                    <span class="empty-subtitle">Finalisez une commande pour voir l'historique ici.</span>
-                </div>
-            </li>`;
-            return;
-        }
-        sales.forEach(sale => {
-            const li = document.createElement('li');
-            const date = new Date(sale.date).toLocaleString('fr-FR');
-            const sellerLabel = sale.seller || sale.sellerName || 'Boutique';
-            li.textContent = `${date} - ${POSApp.formatCurrency(sale.total)} (${sale.payment} · ${sellerLabel})`;
-            history.appendChild(li);
-        });
-    }
-
-    function appendActivity(message) {
-        const feed = document.getElementById('activity-feed');
-        const placeholder = feed.querySelector('.empty-state');
-        if (placeholder) placeholder.remove();
-        const item = document.createElement('li');
-        item.textContent = `${new Date().toLocaleTimeString('fr-FR')} · ${message}`;
-        feed.prepend(item);
-        while (feed.children.length > 6) feed.removeChild(feed.lastChild);
-    }
-
-    function updateDashboardMetrics() {
-        const today = new Date().toISOString().slice(0, 10);
-        const salesToday = POSApp.state.sales.filter(s => s.date.slice(0, 10) === today);
-        const totalToday = salesToday.reduce((sum, sale) => sum + sale.total, 0);
-        document.getElementById('daily-sales').textContent = POSApp.formatCurrency(totalToday);
-        document.getElementById('daily-sales-count').textContent = `${salesToday.length} vente(s)`;
-        const month = new Date().toISOString().slice(0, 7);
-        const monthSales = POSApp.state.sales.filter(s => s.date.slice(0, 7) === month);
-        const revenue = monthSales.reduce((sum, sale) => sum + sale.total, 0);
-        const cost = monthSales.reduce((sum, sale) => {
-            return sum + sale.items.reduce((acc, item) => {
-                const product = POSApp.state.products.find(p => p.id === item.id);
-                return acc + (product?.cost || 0) * item.quantity;
-            }, 0);
-        }, 0);
-        document.getElementById('net-profit').textContent = POSApp.formatCurrency(revenue - cost);
-    }
-
-    function renderChart() {
-        const canvas = document.getElementById('sales-chart');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const days = [...Array(7).keys()].map(i => {
-            const date = new Date();
-            date.setDate(date.getDate() - (6 - i));
-            const iso = date.toISOString().slice(0, 10);
-            const total = POSApp.state.sales
-                .filter(s => s.date.slice(0, 10) === iso)
-                .reduce((sum, sale) => sum + sale.total, 0);
-            return { date, total };
-        });
-        const max = Math.max(...days.map(d => d.total), 1);
-        const chartHeight = canvas.height - 40;
-        const barWidth = (canvas.width - 60) / days.length;
-        if (chartAnimationFrame) cancelAnimationFrame(chartAnimationFrame);
-        chartProgress = 0;
-
-        const drawGrid = () => {
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
-            ctx.lineWidth = 1;
-            const steps = 4;
-            for (let i = 0; i <= steps; i++) {
-                const y = canvas.height - 20 - (chartHeight / steps) * i;
-                ctx.beginPath();
-                ctx.moveTo(40, y);
-                ctx.lineTo(canvas.width - 10, y);
-                ctx.stroke();
-            }
-            ctx.beginPath();
-            ctx.moveTo(40, 20);
-            ctx.lineTo(40, canvas.height - 20);
-            ctx.lineTo(canvas.width - 10, canvas.height - 20);
-            ctx.stroke();
-        };
-
-        const animate = () => {
-            chartProgress = Math.min(chartProgress + 0.08, 1);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
-            ctx.textBaseline = 'alphabetic';
-            days.forEach((day, index) => {
-                const label = day.date.toLocaleDateString('fr-FR', { weekday: 'short' });
-                const x = 40 + index * barWidth;
-                const barHeight = (day.total / max) * chartHeight * chartProgress;
-                const barX = x + 6;
-                const barY = canvas.height - 20 - barHeight;
-                const barWidthAdjusted = Math.max(barWidth - 22, 12);
-                ctx.fillStyle = '#FFA500';
-                ctx.fillRect(barX, barY, barWidthAdjusted, barHeight);
-                ctx.fillStyle = '#6b6b6b';
-                ctx.font = '12px Inter, sans-serif';
-                ctx.fillText(label, barX, canvas.height - 6);
-                if (day.total > 0) {
-                    const valueY = barY - 8;
-                    ctx.fillStyle = barHeight > 24 ? '#ffffff' : '#1a1a1a';
-                    ctx.font = '11px Inter, sans-serif';
-                    ctx.fillText(POSApp.formatCurrency(day.total), barX, Math.max(valueY, 16));
-                }
-            });
-            if (chartProgress < 1) {
-                chartAnimationFrame = requestAnimationFrame(animate);
-            }
-        };
-
-        animate();
-    }
-
-    function printReceipt() {
-        const total = updateCartTotal();
-        if (!cart.length && !POSApp.state.sales.length) {
-            POSApp.notify('Rien à imprimer.', 'error');
-            return;
-        }
-        const lastSale = POSApp.state.sales.slice(-1)[0];
-        const items = lastSale ? lastSale.items : cart;
-        const amount = lastSale ? lastSale.total : total;
-        const html = `
-        <div class="receipt">
-            <h2>${POSApp.state.settings.storeName}</h2>
-            <table>
-                <thead><tr><th>Article</th><th>Qté</th><th>Total</th></tr></thead>
-                <tbody>
-                ${items.map(item => `<tr><td>${item.name}</td><td>${item.quantity}</td><td>${POSApp.formatCurrency(item.price * item.quantity)}</td></tr>`).join('')}
-                </tbody>
-            </table>
-            <p style="text-align:right;font-weight:700;">Total: ${POSApp.formatCurrency(amount)}</p>
-            <p style="text-align:center;">Merci pour votre achat !</p>
-        </div>`;
-        document.getElementById('print-area')?.remove();
-        const printArea = document.createElement('div');
-        printArea.id = 'print-area';
-        printArea.innerHTML = html;
-        document.body.appendChild(printArea);
-        window.print();
-        setTimeout(() => printArea.remove(), 500);
-    }
-
-    document.getElementById('refresh-chart')?.addEventListener('click', renderChart);
-
-    document.addEventListener('pos:refresh', ({ detail }) => {
-        if (!detail?.section || detail.section === 'sales' || detail.section === 'dashboard') {
-            renderProductList(document.getElementById('sales-search')?.value || '');
-            populateSelectors();
-            renderSalesHistory();
-            updateDashboardMetrics();
-            renderChart();
-            ensureSaleDateValue();
-        }
+      });
     });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        bindEvents();
-        populateSelectors();
-        renderProductList();
-        renderSalesHistory();
-        updateDashboardMetrics();
-        renderChart();
-        ensureSaleDateValue();
+    list.querySelectorAll("input[data-field]").forEach((input) => {
+      input.addEventListener("change", (event) => {
+        const idx = Number(event.currentTarget.dataset.index);
+        const field = event.currentTarget.dataset.field;
+        const value = Number(event.currentTarget.value);
+        if (value <= 0) return;
+        cart[idx][field] = value;
+        renderCart();
+      });
     });
+    document.getElementById("cart-total").textContent = formatCurrency(cartTotal());
+  }
+
+  function currentDate() {
+    const now = new Date();
+    return now.toISOString().slice(0, 10);
+  }
+
+  function formatCurrency(value, currency) {
+    const settings = app ? app.getState().settings : { currency: "FCFA" };
+    const symbol = currency || settings.currency;
+    return `${Number(value || 0).toLocaleString("fr-FR")} ${symbol}`;
+  }
+
+  app.register(init);
 })();

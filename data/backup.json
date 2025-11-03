@@ -1,16 +1,23 @@
 {
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "data": {
-    "products": [],
-    "sellers": [],
-    "sales": [],
-    "finances": [],
-    "settings": {
-      "storeName": "Boutique Jocelyne",
-      "currency": "FCFA",
-      "tax": 0,
-      "theme": "light",
-      "manualPricing": true
-    }
-  }
+  "settings": {
+    "storeName": "Boutique Jocelyne",
+    "tagline": "Caisse intelligente hors ligne",
+    "currency": "FCFA",
+    "vat": 0,
+    "lowStock": 5,
+    "manualPrice": true,
+    "theme": "light"
+  },
+  "meta": {
+    "productCounter": 1,
+    "sellerCounter": 1,
+    "saleCounter": 1,
+    "financeCounter": 1
+  },
+  "inventory": [],
+  "sellers": [],
+  "sales": [],
+  "finances": [],
+  "activities": [],
+  "lastBackup": null
 }

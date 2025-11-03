@@ -1,62 +1,65 @@
-@page {
-    margin: 12mm;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-}
-
-.receipt {
-    width: 100%;
-    max-width: 320px;
-    margin: 0 auto;
-    border: 1px dashed #999;
-    padding: 1rem;
-}
-
-.receipt h2 {
+@media print {
+  body {
+    background: #fff !important;
+    color: #000;
+  }
+  .app,
+  .sidebar,
+  .topbar,
+  .section,
+  .modal,
+  #loader {
+    display: none !important;
+  }
+  .print-labels,
+  .print-receipt {
+    display: block !important;
+    font-family: "Inter", sans-serif;
+  }
+  .print-labels h1,
+  .print-receipt h1 {
     text-align: center;
-    margin-bottom: 1rem;
-}
-
-.receipt table {
+    font-size: 1.1rem;
+  }
+  .print-labels #label-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+  .print-labels article {
+    border: 1px dashed #111;
+    padding: 0.25rem;
+    border-radius: 0.3rem;
+    font-size: 0.75rem;
+  }
+  .print-labels .qr {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    margin-top: 0.35rem;
+  }
+  .print-labels .qr span {
+    display: block;
+    padding-top: 100%;
+    background: #000;
+  }
+  .print-labels .qr span.off {
+    background: transparent;
+    border: 1px solid #000;
+  }
+  .print-receipt table {
     width: 100%;
     border-collapse: collapse;
-}
-
-.receipt th,
-.receipt td {
-    text-align: left;
-    padding: 0.35rem 0;
-}
-
-.label-sheet {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6mm;
-}
-
-.label {
-    width: 15mm;
-    min-height: 7mm;
+    margin-top: 1rem;
+  }
+  .print-receipt th,
+  .print-receipt td {
     border: 1px solid #000;
-    padding: 1mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-size: 6px;
-    text-align: center;
-}
-
-.qr-placeholder {
-    width: 10mm;
-    height: 10mm;
-    background: repeating-linear-gradient(45deg, #000, #000 1px, #fff 1px, #fff 2px);
-}
-
-@media screen {
-    #print-area {
-        display: none;
-    }
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+  .print-receipt p {
+    margin: 0.4rem 0;
+    font-size: 0.85rem;
+  }
 }

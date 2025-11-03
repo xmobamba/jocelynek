@@ -1,405 +1,439 @@
-// JOCELYNE K POS SYSTEM - noyau applicatif
-// Ce module gère le routage, le stockage local et les utilitaires globaux
-
-const STORAGE_KEYS = {
-    products: 'jk_products',
-    sales: 'jk_sales',
-    sellers: 'jk_sellers',
-    finances: 'jk_finances',
-    settings: 'jk_settings',
-    backupDate: 'jk_last_backup'
-};
-
-const cloneState = data => {
-    if (typeof structuredClone === 'function') {
-        return structuredClone(data);
-    }
-    return JSON.parse(JSON.stringify(data));
-};
-
-const DEFAULT_STATE = {
-    products: [
-        { id: 'PROD001', name: 'Sac en cuir noir', category: 'Sacs', price: 13000, stock: 9, cost: 8000 },
-        { id: 'PROD002', name: 'Chaussures dorées', category: 'Chaussures', price: 18000, stock: 8, cost: 11000 },
-        { id: 'PROD003', name: 'Robe wax', category: 'Vêtements', price: 22000, stock: 4, cost: 15000 }
-    ],
-    sellers: [
-        {
-            id: 'VEN001',
-            name: 'Aminata Koné',
-            phone: '+225 07 55 11 22',
-            notes: 'Marché de Cocody',
-            assignments: [
-                { productId: 'PROD001', quantity: 3, assignedAt: '2024-01-02T09:00:00.000Z' }
-            ],
-            history: []
-        },
-        {
-            id: 'VEN002',
-            name: 'Sali Diabaté',
-            phone: '+225 05 44 33 77',
-            notes: 'Tournée Abobo',
-            assignments: [],
-            history: []
-        }
-    ],
+(function () {
+  const storageKey = "jk-pos-state";
+  const defaultState = {
+    settings: {
+      storeName: "Boutique Jocelyne",
+      tagline: "Caisse intelligente hors ligne",
+      currency: "FCFA",
+      vat: 0,
+      lowStock: 5,
+      manualPrice: true,
+      theme: "light"
+    },
+    meta: {
+      productCounter: 1,
+      sellerCounter: 1,
+      saleCounter: 1,
+      financeCounter: 1
+    },
+    inventory: [],
+    sellers: [],
     sales: [],
     finances: [],
-    settings: {
-        storeName: 'Boutique Jocelyne',
-        currency: 'FCFA',
-        tax: 0,
-        theme: 'light',
-        manualPricing: true
+    activities: [],
+    lastBackup: null
+  };
+
+  const modules = [];
+  const events = {};
+  let state = hydrate(loadData(storageKey, defaultState));
+  let ready = false;
+  let modalReady = false;
+
+  const modal = () => document.getElementById("modal");
+  const modalTitle = () => document.getElementById("modal-title");
+  const modalForm = () => document.getElementById("modal-form");
+  const modalClose = () => document.getElementById("close-modal");
+
+  function clone(value) {
+    if (typeof structuredClone === "function") {
+      return structuredClone(value);
     }
-};
+    return JSON.parse(JSON.stringify(value));
+  }
 
-function cleanMergeArtifacts(value) {
-    if (typeof value === 'string') {
-        if (!value.includes('<<<<<<<') && !value.includes('=======') && !value.includes('>>>>>>>')) {
-            return value;
-        }
+  function sanitizeString(value) {
+    if (typeof value !== "string") return value;
+    return value
+      .replace(/<<<<<<<.*?=======/gs, "")
+      .replace(/>>>>>>>.*?(\n|$)/g, "")
+      .trim();
+  }
 
-        let cleaned = value.replace(/\r\n/g, '\n');
+  function hydrate(raw) {
+    const safe = clone(defaultState);
+    const data = raw && typeof raw === "object" ? raw : {};
+    safe.settings = Object.assign({}, safe.settings, data.settings || {});
+    safe.meta = Object.assign({}, safe.meta, data.meta || {});
+    safe.inventory = Array.isArray(data.inventory)
+      ? data.inventory.map((item, index) => ({
+          id: item?.id || generateId("PROD", index + 1),
+          name: sanitizeString(item?.name || "Produit"),
+          category: sanitizeString(item?.category || "Divers"),
+          price: Number(item?.price) || 0,
+          stock: Number.isFinite(item?.stock) ? Number(item.stock) : 0,
+          consigned:
+            item?.consigned && typeof item.consigned === "object"
+              ? Object.entries(item.consigned).reduce((acc, [key, value]) => {
+                  acc[key] = Number(value) || 0;
+                  return acc;
+                }, {})
+              : {},
+          createdAt: item?.createdAt || new Date().toISOString()
+        })
+      : [];
+    safe.sellers = Array.isArray(data.sellers)
+      ? data.sellers.map((seller, index) => ({
+          id: seller?.id || generateId("SELL", index + 1),
+          name: sanitizeString(seller?.name || "Vendeuse"),
+          phone: sanitizeString(seller?.phone || ""),
+          balance: Number(seller?.balance) || 0,
+          consignments: Array.isArray(seller?.consignments)
+            ? seller.consignments.map((entry) => ({
+                productId: entry?.productId,
+                quantity: Number(entry?.quantity) || 0
+              }))
+            : [],
+          history: Array.isArray(seller?.history)
+            ? seller.history.map((entry) => ({
+                type: entry?.type || "info",
+                productId: entry?.productId,
+                saleId: entry?.saleId,
+                quantity: Number(entry?.quantity) || 0,
+                amount: Number(entry?.amount) || 0,
+                note: sanitizeString(entry?.note || ""),
+                at: entry?.at || new Date().toISOString()
+              }))
+            : []
+        }))
+      : [];
+    safe.sales = Array.isArray(data.sales)
+      ? data.sales.map((sale, index) => ({
+          id: sale?.id || generateId("SALE", index + 1),
+          date: sale?.date || new Date().toISOString(),
+          sellerId: sale?.sellerId || null,
+          payment: sale?.payment || "cash",
+          items: Array.isArray(sale?.items)
+            ? sale.items.map((item) => ({
+                productId: item?.productId,
+                name: item?.name || "Produit",
+                quantity: Number(item?.quantity) || 0,
+                unitPrice: Number(item?.unitPrice) || 0,
+                sellerId: item?.sellerId || null
+              }))
+            : [],
+          total: Number(sale?.total) || 0,
+          createdAt: sale?.createdAt || new Date().toISOString()
+        }))
+      : [];
+    safe.finances = Array.isArray(data.finances)
+      ? data.finances.map((entry, index) => ({
+          id: entry?.id || generateId("FIN", index + 1),
+          type: entry?.type === "expense" ? "expense" : "income",
+          label: sanitizeString(entry?.label || "Mouvement"),
+          amount: Number(entry?.amount) || 0,
+          date: entry?.date || new Date().toISOString()
+        }))
+      : [];
+    safe.activities = Array.isArray(data.activities)
+      ? data.activities.slice(-40).map((entry) => ({
+          message: sanitizeString(entry?.message || ""),
+          createdAt: entry?.createdAt || new Date().toISOString()
+        }))
+      : [];
+    safe.lastBackup = data.lastBackup || null;
+    return safe;
+  }
 
-        cleaned = cleaned.replace(/<<<<<<<[^]*?=======([^]*?)>>>>>>>[^]*/g, (_, incoming) => incoming.trim());
-        cleaned = cleaned.replace(/<<<<<<<[^]*?>>>>>>>[^]*/g, '');
-        cleaned = cleaned.replace(/=======/g, '');
-        cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+  function persist() {
+    saveData(storageKey, state);
+    emit("state:changed", getState());
+    updateBadges();
+  }
 
-        return cleaned;
-    }
+  function register(moduleInit) {
+    modules.push(moduleInit);
+    if (ready) moduleInit(AppAPI);
+  }
 
-    if (Array.isArray(value)) {
-        return value.map(item => cleanMergeArtifacts(item));
-    }
+  function on(event, handler) {
+    events[event] = events[event] || [];
+    events[event].push(handler);
+  }
 
-    if (value && typeof value === 'object') {
-        const next = Array.isArray(value) ? [] : { ...value };
-        Object.keys(next).forEach(key => {
-            next[key] = cleanMergeArtifacts(next[key]);
-        });
-        return next;
-    }
+  function emit(event, payload) {
+    (events[event] || []).forEach((handler) => handler(payload, getState()));
+  }
 
-    return value;
-}
+  function getState() {
+    return clone(state);
+  }
 
-const POSApp = {
-    state: cleanMergeArtifacts(cloneState(DEFAULT_STATE)),
-    currency() {
-        return POSApp.state.settings.currency || 'FCFA';
-    },
-    formatCurrency(value) {
-        return new Intl.NumberFormat('fr-FR', {
-            style: 'currency',
-            currency: 'XOF',
-            minimumFractionDigits: 0
-        }).format(value).replace('XOF', POSApp.currency());
-    },
-    notify(message, type = 'info') {
-        const existing = document.querySelector('.notification');
-        existing?.remove();
-        const div = document.createElement('div');
-        div.className = `notification ${type}`;
-        div.textContent = message;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 3500);
-    },
-    openModal(title, fields, onSubmit) {
-        const modal = document.getElementById('modal');
-        const form = document.getElementById('modal-form');
-        form.innerHTML = '';
-        const heading = document.createElement('h3');
-        heading.textContent = title;
-        form.appendChild(heading);
-        fields.forEach(field => {
-            const label = document.createElement('label');
-            label.textContent = field.label;
-            label.htmlFor = field.id;
-            const input = field.type === 'textarea' ? document.createElement('textarea') : document.createElement(field.type === 'select' ? 'select' : 'input');
-            input.id = field.id;
-            input.name = field.id;
-            if (field.type === 'select' && field.options) {
-                field.options.forEach(opt => {
-                    const option = document.createElement('option');
-                    option.value = opt.value ?? opt;
-                    option.textContent = opt.label ?? opt;
-                    input.appendChild(option);
-                });
-            }
-            if (field.type !== 'select' && field.type !== 'textarea') {
-                input.type = field.type || 'text';
-            }
-            if (field.value !== undefined) input.value = field.value;
-            if (field.required) input.required = true;
-            if (field.placeholder) input.placeholder = field.placeholder;
-            if (field.min !== undefined) input.min = field.min;
-            if (field.max !== undefined) input.max = field.max;
-            if (field.step !== undefined) input.step = field.step;
-            if (field.autofocus) input.autofocus = true;
-            if (field.readonly) {
-                input.readOnly = true;
-                input.classList.add('readonly');
-            }
-            label.appendChild(input);
-            if (field.helpText) {
-                const hint = document.createElement('small');
-                hint.className = 'field-hint';
-                hint.textContent = field.helpText;
-                label.appendChild(hint);
-            }
-            form.appendChild(label);
-        });
-        const actions = document.createElement('div');
-        actions.style.display = 'flex';
-        actions.style.gap = '0.75rem';
-        actions.style.marginTop = '0.5rem';
-        const cancelBtn = document.createElement('button');
-        cancelBtn.type = 'button';
-        cancelBtn.className = 'secondary';
-        cancelBtn.textContent = 'Annuler';
-        cancelBtn.onclick = () => modal.close();
-        const submitBtn = document.createElement('button');
-        submitBtn.type = 'submit';
-        submitBtn.textContent = 'Enregistrer';
-        actions.append(cancelBtn, submitBtn);
-        form.appendChild(actions);
-        form.onsubmit = evt => {
-            evt.preventDefault();
-            const data = Object.fromEntries(new FormData(form).entries());
-            onSubmit?.(data, modal.close.bind(modal));
-        };
-        modal.showModal();
-    },
-    refresh(section) {
-        updateStoreBranding();
-        document.dispatchEvent(new CustomEvent('pos:refresh', { detail: { section } }));
-    }
-};
+  function updateState(mutator) {
+    const draft = getState();
+    mutator(draft);
+    state = hydrate(draft);
+    persist();
+  }
 
-// Stockage LocalStorage
-function saveData(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
+  function setTheme(theme) {
+    state.settings.theme = theme;
+    document.body.classList.toggle("dark", theme === "dark");
+    persist();
+  }
 
-function loadData(key) {
-    const item = localStorage.getItem(key);
-    if (!item) return null;
-    try {
-        return JSON.parse(item);
-    } catch (error) {
-        console.warn(`Impossible de lire les données stockées pour "${key}". Réinitialisation...`, error);
-        localStorage.removeItem(key);
-        POSApp?.notify?.('Données corrompues détectées et réinitialisées.', 'warning');
-        return null;
-    }
-}
+  function toggleTheme() {
+    const next = state.settings.theme === "dark" ? "light" : "dark";
+    setTheme(next);
+  }
 
-function backupData() {
-    const backup = {
-        createdAt: new Date().toISOString(),
-        data: POSApp.state
-    };
-    saveData('jk_backup', backup);
-    saveData(STORAGE_KEYS.backupDate, new Date().toISOString());
-    POSApp.notify('Sauvegarde locale effectuée', 'success');
-    updateBackupInfo();
-    return backup;
-}
+  function generateId(prefix, counter) {
+    return `${prefix}-${String(counter).padStart(3, "0")}`;
+  }
 
-function restoreData(data) {
-    POSApp.state = cleanMergeArtifacts(cloneState(data));
-    ensureSettingsDefaults();
-    ensureSellersDefaults();
-    persistState();
-    POSApp.notify('Base restaurée avec succès', 'success');
-    POSApp.refresh();
-}
+  const prefixMap = {
+    product: "PROD",
+    seller: "SELL",
+    sale: "SALE",
+    finance: "FIN"
+  };
 
-function persistState() {
-    Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
-        if (key === 'backupDate') return;
-        saveData(storageKey, cleanMergeArtifacts(POSApp.state[key]));
+  function nextId(type) {
+    const key = `${type}Counter`;
+    state.meta[key] = (state.meta[key] || 1) + 1;
+    const prefix = prefixMap[type] || type.toUpperCase();
+    return generateId(prefix, state.meta[key] - 1);
+  }
+
+  function addActivity(message) {
+    state.activities.push({
+      message,
+      createdAt: new Date().toISOString()
     });
-}
+    state.activities = state.activities.slice(-40);
+    persist();
+  }
 
-function loadStateFromStorage() {
-    let initialized = false;
-    Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
-        if (key === 'backupDate') return;
-        const data = loadData(storageKey);
-        if (data) {
-            POSApp.state[key] = cleanMergeArtifacts(data);
-            initialized = true;
-        }
-    });
-    POSApp.state = cleanMergeArtifacts(POSApp.state);
-    ensureSettingsDefaults();
-    ensureSellersDefaults();
-    if (!initialized) {
-        persistState();
+  function updateBadges() {
+    const badge = document.getElementById("connection-badge");
+    const topBadge = document.getElementById("topbar-status");
+    const backup = document.getElementById("backup-indicator");
+    const status = navigator.onLine ? "En ligne" : "Hors ligne";
+    badge.textContent = status;
+    topBadge.textContent = status;
+    if (state.lastBackup) {
+      const date = new Date(state.lastBackup).toLocaleString();
+      backup.textContent = `Dernière sauvegarde : ${date}`;
     }
-}
+  }
 
-function updateBackupInfo() {
-    const last = loadData(STORAGE_KEYS.backupDate);
-    if (last) {
-        const info = document.getElementById('last-backup');
-        const formatted = new Intl.DateTimeFormat('fr-FR', {
-            dateStyle: 'medium',
-            timeStyle: 'short'
-        }).format(new Date(last));
-        info.textContent = `Dernière sauvegarde : ${formatted}`;
-    }
-}
+  function showLoader(show) {
+    const loader = document.getElementById("loader");
+    loader.style.display = show ? "grid" : "none";
+  }
 
-function ensureSettingsDefaults() {
-    const defaults = DEFAULT_STATE.settings;
-    POSApp.state.settings = {
-        ...defaults,
-        ...POSApp.state.settings
-    };
-    if (typeof POSApp.state.settings.manualPricing !== 'boolean') {
-        POSApp.state.settings.manualPricing = defaults.manualPricing;
-    }
-}
+  function initApp() {
+    updateBadges();
+    document.getElementById("store-name").textContent = state.settings.storeName;
+    document.getElementById("store-tagline").textContent = state.settings.tagline;
+    document.body.classList.toggle("dark", state.settings.theme === "dark");
+    document.getElementById("toggle-theme").textContent =
+      state.settings.theme === "dark" ? "Mode clair" : "Mode sombre";
 
-function ensureSellersDefaults() {
-    if (!Array.isArray(POSApp.state.sellers) || !POSApp.state.sellers.length) {
-        const legacyNames = Array.isArray(POSApp.state.settings?.sellers)
-            ? POSApp.state.settings.sellers
-            : [];
-        if (legacyNames.length) {
-            POSApp.state.sellers = legacyNames.map((name, index) => ({
-                id: `VEN${String(index + 1).padStart(3, '0')}`,
-                name,
-                phone: '',
-                notes: '',
-                assignments: [],
-                history: []
-            }));
-        } else {
-            POSApp.state.sellers = cloneState(DEFAULT_STATE.sellers);
-        }
-    }
-    POSApp.state.sellers = POSApp.state.sellers.map((seller, index) => ({
-        id: seller.id || `VEN${String(index + 1).padStart(3, '0')}`,
-        name: seller.name || `Vendeuse ${index + 1}`,
-        phone: seller.phone || '',
-        notes: seller.notes || '',
-        assignments: Array.isArray(seller.assignments) ? seller.assignments : [],
-        history: Array.isArray(seller.history) ? seller.history : []
-    }));
-    if (POSApp.state.settings?.sellers) {
-        delete POSApp.state.settings.sellers;
-    }
-}
-
-function updateOfflineStatus() {
-    const status = document.getElementById('offline-status');
-    if (!status) return;
-    const online = navigator.onLine;
-    status.querySelector('span').textContent = online ? 'En ligne (mode autonome)' : 'Hors ligne';
-    status.querySelector('span').style.color = online ? 'var(--accent)' : 'var(--danger)';
-    const topbarBadge = document.getElementById('topbar-status');
-    if (topbarBadge) {
-        topbarBadge.textContent = online ? 'En ligne' : 'Hors ligne';
-        topbarBadge.classList.toggle('online', online);
-    }
-}
-
-function initNavigation() {
-    const links = Array.from(document.querySelectorAll('.nav-link'));
-    let needsDefault = false;
-
-    links.forEach(btn => {
-        const targetId = btn.dataset.section;
-        const targetSection = targetId ? document.getElementById(targetId) : null;
-        if (!targetSection) {
-            needsDefault = needsDefault || btn.classList.contains('active');
-            btn.remove();
-            return;
-        }
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            targetSection.classList.add('active');
-            POSApp.refresh(targetId);
-        });
+    document.querySelectorAll(".menu-item").forEach((btn) => {
+      btn.addEventListener("click", () => switchSection(btn.dataset.section));
     });
 
-    let activeLink = document.querySelector('.nav-link.active');
-    if (!activeLink || needsDefault) {
-        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-        activeLink = document.querySelector('.nav-link');
-        if (activeLink) {
-            activeLink.classList.add('active');
-            const firstSection = document.getElementById(activeLink.dataset.section);
-            firstSection?.classList.add('active');
-            POSApp.refresh(activeLink.dataset.section);
-        }
-    } else {
-        const currentSection = document.getElementById(activeLink.dataset.section);
-        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-        currentSection?.classList.add('active');
-    }
-}
-
-function initTheme() {
-    const toggle = document.getElementById('toggle-theme');
-    const applyTheme = () => {
-        const theme = POSApp.state.settings.theme || 'light';
-        document.body.classList.toggle('dark-theme', theme === 'dark');
-        toggle.textContent = theme === 'dark' ? 'Mode clair' : 'Mode sombre';
-    };
-    toggle.addEventListener('click', () => {
-        POSApp.state.settings.theme = POSApp.state.settings.theme === 'dark' ? 'light' : 'dark';
-        applyTheme();
-        persistState();
+    document.getElementById("toggle-theme").addEventListener("click", () => {
+      toggleTheme();
+      document.getElementById("toggle-theme").textContent =
+        state.settings.theme === "dark" ? "Mode clair" : "Mode sombre";
     });
-    applyTheme();
-}
 
-function initAutoBackup() {
-    setInterval(() => {
-        backupData();
-    }, 10 * 60 * 1000);
-}
+    document.getElementById("trigger-backup").addEventListener("click", backupData);
 
-function setupLoader() {
+    window.addEventListener("online", updateBadges);
+    window.addEventListener("offline", updateBadges);
+
+    if (!modalReady) {
+      modalClose().addEventListener("click", closeModal);
+      modal().addEventListener("click", (event) => {
+        if (event.target === modal()) closeModal();
+      });
+      modalReady = true;
+    }
+
     setTimeout(() => {
-        document.getElementById('loader').classList.add('hidden');
-        const app = document.getElementById('app');
-        app.classList.remove('hidden');
-    }, 900);
-}
+      document.getElementById("app").hidden = false;
+      showLoader(false);
+      ready = true;
+      modules.forEach((fn) => fn(AppAPI));
+      emit("state:ready", getState());
+    }, 400);
 
-function updateStoreBranding() {
-    document.getElementById('store-name').textContent = POSApp.state.settings.storeName;
-    document.title = `${POSApp.state.settings.storeName} - POS`;
-}
+    setInterval(() => {
+      if (document.hidden) return;
+      backupData(true);
+    }, 10 * 60 * 1000);
+  }
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadStateFromStorage();
-    setupLoader();
-    initNavigation();
-    initTheme();
-    updateBackupInfo();
-    updateOfflineStatus();
-    updateStoreBranding();
-    window.addEventListener('online', updateOfflineStatus);
-    window.addEventListener('offline', updateOfflineStatus);
-    document.getElementById('backup-btn').addEventListener('click', backupData);
-    initAutoBackup();
-    POSApp.refresh();
-});
+  function switchSection(section) {
+    document.querySelectorAll(".menu-item").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.section === section);
+    });
+    document.querySelectorAll(".section").forEach((el) => {
+      el.classList.toggle("active", el.id === section);
+    });
+  }
 
-window.POSApp = POSApp;
-window.saveData = saveData;
-window.loadData = loadData;
-window.backupData = backupData;
-window.restoreData = restoreData;
-window.persistState = persistState;
-window.cloneState = cloneState;
+  function saveData(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function loadData(key, fallback = null) {
+    try {
+      const stored = localStorage.getItem(key);
+      if (!stored) return clone(fallback);
+      return JSON.parse(stored);
+    } catch (error) {
+      console.warn("Impossible de charger", error);
+      return clone(fallback);
+    }
+  }
+
+  function backupData(silent = false) {
+    try {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `jk-pos-backup-${Date.now()}.json`;
+      if (!silent) {
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      URL.revokeObjectURL(url);
+      state.lastBackup = new Date().toISOString();
+      persist();
+    } catch (error) {
+      console.error("Sauvegarde impossible", error);
+    }
+  }
+
+  function restoreData(payload) {
+    try {
+      const parsed = typeof payload === "string" ? JSON.parse(payload) : payload;
+      state = hydrate(parsed);
+      persist();
+      modules.forEach((fn) => fn(AppAPI));
+    } catch (error) {
+      alert("Impossible de restaurer le fichier fourni");
+      console.error(error);
+    }
+  }
+
+  function reset() {
+    state = clone(defaultState);
+    persist();
+    modules.forEach((fn) => fn(AppAPI));
+  }
+
+  function closeModal() {
+    modal().setAttribute("hidden", "hidden");
+    modal().setAttribute("aria-hidden", "true");
+    modalForm().innerHTML = "";
+  }
+
+  function openModal({ title, fields = [], submitLabel = "Enregistrer", onSubmit }) {
+    modalTitle().textContent = title;
+    modalForm().innerHTML = "";
+    fields.forEach((field) => {
+      const wrapper = document.createElement("label");
+      wrapper.className = "form-group";
+      if (field.label) {
+        const span = document.createElement("span");
+        span.textContent = field.label;
+        wrapper.appendChild(span);
+      }
+      let input;
+      if (field.type === "textarea") {
+        input = document.createElement("textarea");
+        input.rows = field.rows || 3;
+      } else if (field.type === "select") {
+        input = document.createElement("select");
+        (field.options || []).forEach((option) => {
+          const opt = document.createElement("option");
+          opt.value = option.value;
+          opt.textContent = option.label;
+          if (option.value === field.value) opt.selected = true;
+          input.appendChild(opt);
+        });
+      } else {
+        input = document.createElement("input");
+        input.type = field.type || "text";
+      }
+      if (field.name) input.name = field.name;
+      if (field.placeholder) input.placeholder = field.placeholder;
+      if (typeof field.value !== "undefined") input.value = field.value;
+      if (field.min !== undefined) input.min = field.min;
+      if (field.max !== undefined) input.max = field.max;
+      if (field.step !== undefined) input.step = field.step;
+      if (field.required) input.required = true;
+      if (field.readOnly) input.readOnly = true;
+      wrapper.appendChild(input);
+      if (field.hint) {
+        const hint = document.createElement("small");
+        hint.textContent = field.hint;
+        hint.className = "hint";
+        wrapper.appendChild(hint);
+      }
+      modalForm().appendChild(wrapper);
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "form-actions";
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.textContent = submitLabel;
+    actions.appendChild(submit);
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "secondary";
+    cancel.textContent = "Annuler";
+    cancel.addEventListener("click", closeModal);
+    actions.appendChild(cancel);
+    modalForm().appendChild(actions);
+
+    modalForm().onsubmit = (event) => {
+      event.preventDefault();
+      const formData = new FormData(modalForm());
+      const result = {};
+      fields.forEach((field) => {
+        if (!field.name) return;
+        if (field.type === "number") {
+          result[field.name] = Number(formData.get(field.name));
+        } else {
+          result[field.name] = formData.get(field.name);
+        }
+      });
+      if (onSubmit) onSubmit(result, closeModal);
+    };
+
+    modal().removeAttribute("hidden");
+    modal().setAttribute("aria-hidden", "false");
+  }
+
+  const AppAPI = {
+    getState,
+    updateState,
+    nextId,
+    generateId,
+    addActivity,
+    on,
+    emit,
+    register,
+    saveData,
+    loadData,
+    backupData,
+    restoreData,
+    reset,
+    openModal,
+    closeModal,
+    defaultState: clone(defaultState)
+  };
+
+  window.App = AppAPI;
+  document.addEventListener("DOMContentLoaded", initApp);
+})();
