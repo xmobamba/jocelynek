@@ -4,15 +4,22 @@
     gap: 1.5rem;
 }
 
+<<<<<<< HEAD
 .insights-card {
     grid-column: 1 / -1;
     background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.78));
+=======
+.chart-card,
+.activity-card {
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
     border-radius: 24px;
     box-shadow: var(--shadow);
     padding: 1.75rem;
     border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+<<<<<<< HEAD
     gap: 1.25rem;
 }
 
@@ -131,12 +138,81 @@ body.dark-theme canvas {
     background: linear-gradient(160deg, rgba(255, 165, 0, 0.12), rgba(34, 197, 94, 0.16));
 }
 
+=======
+    gap: 1rem;
+}
+
+body.dark-theme .chart-card,
+body.dark-theme .activity-card {
+    background: linear-gradient(150deg, rgba(17, 24, 39, 0.92), rgba(15, 23, 42, 0.8));
+}
+
+.chart-card header,
+.activity-card header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.activity-card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-card li {
+    font-size: 0.9rem;
+    color: var(--muted);
+    position: relative;
+    padding: 0.85rem 0.75rem 0.85rem 1.6rem;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.activity-card li::before {
+    content: '';
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    transform: translateY(-50%);
+}
+
+.activity-card li.empty-state {
+    background: transparent;
+    padding: 0;
+}
+
+.activity-card li.empty-state::before {
+    display: none;
+}
+
+canvas {
+    background: linear-gradient(160deg, rgba(255, 165, 0, 0.08), rgba(0, 168, 107, 0.12));
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+body.dark-theme canvas {
+    border-color: rgba(148, 163, 184, 0.18);
+    background: linear-gradient(160deg, rgba(255, 165, 0, 0.12), rgba(34, 197, 94, 0.16));
+}
+
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
 @media (max-width: 1000px) {
     .dashboard-layout {
         grid-template-columns: 1fr;
     }
+<<<<<<< HEAD
 
     .insights-card {
         grid-column: auto;
     }
+=======
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
 }

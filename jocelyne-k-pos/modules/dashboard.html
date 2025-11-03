@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | JOCELYNE K POS</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="../assets/js/app.js"></script>
+    <script defer src="../assets/js/dashboard.js"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <img src="../assets/img/logo.png" alt="Logo Jocelyne K" class="brand__logo">
+                <span class="brand__name">Jocelyne K POS</span>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="dashboard.html" class="nav__link nav__link--active">Tableau de bord</a>
+                <a href="inventaire.html" class="nav__link">Inventaire</a>
+                <a href="ventes.html" class="nav__link">Ventes</a>
+                <a href="vendeurs.html" class="nav__link">Vendeurs</a>
+                <a href="parametres.html" class="nav__link">Paramètres</a>
+                <a href="../index.html" class="nav__link nav__link--home">Accueil</a>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Tableau de bord</h1>
+                <p>Visualisez les indicateurs clés de vos boutiques.</p>
+            </header>
+            <section class="grid grid--2">
+                <article class="card card--stat">
+                    <h2>Ventes du jour</h2>
+                    <p class="stat-value" id="salesToday">0 FCFA</p>
+                </article>
+                <article class="card card--stat">
+                    <h2>Avances clients (semaine)</h2>
+                    <p class="stat-value" id="advancesWeek">0 FCFA</p>
+                </article>
+                <article class="card card--stat">
+                    <h2>Produits en alerte</h2>
+                    <p class="stat-value" id="lowStockCount">0</p>
+                </article>
+                <article class="card card--stat">
+                    <h2>Top produit</h2>
+                    <p class="stat-value" id="topProduct">-</p>
+                </article>
+            </section>
+            <section class="grid grid--2">
+                <article class="card">
+                    <h2>Évolution des ventes</h2>
+                    <canvas id="salesChart"></canvas>
+                </article>
+                <article class="card">
+                    <h2>Répartition des stocks</h2>
+                    <canvas id="inventoryChart"></canvas>
+                </article>
+            </section>
+            <section class="card">
+                <h2>Assistant IA</h2>
+                <div class="assistant">
+                    <div class="assistant__messages" id="assistantMessages"></div>
+                    <form id="assistantForm" class="assistant__form">
+                        <input type="text" id="assistantInput" placeholder="Posez une question sur vos données..." required>
+                        <button type="submit" class="btn">Envoyer</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
