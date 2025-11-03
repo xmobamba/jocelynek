@@ -10,7 +10,11 @@ Application de point de vente 100 % hors ligne, pensée pour les boutiques Joce
 - **Vendeuses** : fiches de suivi des collaboratrices, stocks confiés, retours en boutique et historique des ventes réalisées.
 - **Finances** : journal recettes/dépenses, synthèse mensuelle, export comptable CSV.
 - **Paramètres** : identité de la boutique, devise FCFA (personnalisable), TVA, gestion du logo, export/import complet de la base JSON, remise à zéro.
+<<<<<<< HEAD
+- **Résumé intelligent** : synthèse automatique dans le dashboard couvrant inventaire, ventes, vendeuses et finances.
+=======
 - **Assistant IA local** : widget flottant avec réponses contextuelles pré-enregistrées sur les ventes, l'inventaire et la configuration.
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
 - **Sécurité des données** : sauvegarde locale à la demande et auto-sauvegarde toutes les 10 minutes.
 
 ## 🗂️ Structure du projet
@@ -29,7 +33,11 @@ Application de point de vente 100 % hors ligne, pensée pour les boutiques Joce
 │   ├── sellers.js
 │   ├── finances.js
 │   ├── settings.js
+<<<<<<< HEAD
+│   └── insights.js
+=======
 │   └── ai.js
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
 ├── assets/
 │   ├── README.md
 │   ├── icons/

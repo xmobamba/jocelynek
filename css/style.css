@@ -1029,12 +1029,18 @@ body.dark-theme .field-hint {
     transform: translateX(26px);
 }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
 .settings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1.5rem;
 }
 
+<<<<<<< HEAD
+=======
 .ai-widget {
     position: fixed;
     right: 2rem;
@@ -1106,6 +1112,7 @@ body.dark-theme .field-hint {
     background: rgba(0, 168, 107, 0.15);
 }
 
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
 .modal::backdrop {
     background: rgba(0, 0, 0, 0.5);
 }
@@ -1271,9 +1278,12 @@ body.dark-theme .field-hint {
         grid-template-columns: 1fr;
     }
 
+<<<<<<< HEAD
+=======
     .ai-panel {
         width: calc(100vw - 3rem);
     }
+>>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
 }
 
 @media (max-width: 600px) {
