@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventes | JOCELYNE K POS</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="../assets/js/app.js"></script>
+    <script defer src="../assets/js/ventes.js"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <img src="../assets/img/logo.png" alt="Logo Jocelyne K" class="brand__logo">
+                <span class="brand__name">Jocelyne K POS</span>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="dashboard.html" class="nav__link">Tableau de bord</a>
+                <a href="inventaire.html" class="nav__link">Inventaire</a>
+                <a href="ventes.html" class="nav__link nav__link--active">Ventes</a>
+                <a href="vendeurs.html" class="nav__link">Vendeurs</a>
+                <a href="parametres.html" class="nav__link">Paramètres</a>
+                <a href="../index.html" class="nav__link nav__link--home">Accueil</a>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Ventes</h1>
+                <p>Enregistrez les ventes, avances et soldes clients.</p>
+            </header>
+            <section class="card">
+                <h2>Nouvelle vente</h2>
+                <form id="saleForm" class="form-grid form-grid--3">
+                    <div class="form-group">
+                        <label for="saleProduct">Produit</label>
+                        <select id="saleProduct" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleQuantity">Quantité</label>
+                        <input type="number" id="saleQuantity" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="salePrice">Prix unitaire (FCFA)</label>
+                        <input type="number" id="salePrice" min="0" step="50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleAdvance">Avance client (FCFA)</label>
+                        <input type="number" id="saleAdvance" min="0" step="50">
+                    </div>
+                    <div class="form-group">
+                        <label for="saleClient">Client</label>
+                        <input type="text" id="saleClient" placeholder="Nom du client (optionnel)">
+                    </div>
+                    <div class="form-group">
+                        <label for="saleVendor">Vendeur</label>
+                        <input type="text" id="saleVendor" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleStore">Boutique</label>
+                        <select id="saleStore" required>
+                            <option value="Cocovico">Jocelyne K Cocovico</option>
+                            <option value="Djorobité">Jocelyne K Djorobité</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleDate">Date</label>
+                        <input type="date" id="saleDate" required>
+                    </div>
+                    <div class="form-group form-group--summary">
+                        <label>Total</label>
+                        <p id="saleTotal" class="summary-value">0 FCFA</p>
+                    </div>
+                    <div class="form-group form-group--summary">
+                        <label>Solde restant</label>
+                        <p id="saleBalance" class="summary-value">0 FCFA</p>
+                    </div>
+                    <button type="submit" class="btn btn--full">Enregistrer la vente</button>
+                </form>
+            </section>
+            <section class="card">
+                <header class="card__header">
+                    <h2>Historique des ventes</h2>
+                    <div class="filters">
+                        <input type="date" id="filterDate">
+                        <input type="text" id="filterVendor" placeholder="Filtrer par vendeur">
+                        <select id="filterStore">
+                            <option value="">Toutes les boutiques</option>
+                            <option value="Cocovico">Cocovico</option>
+                            <option value="Djorobité">Djorobité</option>
+                        </select>
+                    </div>
+                </header>
+                <table class="table" id="salesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Produit</th>
+                            <th>Total</th>
+                            <th>Avance</th>
+                            <th>Solde</th>
+                            <th>Vendeur</th>
+                            <th>Boutique</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+            <template id="invoiceTemplate">
+                <div class="invoice">
+                    <header class="invoice__header">
+                        <img src="../assets/img/logo.png" alt="Logo" class="invoice__logo">
+                        <div>
+                            <h1>JOCELYNE K POS SYSTEM</h1>
+                            <p id="invoiceStore"></p>
+                            <p id="invoiceContact"></p>
+                        </div>
+                    </header>
+                    <section class="invoice__details">
+                        <p><strong>Facture :</strong> <span id="invoiceId"></span></p>
+                        <p><strong>Date :</strong> <span id="invoiceDate"></span></p>
+                        <p><strong>Client :</strong> <span id="invoiceClient"></span></p>
+                        <p><strong>Vendeur :</strong> <span id="invoiceVendor"></span></p>
+                    </section>
+                    <table class="invoice__table">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Quantité</th>
+                                <th>Prix unitaire</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceItems"></tbody>
+                    </table>
+                    <section class="invoice__summary">
+                        <p><strong>Total général :</strong> <span id="invoiceTotal"></span></p>
+                        <p><strong>Avance :</strong> <span id="invoiceAdvance"></span></p>
+                        <p><strong>Solde restant :</strong> <span id="invoiceBalance"></span></p>
+                    </section>
+                    <footer class="invoice__footer">
+                        Merci pour votre confiance 💕
+                    </footer>
+                </div>
+            </template>
+            <div class="invoice-container"></div>
+            <button id="printInvoice" class="btn btn--print">Imprimer la facture</button>
+        </main>
+    </div>
+</body>
+</html>

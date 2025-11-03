@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOCELYNE K POS SYSTEM</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="assets/js/app.js"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <img src="assets/img/logo.png" alt="Logo Jocelyne K" class="brand__logo">
+                <span class="brand__name">Jocelyne K POS</span>
+            </div>
+            <nav class="sidebar__nav">
+                <a href="modules/dashboard.html" class="nav__link">Tableau de bord</a>
+                <a href="modules/inventaire.html" class="nav__link">Inventaire</a>
+                <a href="modules/ventes.html" class="nav__link">Ventes</a>
+                <a href="modules/vendeurs.html" class="nav__link">Vendeurs</a>
+                <a href="modules/parametres.html" class="nav__link">Paramètres</a>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Bienvenue dans le système JOCELYNE K POS</h1>
+                <p>Sélectionnez un module dans le menu latéral pour commencer.</p>
+            </header>
+            <section class="module-preview">
+                <article class="card">
+                    <h2>Modules disponibles</h2>
+                    <ul>
+                        <li>Tableau de bord avec assistant IA et graphiques.</li>
+                        <li>Inventaire avec références automatiques et alertes de stock.</li>
+                        <li>Ventes avec gestion des avances et impression de factures.</li>
+                        <li>Gestion des vendeurs et marchandises confiées.</li>
+                        <li>Paramètres pour configurer les boutiques et les utilisateurs.</li>
+                    </ul>
+                </article>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
