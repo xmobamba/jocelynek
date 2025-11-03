@@ -2,9 +2,24 @@
 
 (function () {
     const salesProductsList = () => document.getElementById('sales-products');
+    const saleDateField = () => document.getElementById('sale-date');
     let cart = [];
     let chartAnimationFrame = null;
     let chartProgress = 0;
+
+    function currentLocalDateTimeValue(date = new Date()) {
+        const offset = date.getTimezoneOffset();
+        const local = new Date(date.getTime() - offset * 60000);
+        return local.toISOString().slice(0, 16);
+    }
+
+    function ensureSaleDateValue() {
+        const input = saleDateField();
+        if (!input) return;
+        if (!input.value) {
+            input.value = currentLocalDateTimeValue();
+        }
+    }
 
     function renderProductList(filter = '') {
         const list = salesProductsList();
@@ -261,9 +276,23 @@
         const taxRate = Number(POSApp.state.settings.tax || 0) / 100;
         const taxAmount = Math.round(total * taxRate);
         const grandTotal = total + taxAmount;
+        const dateInput = saleDateField();
+        let saleDate = new Date();
+        if (dateInput?.value) {
+            const parsed = new Date(dateInput.value);
+            if (!Number.isNaN(parsed.getTime())) {
+                saleDate = parsed;
+            } else {
+                POSApp.notify('Date de vente invalide. Utilisation de la date actuelle.', 'warning');
+                dateInput.value = currentLocalDateTimeValue();
+            }
+        } else {
+            ensureSaleDateValue();
+        }
+        const saleDateIso = saleDate.toISOString();
         const sale = {
             id: `VENTE-${Date.now()}`,
-            date: new Date().toISOString(),
+            date: saleDateIso,
             seller: sellerName,
             sellerId: sellerRecord?.id || null,
             payment,
@@ -305,6 +334,9 @@
         POSApp.notify('Vente enregistrée', 'success');
         cart = [];
         renderCart();
+        if (dateInput) {
+            dateInput.value = currentLocalDateTimeValue();
+        }
         renderProductList(document.getElementById('sales-search').value || '');
         populateSelectors();
         renderSalesHistory();
@@ -471,6 +503,7 @@
             renderSalesHistory();
             updateDashboardMetrics();
             renderChart();
+            ensureSaleDateValue();
         }
     });
 
@@ -481,5 +514,6 @@
         renderSalesHistory();
         updateDashboardMetrics();
         renderChart();
+        ensureSaleDateValue();
     });
 })();
