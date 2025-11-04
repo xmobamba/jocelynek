@@ -103,6 +103,13 @@
                         <select id="sale-product"></select>
                     </div>
                     <div class="form-group">
+                        <label for="sale-seller">Vendeur / Vendeuse</label>
+                        <select id="sale-seller">
+                            <option value="">-- Vente directe --</option>
+                        </select>
+                        <small id="seller-stock-info" class="field-hint"></small>
+                    </div>
+                    <div class="form-group">
                         <label for="sale-product-name">Nom du produit (modifiable)</label>
                         <input type="text" id="sale-product-name" placeholder="Nom du produit" required />
                     </div>
@@ -151,6 +158,7 @@
                                     <th>Date</th>
                                     <th>Produit</th>
                                     <th>Boutique</th>
+                                    <th>Vendeur</th>
                                     <th>Client</th>
                                     <th>Qté</th>
                                     <th>Total</th>

@@ -21,6 +21,55 @@ const VentesModule = (function () {
             .join('');
     }
 
+    function populateSellerOptions() {
+        const select = document.getElementById('sale-seller');
+        if (!select) return;
+        const data = POSApp.getData();
+        const boutiqueSelect = document.getElementById('sale-boutique');
+        const selectedBoutique = boutiqueSelect ? boutiqueSelect.value : '';
+        const sellers = selectedBoutique
+            ? data.sellers.filter(seller => seller.boutique === selectedBoutique)
+            : data.sellers;
+
+        const options = ['<option value="">-- Vente directe --</option>'];
+        sellers.forEach(seller => {
+            options.push(`<option value="${seller.id}">${seller.name}</option>`);
+        });
+        select.innerHTML = options.join('');
+    }
+
+    function updateSellerStockInfo() {
+        const infoEl = document.getElementById('seller-stock-info');
+        if (!infoEl) return;
+        const sellerSelect = document.getElementById('sale-seller');
+        const productSelect = document.getElementById('sale-product');
+        if (!sellerSelect || !productSelect) return;
+
+        const sellerId = sellerSelect.value;
+        const productRef = productSelect.value;
+        if (!sellerId) {
+            infoEl.textContent = 'Sélectionnez une vendeuse pour utiliser le stock confié.';
+            return;
+        }
+
+        const data = POSApp.getData();
+        const seller = data.sellers.find(item => String(item.id) === sellerId);
+        if (!seller) {
+            infoEl.textContent = 'Vendeur introuvable.';
+            return;
+        }
+
+        if (!productRef) {
+            infoEl.textContent = 'Choisissez un produit pour vérifier le stock confié.';
+            return;
+        }
+
+        const assignment = seller.assignments.find(a => a.productRef === productRef);
+        infoEl.textContent = assignment
+            ? `Stock confié disponible : ${assignment.quantity}`
+            : 'Aucun stock confié pour ce produit.';
+    }
+
     function getSaleFormValues() {
         const date = document.getElementById('sale-date').value;
         const selectedProductRef = document.getElementById('sale-product').value;
@@ -28,6 +77,7 @@ const VentesModule = (function () {
         const quantity = Number(document.getElementById('sale-quantity').value);
         const price = Number(document.getElementById('sale-price').value);
         const boutique = document.getElementById('sale-boutique').value;
+        const sellerId = document.getElementById('sale-seller').value;
         const client = document.getElementById('sale-client').value.trim();
         const paymentMethod = document.getElementById('sale-payment').value;
         const advanceInput = document.getElementById('sale-advance');
@@ -40,6 +90,7 @@ const VentesModule = (function () {
             quantity,
             price,
             boutique,
+            sellerId,
             client,
             paymentMethod,
             advance
@@ -64,9 +115,14 @@ const VentesModule = (function () {
         document.getElementById('sale-price').value = '';
         document.getElementById('sale-client').value = '';
         document.getElementById('sale-payment').value = 'Cash';
+        const sellerSelect = document.getElementById('sale-seller');
+        if (sellerSelect) {
+            sellerSelect.value = '';
+        }
         document.getElementById('sale-advance').value = 0;
         document.getElementById('sale-payment').dispatchEvent(new Event('change'));
         updateBalance();
+        updateSellerStockInfo();
     }
 
     function renderSalesList() {
@@ -74,10 +130,13 @@ const VentesModule = (function () {
         if (!tbody) return;
         const data = POSApp.getData();
         const boutiqueMap = Object.fromEntries(data.settings.boutiques.map(b => [b.id, b.name]));
+        const sellerMap = Object.fromEntries(data.sellers.map(seller => [String(seller.id), seller.name]));
         const filtered = data.sales.filter(sale => {
+            const sellerLabel = sale.sellerName || sellerMap[String(sale.sellerId)] || '';
             const haystack = [
                 sale.productName,
                 sale.client,
+                sellerLabel,
                 sale.boutique,
                 sale.paymentMethod
             ].join(' ').toLowerCase();
@@ -85,18 +144,20 @@ const VentesModule = (function () {
         });
 
         if (!filtered.length) {
-            tbody.innerHTML = '<tr><td colspan="8">Aucune vente trouvée</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9">Aucune vente trouvée</td></tr>';
             return;
         }
 
         tbody.innerHTML = filtered
             .map(sale => {
                 const boutiqueLabel = sale.boutiqueLabel || boutiqueMap[sale.boutique] || sale.boutique;
+                const sellerLabel = sale.sellerName || sellerMap[String(sale.sellerId)] || '—';
                 return `
                 <tr>
                     <td>${sale.date}</td>
                     <td>${sale.productName}</td>
                     <td>${boutiqueLabel}</td>
+                    <td>${sellerLabel}</td>
                     <td>${sale.client || '—'}</td>
                     <td>${sale.quantity}</td>
                     <td>${POSApp.formatCurrency(sale.totalAmount)}</td>
@@ -113,6 +174,8 @@ const VentesModule = (function () {
         if (!invoiceEl) return;
         const data = POSApp.getData();
         const logo = data.settings.logo || POSApp.DEFAULT_LOGO;
+        const sellerMap = Object.fromEntries(data.sellers.map(seller => [String(seller.id), seller.name]));
+        const sellerLabel = sale.sellerName || sellerMap[String(sale.sellerId)] || '—';
         invoiceEl.innerHTML = `
             <header>
                 <img src="${logo}" alt="Logo" style="height:80px;margin:0 auto 1rem;" />
@@ -122,6 +185,7 @@ const VentesModule = (function () {
             <section>
                 <p><strong>Date :</strong> ${sale.date}</p>
                 <p><strong>Client :</strong> ${sale.client || '—'}</p>
+                <p><strong>Vendeur :</strong> ${sellerLabel}</p>
                 <p><strong>Mode de paiement :</strong> ${sale.paymentMethod}</p>
             </section>
             <table style="width:100%;border-collapse:collapse;margin-top:1.5rem;">
@@ -172,6 +236,8 @@ const VentesModule = (function () {
     function attachEvents() {
         const form = document.getElementById('sale-form');
         const productSelect = document.getElementById('sale-product');
+        const sellerSelect = document.getElementById('sale-seller');
+        const boutiqueSelect = document.getElementById('sale-boutique');
         const quantityInput = document.getElementById('sale-quantity');
         const priceInput = document.getElementById('sale-price');
         const advanceInput = document.getElementById('sale-advance');
@@ -191,7 +257,19 @@ const VentesModule = (function () {
                 const data = POSApp.getData();
                 const boutiqueLabel = data.settings.boutiques.find(b => b.id === values.boutique)?.name || values.boutique;
                 const selectedProduct = data.products.find(p => p.reference === values.selectedProductRef);
-                if (selectedProduct && selectedProduct.quantity < values.quantity) {
+                const seller = values.sellerId ? data.sellers.find(s => String(s.id) === values.sellerId) : null;
+
+                if (seller) {
+                    if (!values.selectedProductRef) {
+                        alert('Veuillez choisir un produit attribué au vendeur.');
+                        return;
+                    }
+                    const assignment = seller.assignments.find(a => a.productRef === values.selectedProductRef);
+                    if (!assignment || assignment.quantity < values.quantity) {
+                        alert('Stock confié insuffisant pour cette vente.');
+                        return;
+                    }
+                } else if (selectedProduct && selectedProduct.quantity < values.quantity) {
                     alert('Quantité insuffisante en stock.');
                     return;
                 }
@@ -206,6 +284,8 @@ const VentesModule = (function () {
                     totalAmount: total,
                     boutique: values.boutique,
                     boutiqueLabel,
+                    sellerId: seller ? seller.id : null,
+                    sellerName: seller ? seller.name : '',
                     client: values.client,
                     paymentMethod: values.paymentMethod,
                     advance: values.paymentMethod === 'Avance + Solde' ? Math.min(values.advance, total) : 0,
@@ -214,8 +294,22 @@ const VentesModule = (function () {
 
                 POSApp.updateData(store => {
                     store.sales.push(sale);
-                    if (selectedProduct) {
-                        selectedProduct.quantity = Math.max(selectedProduct.quantity - values.quantity, 0);
+                    if (seller && sale.productRef) {
+                        const sellerRecord = store.sellers.find(s => s.id === seller.id);
+                        if (sellerRecord) {
+                            const assignment = sellerRecord.assignments.find(a => a.productRef === sale.productRef);
+                            if (assignment) {
+                                assignment.quantity = Math.max(assignment.quantity - sale.quantity, 0);
+                                if (assignment.quantity === 0) {
+                                    sellerRecord.assignments = sellerRecord.assignments.filter(a => a.productRef !== sale.productRef);
+                                }
+                            }
+                        }
+                    } else if (sale.productRef) {
+                        const productRecord = store.products.find(p => p.reference === sale.productRef);
+                        if (productRecord) {
+                            productRecord.quantity = Math.max(productRecord.quantity - sale.quantity, 0);
+                        }
                     }
                 });
 
@@ -232,6 +326,18 @@ const VentesModule = (function () {
                 if (name) {
                     document.getElementById('sale-product-name').value = name;
                 }
+                updateSellerStockInfo();
+            });
+        }
+
+        if (sellerSelect) {
+            sellerSelect.addEventListener('change', updateSellerStockInfo);
+        }
+
+        if (boutiqueSelect) {
+            boutiqueSelect.addEventListener('change', () => {
+                populateSellerOptions();
+                updateSellerStockInfo();
             });
         }
 
@@ -276,19 +382,24 @@ const VentesModule = (function () {
         document.getElementById('sale-quantity').value = 1;
         document.getElementById('sale-advance').value = 0;
         updateBalance();
+        populateSellerOptions();
+        updateSellerStockInfo();
     }
 
     function init() {
         populateProductOptions();
         populateBoutiqueOptions();
+        populateSellerOptions();
         renderSalesList();
         initDefaults();
         attachEvents();
         POSApp.eventTarget.addEventListener('pos-data-updated', () => {
             populateProductOptions();
             populateBoutiqueOptions();
+            populateSellerOptions();
             renderSalesList();
             updateBalance();
+            updateSellerStockInfo();
         });
     }
 
