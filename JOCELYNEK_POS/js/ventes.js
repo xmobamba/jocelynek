@@ -13,28 +13,41 @@ const VentesModule = (function () {
 
         if (selectedSellerId) {
             const seller = data.sellers.find(item => String(item.id) === selectedSellerId);
-            const assignments = seller?.assignments || [];
+            const assignments = (seller?.assignments || []).filter(assignment => Number(assignment.quantity) > 0);
             options.push('<option value="">-- Sélectionner --</option>');
+            if (!assignments.length) {
+                options.push('<option value="" disabled>Aucun produit confié</option>');
+            }
             assignments.forEach(assignment => {
                 const product = data.products.find(p => p.reference === assignment.productRef);
                 const productName = product?.name || assignment.productName;
+                const stock = Number(assignment.quantity) || 0;
                 options.push(
-                    `<option value="${assignment.productRef}" data-name="${productName}" data-stock="${assignment.quantity}" data-assignment="true">${assignment.productRef} — ${productName}</option>`
+                    `<option value="${assignment.productRef}" data-name="${productName}" data-stock="${stock}" data-assignment="true">${assignment.productRef} — ${productName} · ${stock} en stock</option>`
                 );
             });
         } else {
             options.push('<option value="">-- Produit libre --</option>');
-            const catalog = data.products.filter(product => !selectedBoutique || product.boutique === selectedBoutique);
+            const catalog = data.products
+                .filter(product => !selectedBoutique || product.boutique === selectedBoutique)
+                .map(product => ({
+                    ...product,
+                    quantity: Number(product.quantity) || 0
+                }))
+                .sort((a, b) => a.reference.localeCompare(b.reference));
+            if (!catalog.length) {
+                options.push('<option value="" disabled>Aucun produit disponible</option>');
+            }
             catalog.forEach(product => {
                 options.push(
-                    `<option value="${product.reference}" data-name="${product.name}" data-stock="${product.quantity}">${product.reference} — ${product.name}</option>`
+                    `<option value="${product.reference}" data-name="${product.name}" data-stock="${product.quantity}">${product.reference} — ${product.name} · ${product.quantity} en stock</option>`
                 );
             });
         }
 
         const previousValue = select.value;
         select.innerHTML = options.join('');
-        if (options.some(option => option.includes(`value="${previousValue}"`))) {
+        if (previousValue && Array.from(select.options).some(option => option.value === previousValue)) {
             select.value = previousValue;
         } else {
             select.selectedIndex = 0;
@@ -62,50 +75,160 @@ const VentesModule = (function () {
 
         const options = ['<option value="">-- Vente directe --</option>'];
         sellers.forEach(seller => {
-            options.push(`<option value="${seller.id}">${seller.name}</option>`);
+            const assignments = Array.isArray(seller.assignments) ? seller.assignments : [];
+            const totalConsigned = assignments.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+            const suffix = totalConsigned ? ` · ${totalConsigned} pièces` : '';
+            options.push(`<option value="${seller.id}" data-boutique="${seller.boutique}">${seller.name}${suffix}</option>`);
         });
         const previousValue = select.value;
         select.innerHTML = options.join('');
-        if (options.some(option => option.includes(`value="${previousValue}"`))) {
+        if (previousValue && Array.from(select.options).some(option => option.value === previousValue)) {
             select.value = previousValue;
         } else {
             select.value = '';
         }
         toggleProductNameField();
+        lockBoutiqueForSeller();
+    }
+
+    function lockBoutiqueForSeller() {
+        const sellerSelect = document.getElementById('sale-seller');
+        const boutiqueSelect = document.getElementById('sale-boutique');
+        if (!sellerSelect || !boutiqueSelect) return;
+        const selectedOption = sellerSelect.options[sellerSelect.selectedIndex];
+        if (sellerSelect.value && selectedOption) {
+            const sellerBoutique = selectedOption.dataset.boutique;
+            if (sellerBoutique) {
+                boutiqueSelect.value = sellerBoutique;
+            }
+            boutiqueSelect.setAttribute('data-locked', 'true');
+            boutiqueSelect.setAttribute('disabled', 'disabled');
+        } else {
+            boutiqueSelect.removeAttribute('data-locked');
+            boutiqueSelect.removeAttribute('disabled');
+        }
+    }
+
+    function getStockAvailability() {
+        const data = POSApp.getData();
+        const values = getSaleFormValues();
+        const sellerSelected = Boolean(values.sellerId);
+        const productSelected = Boolean(values.selectedProductRef);
+
+        if (sellerSelected) {
+            const seller = data.sellers.find(item => String(item.id) === values.sellerId) || null;
+            if (!seller) {
+                return { available: 0, reason: 'noSeller', sellerSelected, productSelected };
+            }
+            if (!productSelected) {
+                return { available: 0, reason: 'chooseProduct', seller, sellerSelected, productSelected };
+            }
+            const assignment = seller.assignments?.find(a => a.productRef === values.selectedProductRef) || null;
+            if (!assignment) {
+                return { available: 0, reason: 'noAssignment', seller, sellerSelected, productSelected };
+            }
+            const available = Number(assignment.quantity) || 0;
+            return {
+                available,
+                reason: available > 0 ? 'ok' : 'empty',
+                seller,
+                assignment,
+                sellerSelected,
+                productSelected
+            };
+        }
+
+        if (productSelected) {
+            const product = data.products.find(p => p.reference === values.selectedProductRef) || null;
+            if (!product) {
+                return { available: 0, reason: 'noProduct', sellerSelected, productSelected };
+            }
+            const available = Number(product.quantity) || 0;
+            return {
+                available,
+                reason: available > 0 ? 'ok' : 'empty',
+                product,
+                sellerSelected,
+                productSelected
+            };
+        }
+
+        return { available: null, reason: 'manual', sellerSelected, productSelected };
+    }
+
+    function applyQuantityLimit(context) {
+        const quantityInput = document.getElementById('sale-quantity');
+        if (!quantityInput) return;
+        const submitBtn = document.querySelector('#sale-form button[type="submit"]');
+        const { available, reason, sellerSelected, productSelected } = context;
+
+        if (available === null || typeof available === 'undefined') {
+            quantityInput.removeAttribute('max');
+            if (Number(quantityInput.value) < 1) {
+                quantityInput.value = 1;
+            }
+        } else {
+            const normalized = Math.max(Number(available) || 0, 0);
+            if (normalized > 0) {
+                quantityInput.setAttribute('max', normalized);
+                const current = Number(quantityInput.value) || 1;
+                if (current > normalized) {
+                    quantityInput.value = normalized;
+                } else if (current < 1) {
+                    quantityInput.value = 1;
+                }
+            } else {
+                quantityInput.removeAttribute('max');
+                if (Number(quantityInput.value) < 1) {
+                    quantityInput.value = 1;
+                }
+            }
+        }
+
+        if (submitBtn) {
+            let disable = false;
+            if (sellerSelected) {
+                disable = ['chooseProduct', 'noAssignment', 'empty', 'noSeller'].includes(reason);
+            } else if (productSelected) {
+                disable = reason === 'empty';
+            }
+            submitBtn.disabled = disable;
+        }
     }
 
     function updateSellerStockInfo() {
         const infoEl = document.getElementById('seller-stock-info');
-        if (!infoEl) return;
         const sellerSelect = document.getElementById('sale-seller');
-        const productSelect = document.getElementById('sale-product');
-        if (!sellerSelect || !productSelect) return;
+        if (!infoEl || !sellerSelect) {
+            return;
+        }
 
-        const sellerId = sellerSelect.value;
-        const productRef = productSelect.value;
-        if (!sellerId) {
+        const availability = getStockAvailability();
+        const { reason, available, seller, sellerSelected } = availability;
+
+        if (!sellerSelected) {
             infoEl.textContent = 'Sélectionnez une vendeuse pour utiliser le stock confié.';
-            return;
+        } else if (!seller) {
+            infoEl.textContent = 'Vendeuse introuvable. Vérifiez les données.';
+        } else {
+            const sellerName = seller.name || 'cette vendeuse';
+            switch (reason) {
+                case 'chooseProduct':
+                    infoEl.textContent = `Choisissez un produit confié à ${sellerName}.`;
+                    break;
+                case 'noAssignment':
+                    infoEl.textContent = `${sellerName} n'a pas de stock confié pour ce produit.`;
+                    break;
+                case 'empty':
+                    infoEl.textContent = `Stock confié épuisé pour ${sellerName}. Réaffectez des quantités.`;
+                    break;
+                default:
+                    infoEl.textContent = `Stock confié disponible pour ${sellerName} : ${available}`;
+                    break;
+            }
         }
 
-        const data = POSApp.getData();
-        const seller = data.sellers.find(item => String(item.id) === sellerId);
-        if (!seller) {
-            infoEl.textContent = 'Vendeur introuvable.';
-            return;
-        }
-
-        if (!productRef) {
-            infoEl.textContent = 'Choisissez un produit pour vérifier le stock confié.';
-            return;
-        }
-
-        const selectedOption = productSelect.options[productSelect.selectedIndex];
-        const assignment = seller.assignments.find(a => a.productRef === productRef);
-        const stock = Number(selectedOption?.dataset?.stock ?? assignment?.quantity ?? 0);
-        infoEl.textContent = assignment
-            ? `Stock confié disponible : ${stock}`
-            : 'Aucun stock confié pour ce produit.';
+        applyQuantityLimit(availability);
     }
 
     function toggleProductNameField() {
@@ -173,6 +296,11 @@ const VentesModule = (function () {
         const sellerSelect = document.getElementById('sale-seller');
         if (sellerSelect) {
             sellerSelect.value = '';
+        }
+        const boutiqueSelect = document.getElementById('sale-boutique');
+        if (boutiqueSelect) {
+            boutiqueSelect.removeAttribute('disabled');
+            boutiqueSelect.removeAttribute('data-locked');
         }
         document.getElementById('sale-advance').value = 0;
         document.getElementById('sale-payment').dispatchEvent(new Event('change'));
@@ -399,6 +527,7 @@ const VentesModule = (function () {
             sellerSelect.addEventListener('change', () => {
                 populateProductOptions();
                 toggleProductNameField();
+                lockBoutiqueForSeller();
                 const selectedOption = productSelect?.options[productSelect.selectedIndex];
                 const name = selectedOption?.dataset?.name || '';
                 if (name) {
@@ -421,7 +550,13 @@ const VentesModule = (function () {
 
         [quantityInput, priceInput, advanceInput].forEach(input => {
             if (input) {
-                input.addEventListener('input', updateBalance);
+                input.addEventListener('input', () => {
+                    if (input === quantityInput && Number(quantityInput.value) < 1) {
+                        quantityInput.value = 1;
+                    }
+                    updateSellerStockInfo();
+                    updateBalance();
+                });
             }
         });
 
@@ -463,6 +598,7 @@ const VentesModule = (function () {
         populateSellerOptions();
         populateProductOptions();
         toggleProductNameField();
+        lockBoutiqueForSeller();
         updateSellerStockInfo();
     }
 
@@ -480,6 +616,7 @@ const VentesModule = (function () {
             renderSalesList();
             updateBalance();
             toggleProductNameField();
+            lockBoutiqueForSeller();
             updateSellerStockInfo();
         });
     }

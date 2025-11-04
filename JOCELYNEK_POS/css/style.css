@@ -382,6 +382,14 @@ input:focus, select:focus {
     gap: 0.4rem;
 }
 
+.btn:disabled,
+.btn:disabled:hover {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .btn.primary {
     background: linear-gradient(135deg, var(--color-primary), #ff9340);
     color: #fff;
