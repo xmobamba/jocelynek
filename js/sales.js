@@ -394,6 +394,8 @@
             }
         }
         const payment = document.getElementById('payment-method').value;
+        const customerInput = document.getElementById('sale-customer');
+        const customerName = customerInput?.value.trim();
         const total = updateCartTotal();
         const taxRate = Number(POSApp.state.settings.tax || 0) / 100;
         const taxAmount = Math.round(total * taxRate);
@@ -417,6 +419,7 @@
             date: saleDateIso,
             seller: sellerName,
             sellerId: sellerRecord?.id || null,
+            customer: customerName || null,
             payment,
             taxAmount,
             total: grandTotal,
@@ -453,7 +456,7 @@
             amount: grandTotal,
             category: 'Vente',
             date: sale.date,
-            notes: `${payment} - ${sellerName}`
+            notes: [payment, sellerName, customerName].filter(Boolean).join(' - ')
         });
         persistState();
         appendActivity(`Vente ${sale.id} ${POSApp.formatCurrency(grandTotal)} (${sellerName})`);
@@ -462,6 +465,9 @@
         renderCart();
         if (dateInput) {
             dateInput.value = currentLocalDateTimeValue();
+        }
+        if (customerInput) {
+            customerInput.value = '';
         }
         renderProductList(document.getElementById('sales-search').value || '');
         populateSelectors();

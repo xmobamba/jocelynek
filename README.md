@@ -7,6 +7,7 @@ Application de point de vente 100 % hors ligne, pensée pour les boutiques Joce
 - **Tableau de bord** : cartes de synthèse, fil d'activité et graphique animé des ventes des 7 derniers jours.
 - **Inventaire** : ajout/modification/suppression, import/export CSV/JSON, alertes visuelles de stocks faibles, génération d'étiquettes 15×7 mm avec pseudo-QR code.
 - **Ventes (POS)** : recherche rapide, panier interactif, sélection de la vendeuse, paiements espèces/mobile money/crédit, impression de reçu.
+- **Documents** : onglet dédié aux factures et étiquettes de livraison avec filtre, aperçu et impression A4.
 - **Vendeuses** : fiches de suivi des collaboratrices, stocks confiés, retours en boutique et historique des ventes réalisées.
 - **Finances** : journal recettes/dépenses, synthèse mensuelle, export comptable CSV.
 - **Paramètres** : identité de la boutique, devise FCFA (personnalisable), TVA, gestion du logo, export/import complet de la base JSON, remise à zéro.
@@ -26,6 +27,7 @@ Application de point de vente 100 % hors ligne, pensée pour les boutiques Joce
 │   ├── app.js
 │   ├── inventory.js
 │   ├── sales.js
+│   ├── documents.js
 │   ├── sellers.js
 │   ├── finances.js
 │   ├── settings.js
