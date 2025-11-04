@@ -72,11 +72,7 @@
             stockBoutique,
             assignedTotal,
             consignedValue,
-<<<<<<< HEAD
-            inventoryValue: inventoryValueBoutique + consignedValue,
-=======
             inventoryValue: inventoryValueBoutique,
->>>>>>> 9eb6e5d548e5b7bbda55b17b4a6df4b1acff81e9
             totalProducts: products.length,
             salesTodayCount: salesToday.length,
             salesTodayTotal,
@@ -115,13 +111,6 @@
         if (highlights.totalProducts === 0) {
             lines.push("Inventaire : aucun produit enregistré pour le moment.");
         } else {
-<<<<<<< HEAD
-            const totalPieces = highlights.stockBoutique + highlights.assignedTotal;
-            let line = `Inventaire : ${highlights.totalProducts} référence${plural(highlights.totalProducts)} pour ${formatPieces(totalPieces)} (${POSApp.formatCurrency(highlights.inventoryValue)}).`;
-            if (highlights.lowStock > 0) {
-                line += ` ${highlights.lowStock} alerte${plural(highlights.lowStock)} stock à traiter.`;
-            }
-=======
             let line = `Inventaire : ${highlights.totalProducts} référence${plural(highlights.totalProducts)} pour ${formatPieces(highlights.stockBoutique)} en boutique (${POSApp.formatCurrency(highlights.inventoryValue)}).`;
             if (highlights.lowStock > 0) {
                 line += ` ${highlights.lowStock} alerte${plural(highlights.lowStock)} stock à traiter.`;
@@ -129,7 +118,6 @@
             if (highlights.assignedTotal > 0) {
                 line += ` ${formatPieces(highlights.assignedTotal)} confiée${plural(highlights.assignedTotal)} aux vendeuses.`;
             }
->>>>>>> 9eb6e5d548e5b7bbda55b17b4a6df4b1acff81e9
             lines.push(line);
         }
 
