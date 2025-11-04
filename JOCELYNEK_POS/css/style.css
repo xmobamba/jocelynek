@@ -504,6 +504,145 @@ table tbody tr:hover {
     align-items: start;
 }
 
+.closure-panel {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 1.25rem;
+}
+
+.closure-panel .subtitle {
+    color: var(--color-muted);
+    margin-top: -0.25rem;
+}
+
+.closure-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.closure-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.closure-preview {
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-surface);
+    padding: 1.5rem;
+    display: grid;
+    gap: 1.25rem;
+}
+
+.closure-preview .placeholder {
+    color: var(--color-muted);
+    margin: 0;
+}
+
+.closure-header h4 {
+    margin: 0;
+}
+
+.closure-header p {
+    margin: 0.25rem 0 0;
+    color: var(--color-muted);
+}
+
+.closure-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.closure-metric {
+    border-radius: 16px;
+    padding: 1rem 1.1rem;
+    background: linear-gradient(145deg, rgba(255, 122, 0, 0.12), rgba(0, 151, 57, 0.08));
+    border: 1px solid rgba(255, 122, 0, 0.25);
+    display: grid;
+    gap: 0.4rem;
+}
+
+.closure-metric span.label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+}
+
+.closure-metric span.value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.closure-section {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.closure-section h5 {
+    margin: 0;
+    color: var(--color-accent);
+}
+
+.breakdown-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.breakdown-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px dashed var(--color-border);
+}
+
+.breakdown-list li:last-child {
+    border-bottom: none;
+}
+
+.breakdown-list .label {
+    font-weight: 600;
+}
+
+.breakdown-list .value {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+}
+
+.closure-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.closure-table th,
+.closure-table td {
+    border: 1px solid var(--color-border);
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.closure-table th {
+    background: rgba(0, 151, 57, 0.08);
+    color: var(--color-text);
+}
+
+.closure-empty {
+    color: var(--color-muted);
+    text-align: center;
+    margin: 1rem 0 0;
+}
+
 .document-list {
     list-style: none;
     margin: 0;

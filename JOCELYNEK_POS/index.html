@@ -228,6 +228,28 @@
                             <button id="print-document" class="btn secondary" disabled>Imprimer</button>
                         </div>
                     </div>
+                    <div class="panel closure-panel">
+                        <div class="closure-panel-header">
+                            <h3>Clôture journalière</h3>
+                            <p class="subtitle">Générez un rapport imprimable des ventes d'une journée.</p>
+                        </div>
+                        <form id="closure-form" class="closure-form">
+                            <div class="form-group">
+                                <label for="closure-date">Date à clôturer</label>
+                                <input type="date" id="closure-date" required />
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="closure-buttons">
+                                    <button type="submit" class="btn secondary">Générer la clôture</button>
+                                    <button type="button" id="print-closure" class="btn ghost" disabled>Imprimer</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="closure-preview" class="closure-preview">
+                            <p class="placeholder">Sélectionnez une date pour afficher le résumé de fin de journée.</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
