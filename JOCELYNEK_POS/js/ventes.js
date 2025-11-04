@@ -5,11 +5,40 @@ const VentesModule = (function () {
         const select = document.getElementById('sale-product');
         if (!select) return;
         const data = POSApp.getData();
-        const options = ['<option value="">-- Produit libre --</option>'];
-        data.products.forEach(product => {
-            options.push(`<option value="${product.reference}" data-name="${product.name}">${product.reference} — ${product.name}</option>`);
-        });
+        const boutiqueSelect = document.getElementById('sale-boutique');
+        const sellerSelect = document.getElementById('sale-seller');
+        const selectedBoutique = boutiqueSelect ? boutiqueSelect.value : '';
+        const selectedSellerId = sellerSelect ? sellerSelect.value : '';
+        const options = [];
+
+        if (selectedSellerId) {
+            const seller = data.sellers.find(item => String(item.id) === selectedSellerId);
+            const assignments = seller?.assignments || [];
+            options.push('<option value="">-- Sélectionner --</option>');
+            assignments.forEach(assignment => {
+                const product = data.products.find(p => p.reference === assignment.productRef);
+                const productName = product?.name || assignment.productName;
+                options.push(
+                    `<option value="${assignment.productRef}" data-name="${productName}" data-stock="${assignment.quantity}" data-assignment="true">${assignment.productRef} — ${productName}</option>`
+                );
+            });
+        } else {
+            options.push('<option value="">-- Produit libre --</option>');
+            const catalog = data.products.filter(product => !selectedBoutique || product.boutique === selectedBoutique);
+            catalog.forEach(product => {
+                options.push(
+                    `<option value="${product.reference}" data-name="${product.name}" data-stock="${product.quantity}">${product.reference} — ${product.name}</option>`
+                );
+            });
+        }
+
+        const previousValue = select.value;
         select.innerHTML = options.join('');
+        if (options.some(option => option.includes(`value="${previousValue}"`))) {
+            select.value = previousValue;
+        } else {
+            select.selectedIndex = 0;
+        }
     }
 
     function populateBoutiqueOptions() {
@@ -35,7 +64,14 @@ const VentesModule = (function () {
         sellers.forEach(seller => {
             options.push(`<option value="${seller.id}">${seller.name}</option>`);
         });
+        const previousValue = select.value;
         select.innerHTML = options.join('');
+        if (options.some(option => option.includes(`value="${previousValue}"`))) {
+            select.value = previousValue;
+        } else {
+            select.value = '';
+        }
+        toggleProductNameField();
     }
 
     function updateSellerStockInfo() {
@@ -64,15 +100,32 @@ const VentesModule = (function () {
             return;
         }
 
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
         const assignment = seller.assignments.find(a => a.productRef === productRef);
+        const stock = Number(selectedOption?.dataset?.stock ?? assignment?.quantity ?? 0);
         infoEl.textContent = assignment
-            ? `Stock confié disponible : ${assignment.quantity}`
+            ? `Stock confié disponible : ${stock}`
             : 'Aucun stock confié pour ce produit.';
+    }
+
+    function toggleProductNameField() {
+        const nameInput = document.getElementById('sale-product-name');
+        const sellerSelect = document.getElementById('sale-seller');
+        if (!nameInput || !sellerSelect) return;
+        if (sellerSelect.value) {
+            nameInput.setAttribute('readonly', 'readonly');
+            nameInput.classList.add('readonly');
+        } else {
+            nameInput.removeAttribute('readonly');
+            nameInput.classList.remove('readonly');
+        }
     }
 
     function getSaleFormValues() {
         const date = document.getElementById('sale-date').value;
-        const selectedProductRef = document.getElementById('sale-product').value;
+        const productSelect = document.getElementById('sale-product');
+        const selectedProductRef = productSelect.value;
+        const selectedProductOption = productSelect.options[productSelect.selectedIndex];
         const productName = document.getElementById('sale-product-name').value.trim();
         const quantity = Number(document.getElementById('sale-quantity').value);
         const price = Number(document.getElementById('sale-price').value);
@@ -86,6 +139,7 @@ const VentesModule = (function () {
         return {
             date,
             selectedProductRef,
+            selectedProductOption,
             productName,
             quantity,
             price,
@@ -109,7 +163,8 @@ const VentesModule = (function () {
     }
 
     function resetSaleForm() {
-        document.getElementById('sale-product').value = '';
+        const productSelect = document.getElementById('sale-product');
+        productSelect.value = '';
         document.getElementById('sale-product-name').value = '';
         document.getElementById('sale-quantity').value = 1;
         document.getElementById('sale-price').value = '';
@@ -121,7 +176,9 @@ const VentesModule = (function () {
         }
         document.getElementById('sale-advance').value = 0;
         document.getElementById('sale-payment').dispatchEvent(new Event('change'));
+        populateProductOptions();
         updateBalance();
+        toggleProductNameField();
         updateSellerStockInfo();
     }
 
@@ -250,7 +307,7 @@ const VentesModule = (function () {
                 event.preventDefault();
                 const values = getSaleFormValues();
                 const { total, balance } = updateBalance();
-                if (!values.productName || !values.date || !values.quantity || !values.price) {
+                if (!values.date || !values.quantity || !values.price) {
                     alert('Merci de renseigner tous les champs obligatoires.');
                     return;
                 }
@@ -258,13 +315,19 @@ const VentesModule = (function () {
                 const boutiqueLabel = data.settings.boutiques.find(b => b.id === values.boutique)?.name || values.boutique;
                 const selectedProduct = data.products.find(p => p.reference === values.selectedProductRef);
                 const seller = values.sellerId ? data.sellers.find(s => String(s.id) === values.sellerId) : null;
+                const assignment = seller?.assignments.find(a => a.productRef === values.selectedProductRef) || null;
+                const optionName = values.selectedProductOption?.dataset?.name || '';
+                const productName = assignment?.productName || optionName || selectedProduct?.name || values.productName;
+                if (!productName) {
+                    alert('Le nom du produit est requis.');
+                    return;
+                }
 
                 if (seller) {
                     if (!values.selectedProductRef) {
                         alert('Veuillez choisir un produit attribué au vendeur.');
                         return;
                     }
-                    const assignment = seller.assignments.find(a => a.productRef === values.selectedProductRef);
                     if (!assignment || assignment.quantity < values.quantity) {
                         alert('Stock confié insuffisant pour cette vente.');
                         return;
@@ -277,8 +340,8 @@ const VentesModule = (function () {
                 const sale = {
                     id: Date.now(),
                     date: values.date,
-                    productRef: selectedProduct?.reference || '',
-                    productName: values.productName,
+                    productRef: values.selectedProductRef || '',
+                    productName,
                     quantity: values.quantity,
                     unitPrice: values.price,
                     totalAmount: total,
@@ -325,18 +388,33 @@ const VentesModule = (function () {
                 const name = selectedOption?.dataset?.name || '';
                 if (name) {
                     document.getElementById('sale-product-name').value = name;
+                } else if (!sellerSelect.value) {
+                    document.getElementById('sale-product-name').value = '';
                 }
                 updateSellerStockInfo();
             });
         }
 
         if (sellerSelect) {
-            sellerSelect.addEventListener('change', updateSellerStockInfo);
+            sellerSelect.addEventListener('change', () => {
+                populateProductOptions();
+                toggleProductNameField();
+                const selectedOption = productSelect?.options[productSelect.selectedIndex];
+                const name = selectedOption?.dataset?.name || '';
+                if (name) {
+                    document.getElementById('sale-product-name').value = name;
+                } else {
+                    document.getElementById('sale-product-name').value = '';
+                }
+                updateSellerStockInfo();
+            });
         }
 
         if (boutiqueSelect) {
             boutiqueSelect.addEventListener('change', () => {
                 populateSellerOptions();
+                populateProductOptions();
+                toggleProductNameField();
                 updateSellerStockInfo();
             });
         }
@@ -383,22 +461,25 @@ const VentesModule = (function () {
         document.getElementById('sale-advance').value = 0;
         updateBalance();
         populateSellerOptions();
+        populateProductOptions();
+        toggleProductNameField();
         updateSellerStockInfo();
     }
 
     function init() {
-        populateProductOptions();
         populateBoutiqueOptions();
         populateSellerOptions();
+        populateProductOptions();
         renderSalesList();
         initDefaults();
         attachEvents();
         POSApp.eventTarget.addEventListener('pos-data-updated', () => {
-            populateProductOptions();
             populateBoutiqueOptions();
             populateSellerOptions();
+            populateProductOptions();
             renderSalesList();
             updateBalance();
+            toggleProductNameField();
             updateSellerStockInfo();
         });
     }
