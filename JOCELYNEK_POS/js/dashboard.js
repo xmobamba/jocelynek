@@ -13,7 +13,14 @@ const DashboardModule = (function () {
         }, {});
 
         const productFrequency = data.sales.reduce((acc, sale) => {
-            acc[sale.productName] = (acc[sale.productName] || 0) + sale.quantity;
+            const items = Array.isArray(sale.items) && sale.items.length
+                ? sale.items
+                : [{ productName: sale.productName, quantity: sale.quantity }];
+            items.forEach(item => {
+                const name = item.productName || sale.productName || 'Article';
+                const qty = Number(item.quantity) || 0;
+                acc[name] = (acc[name] || 0) + qty;
+            });
             return acc;
         }, {});
 
@@ -134,7 +141,10 @@ const DashboardModule = (function () {
             return "Aucune donnée de vente aujourd'hui. Enregistrez une première transaction pour obtenir une analyse.";
         }
         const lastSale = data.sales[data.sales.length - 1];
-        return `La dernière vente (${lastSale.productName}) a été réalisée pour ${POSApp.formatCurrency(lastSale.totalAmount)} via ${lastSale.paymentMethod}. Continuez sur cette lancée !`;
+        const lastItem = (Array.isArray(lastSale.items) && lastSale.items.length)
+            ? lastSale.items[0].productName
+            : lastSale.productName;
+        return `La dernière vente (${lastItem || 'Article'}) a été réalisée pour ${POSApp.formatCurrency(lastSale.totalAmount)} via ${lastSale.paymentMethod}. Continuez sur cette lancée !`;
     }
 
     function renderAiAnalysis() {

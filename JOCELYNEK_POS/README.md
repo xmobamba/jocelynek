@@ -12,7 +12,8 @@ Application POS web moderne pour les boutiques **Jocelyne K Cocovico** et **Joce
 
 ## 🧭 Modules disponibles
 - **Tableau de bord** : synthèse des ventes, alertes stock, résumé intelligent et analyse AI simulée.
-- **Ventes** : saisie rapide des ventes (prix flexible, avances, génération de facture A4, recherche et impression).
+- **Ventes** : saisie rapide des ventes multi-articles (prix flexible, avances, génération de facture A4, recherche et impression).
+- **Documents** : historique des factures et étiquettes de livraison avec aperçu, recherche et impression dédiée.
 - **Inventaire** : ajout/édition/suppression de produits, génération automatique de références `JK-000X`, alertes stock < 5.
 - **Vendeurs** : enregistrement des vendeurs, affectation de produits confiés et visualisation des dotations.
 - **Paramètres** : gestion du thème, logo, boutiques, taxe, mot de passe, clé AI, export/import JSON et réinitialisation.

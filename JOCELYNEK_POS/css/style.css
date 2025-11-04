@@ -456,6 +456,180 @@ table tbody tr:hover {
     font-weight: 600;
 }
 
+.sale-items-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: grid;
+    gap: 1.25rem;
+}
+
+.sale-items-card h3 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.sale-items-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.sale-items-controls .form-group {
+    margin: 0;
+}
+
+.sale-items-controls .add-btn {
+    align-self: end;
+}
+
+.sale-items-card .table-wrapper {
+    margin: 0;
+}
+
+.sale-items-card .table-wrapper table {
+    min-width: 0;
+}
+
+.sale-items-card .table-wrapper th,
+.sale-items-card .table-wrapper td {
+    font-size: 0.9rem;
+}
+
+.documents-layout {
+    display: grid;
+    grid-template-columns: minmax(260px, 320px) 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.document-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.document-item {
+    width: 100%;
+    text-align: left;
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid transparent;
+    border-radius: 14px;
+    padding: 0.85rem 1rem;
+    display: grid;
+    gap: 0.25rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.document-item:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 122, 0, 0.35);
+}
+
+.document-item.active {
+    border-color: rgba(0, 151, 57, 0.45);
+    background: rgba(0, 151, 57, 0.12);
+}
+
+.document-item-title {
+    font-weight: 600;
+}
+
+.document-item-meta {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
+
+.document-item-summary {
+    font-size: 0.85rem;
+    color: var(--color-text);
+}
+
+.document-tabs {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.document-tabs .tab-button {
+    flex: 1;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: rgba(148, 163, 184, 0.12);
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.document-tabs .tab-button.active {
+    background: linear-gradient(135deg, rgba(255, 122, 0, 0.18), rgba(0, 151, 57, 0.18));
+    border-color: rgba(255, 122, 0, 0.4);
+}
+
+.document-preview {
+    min-height: 320px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-surface);
+    padding: 1.5rem;
+}
+
+.document-preview .document header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.document-preview .document header img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.document-preview .document-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.document-preview .document-table th,
+.document-preview .document-table td {
+    border: 1px solid var(--color-border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+}
+
+.document-preview .document-summary {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.3rem;
+    font-weight: 600;
+}
+
+.document-preview .placeholder {
+    color: var(--color-muted);
+    margin: 0;
+}
+
+.document-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.document-actions .btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .invoice {
     display: none;
 }
@@ -520,6 +694,10 @@ table tbody tr:hover {
     .nav-link {
         flex: 1;
         white-space: nowrap;
+    }
+
+    .documents-layout {
+        grid-template-columns: 1fr;
     }
 
     .sidebar-footer {

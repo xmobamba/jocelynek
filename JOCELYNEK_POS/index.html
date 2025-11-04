@@ -40,6 +40,7 @@
             <nav>
                 <button class="nav-link active" data-target="dashboard">Tableau de bord</button>
                 <button class="nav-link" data-target="ventes">Ventes</button>
+                <button class="nav-link" data-target="documents">Documents</button>
                 <button class="nav-link" data-target="inventaire">Inventaire</button>
                 <button class="nav-link" data-target="vendeur">Vendeurs</button>
                 <button class="nav-link" data-target="parametres">Paramètres</button>
@@ -99,8 +100,8 @@
                         <input type="date" id="sale-date" required />
                     </div>
                     <div class="form-group">
-                        <label for="sale-product">Produit</label>
-                        <select id="sale-product"></select>
+                        <label for="sale-boutique">Boutique</label>
+                        <select id="sale-boutique" required></select>
                     </div>
                     <div class="form-group">
                         <label for="sale-seller">Vendeur / Vendeuse</label>
@@ -108,22 +109,6 @@
                             <option value="">-- Vente directe --</option>
                         </select>
                         <small id="seller-stock-info" class="field-hint"></small>
-                    </div>
-                    <div class="form-group">
-                        <label for="sale-product-name">Nom du produit (modifiable)</label>
-                        <input type="text" id="sale-product-name" placeholder="Nom du produit" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="sale-quantity">Quantité</label>
-                        <input type="number" id="sale-quantity" min="1" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="sale-price">Prix unitaire (FCFA)</label>
-                        <input type="number" id="sale-price" min="0" step="100" required />
-                    </div>
-                    <div class="form-group">
-                        <label for="sale-boutique">Boutique</label>
-                        <select id="sale-boutique" required></select>
                     </div>
                     <div class="form-group">
                         <label for="sale-client">Client</label>
@@ -142,8 +127,54 @@
                         <input type="number" id="sale-advance" min="0" step="100" value="0" />
                     </div>
                     <div class="form-group">
+                        <label>Total de la vente</label>
+                        <div class="balance" id="sale-total">0 FCFA</div>
+                    </div>
+                    <div class="form-group">
                         <label>Reste à payer</label>
                         <div class="balance" id="sale-balance">0 FCFA</div>
+                    </div>
+                    <div class="form-group full">
+                        <div class="sale-items-card">
+                            <h3>Articles de la vente</h3>
+                            <div class="sale-items-controls">
+                                <div class="form-group">
+                                    <label for="sale-product">Produit</label>
+                                    <select id="sale-product"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sale-product-name">Nom du produit (modifiable)</label>
+                                    <input type="text" id="sale-product-name" placeholder="Nom du produit" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="sale-item-quantity">Quantité</label>
+                                    <input type="number" id="sale-item-quantity" min="1" value="1" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="sale-item-price">Prix unitaire (FCFA)</label>
+                                    <input type="number" id="sale-item-price" min="0" step="100" />
+                                </div>
+                                <div class="form-group add-btn">
+                                    <label>&nbsp;</label>
+                                    <button type="button" id="add-sale-item" class="btn secondary">Ajouter l'article</button>
+                                </div>
+                            </div>
+                            <div class="table-wrapper compact">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Produit</th>
+                                            <th>Référence</th>
+                                            <th>Quantité</th>
+                                            <th>Prix unitaire</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sale-items-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group full">
                         <button type="submit" class="btn primary">Enregistrer la vente</button>
@@ -171,6 +202,33 @@
                     </div>
                 </div>
                 <div id="invoice" class="invoice"></div>
+            </section>
+
+            <section id="documents" class="section">
+                <div class="section-header">
+                    <h2>Factures & étiquettes</h2>
+                    <div class="section-actions">
+                        <input type="search" id="search-documents" placeholder="Rechercher une vente" />
+                    </div>
+                </div>
+                <div class="documents-layout">
+                    <div class="panel">
+                        <h3>Historique des ventes</h3>
+                        <ul id="documents-sales-list" class="document-list"></ul>
+                    </div>
+                    <div class="panel">
+                        <div class="document-tabs">
+                            <button class="tab-button active" data-doc="invoice">Facture</button>
+                            <button class="tab-button" data-doc="delivery">Étiquette de livraison</button>
+                        </div>
+                        <div id="document-preview" class="document-preview">
+                            <p class="placeholder">Sélectionnez une vente pour afficher la facture ou l'étiquette de livraison.</p>
+                        </div>
+                        <div class="document-actions">
+                            <button id="print-document" class="btn secondary" disabled>Imprimer</button>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section id="inventaire" class="section">
@@ -402,6 +460,7 @@
             const titleMap = {
                 dashboard: 'Tableau de bord',
                 ventes: 'Ventes',
+                documents: 'Factures & Livraisons',
                 inventaire: 'Inventaire',
                 vendeur: 'Vendeurs',
                 parametres: 'Paramètres'
@@ -516,6 +575,7 @@
 
     <script src="js/dashboard.js"></script>
     <script src="js/ventes.js"></script>
+    <script src="js/documents.js"></script>
     <script src="js/inventaire.js"></script>
     <script src="js/vendeur.js"></script>
     <script src="js/parametres.js"></script>
@@ -524,6 +584,7 @@
             POSApp.init();
             DashboardModule.init();
             VentesModule.init();
+            DocumentsModule.init();
             InventaireModule.init();
             VendeurModule.init();
             ParametresModule.init();
