@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JOCELYNE K POS SYSTEM</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20160%20160%22%3E%0A%3Crect%20width%3D%22160%22%20height%3D%22160%22%20rx%3D%2228%22%20fill%3D%22%23ffffff%22/%3E%0A%3Crect%20width%3D%22160%22%20height%3D%22160%22%20rx%3D%2228%22%20fill%3D%22%23ff7a00%22/%3E%0A%3Cpath%20d%3D%22M30%2040h40v80H30z%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.85%22/%3E%0A%3Cpath%20d%3D%22M90%2040h40v80H90z%22%20fill%3D%22%23009739%22%20opacity%3D%220.9%22/%3E%0A%3Ctext%20x%3D%2280%22%20y%3D%2292%22%20font-family%3D%22%27Inter%27%2C%27Poppins%27%2Csans-serif%22%20font-weight%3D%22700%22%20font-size%3D%2246%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%3EJK%3C/text%3E%0A%3C/svg%3E" alt="Logo Jocelyne K" />
+                <h1>JOCELYNE K POS SYSTEM</h1>
+                <p>Connexion sécurisée</p>
+            </div>
+            <form id="login-form">
+                <label for="login-username">Utilisateur</label>
+                <input type="text" id="login-username" placeholder="Nom d'utilisateur" required />
+
+                <label for="login-password">Mot de passe</label>
+                <input type="password" id="login-password" placeholder="Mot de passe" required />
+
+                <button type="submit" class="btn primary">Se connecter</button>
+                <p class="login-hint">Mot de passe par défaut : <strong>admin123</strong></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="app" class="app hidden">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20160%20160%22%3E%0A%3Crect%20width%3D%22160%22%20height%3D%22160%22%20rx%3D%2228%22%20fill%3D%22%23ffffff%22/%3E%0A%3Crect%20width%3D%22160%22%20height%3D%22160%22%20rx%3D%2228%22%20fill%3D%22%23ff7a00%22/%3E%0A%3Cpath%20d%3D%22M30%2040h40v80H30z%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.85%22/%3E%0A%3Cpath%20d%3D%22M90%2040h40v80H90z%22%20fill%3D%22%23009739%22%20opacity%3D%220.9%22/%3E%0A%3Ctext%20x%3D%2280%22%20y%3D%2292%22%20font-family%3D%22%27Inter%27%2C%27Poppins%27%2Csans-serif%22%20font-weight%3D%22700%22%20font-size%3D%2246%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%3EJK%3C/text%3E%0A%3C/svg%3E" alt="Logo" />
+                <div>
+                    <h2>Jocelyne K</h2>
+                    <p>POS Boutiques</p>
+                </div>
+            </div>
+            <nav>
+                <button class="nav-link active" data-target="dashboard">Tableau de bord</button>
+                <button class="nav-link" data-target="ventes">Ventes</button>
+                <button class="nav-link" data-target="documents">Documents</button>
+                <button class="nav-link" data-target="inventaire">Inventaire</button>
+                <button class="nav-link" data-target="vendeur">Vendeurs</button>
+                <button class="nav-link" data-target="parametres">Paramètres</button>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="btn secondary full">Déconnexion</button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <div>
+                    <h1 id="section-title">Tableau de bord</h1>
+                    <p class="subtitle">Suivi global des boutiques Jocelyne K Cocovico &amp; Djorobité</p>
+                </div>
+                <div class="header-actions">
+                    <span class="date-badge" id="current-date"></span>
+                </div>
+            </header>
+
+            <section id="dashboard" class="section visible">
+                <div class="cards-grid" id="dashboard-cards"></div>
+                <section class="panel" id="dashboard-summary">
+                    <header>
+                        <h2>Résumé intelligent</h2>
+                        <button class="btn ghost" id="refresh-summary">Actualiser</button>
+                    </header>
+                    <p id="summary-text">Chargement du résumé quotidien...</p>
+                </section>
+                <section class="panel" id="dashboard-ai">
+                    <header>
+                        <h2>Conseil de l'assistante AI</h2>
+                    </header>
+                    <p id="ai-analysis">Analyse en cours...</p>
+                </section>
+                <section class="panel" id="dashboard-tables">
+                    <div class="panel-column">
+                        <h3>Meilleures ventes</h3>
+                        <ul id="top-products" class="list"></ul>
+                    </div>
+                    <div class="panel-column">
+                        <h3>Alertes stock</h3>
+                        <ul id="stock-alerts" class="list"></ul>
+                    </div>
+                </section>
+            </section>
+
+            <section id="ventes" class="section">
+                <div class="section-header">
+                    <h2>Enregistrer une vente</h2>
+                    <div class="section-actions">
+                        <input type="search" id="search-sales" placeholder="Rechercher une vente" />
+                    </div>
+                </div>
+                <form id="sale-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="sale-date">Date</label>
+                        <input type="date" id="sale-date" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-boutique">Boutique</label>
+                        <select id="sale-boutique" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-seller">Vendeur / Vendeuse</label>
+                        <select id="sale-seller">
+                            <option value="">-- Vente directe --</option>
+                        </select>
+                        <small id="seller-stock-info" class="field-hint"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-client">Client</label>
+                        <input type="text" id="sale-client" placeholder="Nom du client" />
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-payment">Mode de paiement</label>
+                        <select id="sale-payment" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Mobile Money">Mobile Money</option>
+                            <option value="Avance + Solde">Avance + Solde</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-advance">Avance (si applicable)</label>
+                        <input type="number" id="sale-advance" min="0" step="100" value="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Total de la vente</label>
+                        <div class="balance" id="sale-total">0 FCFA</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Reste à payer</label>
+                        <div class="balance" id="sale-balance">0 FCFA</div>
+                    </div>
+                    <div class="form-group full">
+                        <div class="sale-items-card">
+                            <h3>Articles de la vente</h3>
+                            <div class="sale-items-controls">
+                                <div class="form-group">
+                                    <label for="sale-product">Produit</label>
+                                    <select id="sale-product"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sale-product-name">Nom du produit (modifiable)</label>
+                                    <input type="text" id="sale-product-name" placeholder="Nom du produit" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="sale-item-quantity">Quantité</label>
+                                    <input type="number" id="sale-item-quantity" min="1" value="1" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="sale-item-price">Prix unitaire (FCFA)</label>
+                                    <input type="number" id="sale-item-price" min="0" step="100" />
+                                </div>
+                                <div class="form-group add-btn">
+                                    <label>&nbsp;</label>
+                                    <button type="button" id="add-sale-item" class="btn secondary">Ajouter l'article</button>
+                                </div>
+                            </div>
+                            <div class="table-wrapper compact">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Produit</th>
+                                            <th>Référence</th>
+                                            <th>Quantité</th>
+                                            <th>Prix unitaire</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sale-items-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group full">
+                        <button type="submit" class="btn primary">Enregistrer la vente</button>
+                    </div>
+                </form>
+                <div class="panel">
+                    <h3>Historique des ventes</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Produit</th>
+                                    <th>Boutique</th>
+                                    <th>Vendeur</th>
+                                    <th>Client</th>
+                                    <th>Qté</th>
+                                    <th>Total</th>
+                                    <th>Paiement</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="invoice" class="invoice"></div>
+            </section>
+
+            <section id="documents" class="section">
+                <div class="section-header">
+                    <h2>Factures & étiquettes</h2>
+                    <div class="section-actions">
+                        <input type="search" id="search-documents" placeholder="Rechercher une vente" />
+                    </div>
+                </div>
+                <div class="documents-layout">
+                    <div class="panel">
+                        <h3>Historique des ventes</h3>
+                        <ul id="documents-sales-list" class="document-list"></ul>
+                    </div>
+                    <div class="panel">
+                        <div class="document-tabs">
+                            <button class="tab-button active" data-doc="invoice">Facture</button>
+                            <button class="tab-button" data-doc="delivery">Étiquette de livraison</button>
+                        </div>
+                        <div id="document-preview" class="document-preview">
+                            <p class="placeholder">Sélectionnez une vente pour afficher la facture ou l'étiquette de livraison.</p>
+                        </div>
+                        <div class="document-actions">
+                            <button id="print-document" class="btn secondary" disabled>Imprimer</button>
+                        </div>
+                    </div>
+                    <div class="panel closure-panel">
+                        <div class="closure-panel-header">
+                            <h3>Clôture journalière</h3>
+                            <p class="subtitle">Générez un rapport imprimable des ventes d'une journée.</p>
+                        </div>
+                        <form id="closure-form" class="closure-form">
+                            <div class="form-group">
+                                <label for="closure-date">Date à clôturer</label>
+                                <input type="date" id="closure-date" required />
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="closure-buttons">
+                                    <button type="submit" class="btn secondary">Générer la clôture</button>
+                                    <button type="button" id="print-closure" class="btn ghost" disabled>Imprimer</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div id="closure-preview" class="closure-preview">
+                            <p class="placeholder">Sélectionnez une date pour afficher le résumé de fin de journée.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="inventaire" class="section">
+                <div class="section-header">
+                    <h2>Gestion des stocks</h2>
+                    <div class="section-actions">
+                        <input type="search" id="search-products" placeholder="Rechercher un produit" />
+                    </div>
+                </div>
+                <form id="product-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="product-name">Nom du produit</label>
+                        <input type="text" id="product-name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="product-quantity">Quantité</label>
+                        <input type="number" id="product-quantity" min="0" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="product-boutique">Boutique</label>
+                        <select id="product-boutique" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-image">Image (URL facultative)</label>
+                        <input type="url" id="product-image" placeholder="https://" />
+                    </div>
+                    <div class="form-group full">
+                        <button type="submit" class="btn primary">Ajouter au stock</button>
+                    </div>
+                </form>
+                <div class="panel">
+                    <h3>Produits en stock</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Nom</th>
+                                    <th>Quantité</th>
+                                    <th>Boutique</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vendeur" class="section">
+                <div class="section-header">
+                    <h2>Gestion des vendeurs</h2>
+                    <div class="section-actions">
+                        <input type="search" id="search-sellers" placeholder="Rechercher un vendeur" />
+                    </div>
+                </div>
+                <form id="seller-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="seller-name">Nom du vendeur</label>
+                        <input type="text" id="seller-name" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="seller-boutique">Boutique assignée</label>
+                        <select id="seller-boutique" required></select>
+                    </div>
+                    <div class="form-group full">
+                        <button type="submit" class="btn primary">Enregistrer le vendeur</button>
+                    </div>
+                </form>
+                <div class="panel">
+                    <h3>Affecter des produits</h3>
+                    <form id="assignment-form" class="form-grid compact">
+                        <div class="form-group">
+                            <label for="assignment-seller">Vendeur</label>
+                            <select id="assignment-seller"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="assignment-product">Produit</label>
+                            <select id="assignment-product"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="assignment-quantity">Quantité</label>
+                            <input type="number" id="assignment-quantity" min="1" />
+                        </div>
+                        <div class="form-group full">
+                            <button type="submit" class="btn secondary">Confier le produit</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="panel">
+                    <h3>Vendeurs enregistrés</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Boutique</th>
+                                    <th>Produits confiés</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sellers-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="parametres" class="section">
+                <div class="section-header">
+                    <h2>Paramètres de la boutique</h2>
+                </div>
+                <div class="panel">
+                    <h3>Informations générales</h3>
+                    <form id="settings-form" class="form-grid">
+                        <div class="form-group">
+                            <label for="settings-logo">Logo (URL)</label>
+                            <input type="url" id="settings-logo" placeholder="https://" />
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-theme-primary">Couleur principale</label>
+                            <input type="color" id="settings-theme-primary" />
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-theme-accent">Couleur accent</label>
+                            <input type="color" id="settings-theme-accent" />
+                        </div>
+                        <div class="form-group full" id="boutique-settings">
+                            <label>Boutiques</label>
+                            <div class="boutique-grid" id="boutique-inputs"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-tax">Taux de taxe (%)</label>
+                            <input type="number" id="settings-tax" min="0" step="0.5" />
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-password">Nouveau mot de passe</label>
+                            <input type="password" id="settings-password" placeholder="••••••" />
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-ai-key">Clé API AI (placeholder)</label>
+                            <input type="text" id="settings-ai-key" placeholder="sk-..." />
+                        </div>
+                        <div class="form-group full">
+                            <button type="submit" class="btn primary">Enregistrer les paramètres</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="panel">
+                    <h3>Gestion des données</h3>
+                    <div class="data-actions">
+                        <button id="export-data" class="btn secondary">Exporter les données</button>
+                        <label class="btn ghost">
+                            Importer un fichier JSON
+                            <input type="file" id="import-data" accept="application/json" hidden />
+                        </label>
+                        <button id="reset-data" class="btn danger">Réinitialiser</button>
+                    </div>
+                    <p class="info-text">Les données sont stockées localement dans votre navigateur via localStorage.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+    window.POSApp = (function() {
+        const DEFAULT_LOGO = 'data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20160%20160%22%3E%0A%3Crect%20width%3D%22160%22%20height%3D%22160%22%20rx%3D%2228%22%20fill%3D%22%23ffffff%22/%3E%0A%3Crect%20width%3D%22160%22%20height%3D%22160%22%20rx%3D%2228%22%20fill%3D%22%23ff7a00%22/%3E%0A%3Cpath%20d%3D%22M30%2040h40v80H30z%22%20fill%3D%22%23ffffff%22%20opacity%3D%220.85%22/%3E%0A%3Cpath%20d%3D%22M90%2040h40v80H90z%22%20fill%3D%22%23009739%22%20opacity%3D%220.9%22/%3E%0A%3Ctext%20x%3D%2280%22%20y%3D%2292%22%20font-family%3D%22%27Inter%27%2C%27Poppins%27%2Csans-serif%22%20font-weight%3D%22700%22%20font-size%3D%2246%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%3EJK%3C/text%3E%0A%3C/svg%3E';
+        const STORAGE_KEY = 'jk_pos_data';
+        const DEFAULT_DATA = {
+            products: [],
+            sales: [],
+            sellers: [],
+            settings: {
+                boutiques: [
+                    { id: 'cocovico', name: 'Jocelyne K Cocovico', color: '#ff7a00', logo: DEFAULT_LOGO },
+                    { id: 'djorobite', name: 'Jocelyne K Djorobité', color: '#009739', logo: DEFAULT_LOGO }
+                ],
+                logo: DEFAULT_LOGO,
+                theme: {
+                    primary: '#ff7a00',
+                    accent: '#009739'
+                },
+                taxRate: 0,
+                aiKey: ''
+            },
+            password: 'admin123'
+        };
+
+        const eventTarget = new EventTarget();
+
+        function getData() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                saveData(DEFAULT_DATA);
+                return { ...DEFAULT_DATA, products: [], sales: [], sellers: [] };
+            }
+            try {
+                return JSON.parse(raw);
+            } catch (error) {
+                console.error('Erreur de parsing des données', error);
+                saveData(DEFAULT_DATA);
+                return { ...DEFAULT_DATA, products: [], sales: [], sellers: [] };
+            }
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            eventTarget.dispatchEvent(new CustomEvent('pos-data-updated'));
+        }
+
+        function updateData(updater) {
+            const data = getData();
+            updater(data);
+            saveData(data);
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('fr-FR').format(Number(value) || 0) + ' FCFA';
+        }
+
+        function generateReference(prefix, count) {
+            return `${prefix}-${String(count + 1).padStart(4, '0')}`;
+        }
+
+        function setTheme(primary, accent) {
+            document.documentElement.style.setProperty('--color-primary', primary);
+            document.documentElement.style.setProperty('--color-accent', accent);
+        }
+
+        function updateSectionTitle(sectionId) {
+            const titleMap = {
+                dashboard: 'Tableau de bord',
+                ventes: 'Ventes',
+                documents: 'Factures & Livraisons',
+                inventaire: 'Inventaire',
+                vendeur: 'Vendeurs',
+                parametres: 'Paramètres'
+            };
+            document.getElementById('section-title').textContent = titleMap[sectionId] || 'Tableau de bord';
+        }
+
+        function initNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    navLinks.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const target = btn.dataset.target;
+                    document.querySelectorAll('.section').forEach(section => {
+                        section.classList.toggle('visible', section.id === target);
+                    });
+                    updateSectionTitle(target);
+                });
+            });
+        }
+
+        function initDateBadge() {
+            const dateEl = document.getElementById('current-date');
+            if (dateEl) {
+                const today = new Date();
+                const formatter = new Intl.DateTimeFormat('fr-FR', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+                dateEl.textContent = formatter.format(today);
+            }
+        }
+
+        function initAuth() {
+            const loginScreen = document.getElementById('login-screen');
+            const app = document.getElementById('app');
+            const form = document.getElementById('login-form');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            const showApp = () => {
+                loginScreen.classList.add('hidden');
+                app.classList.remove('hidden');
+            };
+
+            const requireLogin = () => {
+                loginScreen.classList.remove('hidden');
+                app.classList.add('hidden');
+            };
+
+            const storedUser = sessionStorage.getItem('jk_pos_session');
+            if (storedUser) {
+                showApp();
+            }
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value.trim();
+                const password = document.getElementById('login-password').value;
+                const data = getData();
+
+                if (password === data.password) {
+                    sessionStorage.setItem('jk_pos_session', username || 'Utilisateur');
+                    showApp();
+                    document.getElementById('login-password').value = '';
+                } else {
+                    alert('Mot de passe incorrect');
+                }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                sessionStorage.removeItem('jk_pos_session');
+                requireLogin();
+            });
+        }
+
+        function initTheme() {
+            const data = getData();
+            const { primary, accent } = data.settings.theme;
+            setTheme(primary, accent);
+        }
+
+        function initBoutiqueOptions() {
+            const data = getData();
+            const boutiques = data.settings.boutiques;
+            const selects = document.querySelectorAll('#sale-boutique, #product-boutique, #seller-boutique');
+            selects.forEach(select => {
+                select.innerHTML = boutiques.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            });
+        }
+
+        function init() {
+            initNavigation();
+            initDateBadge();
+            initAuth();
+            initTheme();
+            initBoutiqueOptions();
+        }
+
+        return {
+            DEFAULT_LOGO,
+            init,
+            getData,
+            saveData,
+            updateData,
+            formatCurrency,
+            generateReference,
+            setTheme,
+            eventTarget
+        };
+    })();
+    </script>
+
+    <script src="js/dashboard.js"></script>
+    <script src="js/ventes.js"></script>
+    <script src="js/documents.js"></script>
+    <script src="js/inventaire.js"></script>
+    <script src="js/vendeur.js"></script>
+    <script src="js/parametres.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            POSApp.init();
+            DashboardModule.init();
+            VentesModule.init();
+            DocumentsModule.init();
+            InventaireModule.init();
+            VendeurModule.init();
+            ParametresModule.init();
+        });
+    </script>
+</body>
+</html>

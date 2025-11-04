@@ -3,9 +3,40 @@
 (function () {
     const salesProductsList = () => document.getElementById('sales-products');
     const saleDateField = () => document.getElementById('sale-date');
+    const sellerSelectField = () => document.getElementById('sales-seller');
     let cart = [];
     let chartAnimationFrame = null;
     let chartProgress = 0;
+
+    function getActiveSeller() {
+        const select = sellerSelectField();
+        if (!select || !select.value) {
+            return null;
+        }
+        const sellers = Array.isArray(POSApp.state.sellers) ? POSApp.state.sellers : [];
+        return sellers.find(seller => seller.id === select.value) || null;
+    }
+
+    function getProductById(productId) {
+        return POSApp.state.products.find(product => product.id === productId) || null;
+    }
+
+    function getAvailableStock(productId) {
+        const seller = getActiveSeller();
+        if (seller) {
+            const assignments = Array.isArray(seller.assignments) ? seller.assignments : [];
+            const record = assignments.find(item => item.productId === productId);
+            return record?.quantity || 0;
+        }
+        const product = getProductById(productId);
+        return product?.stock || 0;
+    }
+
+    function resetCartIfNeeded() {
+        if (!cart.length) return;
+        cart = [];
+        renderCart();
+    }
 
     function currentLocalDateTimeValue(date = new Date()) {
         const offset = date.getTimezoneOffset();
@@ -26,25 +57,74 @@
         if (!list) return;
         list.innerHTML = '';
         const manualPricing = !!POSApp.state.settings.manualPricing;
-        const products = POSApp.state.products.filter(p =>
-            p.name.toLowerCase().includes(filter.toLowerCase()) ||
-            p.id.toLowerCase().includes(filter.toLowerCase())
+        const seller = getActiveSeller();
+        const query = filter.toLowerCase();
+
+        if (seller) {
+            const assignments = (seller.assignments || []).filter(item => item.quantity > 0);
+            const filteredAssignments = assignments.filter(item => {
+                const product = getProductById(item.productId);
+                const label = product?.name || item.productId;
+                return label.toLowerCase().includes(query) || item.productId.toLowerCase().includes(query);
+            });
+
+            filteredAssignments.forEach(item => {
+                const product = getProductById(item.productId);
+                const name = product?.name || item.productId;
+                const price = product?.price || 0;
+                const available = getAvailableStock(item.productId);
+                const li = document.createElement('li');
+                const actionLabel = manualPricing ? 'Saisir le prix' : 'Ajouter';
+                const priceInfo = manualPricing
+                    ? `<span>${POSApp.formatCurrency(price)} · catalogue</span>`
+                    : `<span>${POSApp.formatCurrency(price)}</span>`;
+                li.innerHTML = `
+                    <strong>${name}</strong>
+                    ${priceInfo}
+                    <small>Stock confié : ${available}</small>
+                    <button data-id="${item.productId}">${actionLabel}</button>`;
+                const button = li.querySelector('button');
+                button.disabled = available === 0;
+                button.addEventListener('click', () => addToCart(item.productId));
+                list.appendChild(li);
+            });
+
+            if (!filteredAssignments.length) {
+                const sellerLabel = seller.name || 'cette vendeuse';
+                list.innerHTML = `<li class="empty-state mini">
+                    <span class="empty-icon" aria-hidden="true">📦</span>
+                    <div>
+                        <span class="empty-title">Aucun stock confié disponible.</span>
+                        <span class="empty-subtitle">Confiez des produits à ${sellerLabel} depuis l'onglet Vendeuses.</span>
+                    </div>
+                </li>`;
+            }
+            return;
+        }
+
+        const products = POSApp.state.products.filter(product =>
+            product.name.toLowerCase().includes(query) ||
+            product.id.toLowerCase().includes(query)
         );
+
         products.forEach(product => {
             const li = document.createElement('li');
             const actionLabel = manualPricing ? 'Saisir le prix' : 'Ajouter';
             const priceInfo = manualPricing
                 ? `<span>${POSApp.formatCurrency(product.price)} · catalogue</span>`
                 : `<span>${POSApp.formatCurrency(product.price)}</span>`;
+            const available = getAvailableStock(product.id);
             li.innerHTML = `
                 <strong>${product.name}</strong>
                 ${priceInfo}
-                <small>Stock : ${product.stock}</small>
+                <small>Stock : ${available}</small>
                 <button data-id="${product.id}">${actionLabel}</button>`;
-            li.querySelector('button').disabled = product.stock === 0;
-            li.querySelector('button').addEventListener('click', () => addToCart(product.id));
+            const button = li.querySelector('button');
+            button.disabled = available === 0;
+            button.addEventListener('click', () => addToCart(product.id));
             list.appendChild(li);
         });
+
         if (!products.length) {
             list.innerHTML = `<li class="empty-state mini">
                 <span class="empty-icon" aria-hidden="true">🛒</span>
@@ -57,27 +137,37 @@
     }
 
     function addToCart(productId) {
-        const product = POSApp.state.products.find(p => p.id === productId);
-        if (!product || product.stock === 0) return;
+        const product = getProductById(productId);
+        const seller = getActiveSeller();
+        const availableStock = getAvailableStock(productId);
+        if (availableStock <= 0) {
+            const message = seller
+                ? 'Stock confié indisponible pour cette vendeuse.'
+                : 'Stock indisponible pour cette vente.';
+            POSApp.notify(message, 'error');
+            return;
+        }
         const manualPricing = !!POSApp.state.settings.manualPricing;
 
         const commitAddition = (unitPrice, quantity) => {
             const existing = cart.find(item => item.id === productId);
             const safePrice = Math.max(0, Math.round(unitPrice));
-            const safeQuantity = Math.min(Math.max(1, quantity), product.stock);
+            const currentQty = existing?.quantity || 0;
+            const targetQuantity = manualPricing ? quantity : currentQty + quantity;
+            const safeQuantity = Math.min(Math.max(1, targetQuantity), availableStock);
+            if (safeQuantity <= 0) {
+                POSApp.notify('Stock insuffisant pour cet article.', 'error');
+                return;
+            }
             if (existing) {
-                if (manualPricing) {
-                    existing.quantity = safeQuantity;
-                } else {
-                    existing.quantity = Math.min(existing.quantity + safeQuantity, product.stock);
-                }
+                existing.quantity = safeQuantity;
                 existing.price = safePrice;
             } else {
                 cart.push({
                     id: productId,
-                    name: product.name,
+                    name: product?.name || productId,
                     price: safePrice,
-                    basePrice: product.price,
+                    basePrice: product?.price,
                     quantity: safeQuantity
                 });
             }
@@ -92,12 +182,13 @@
         };
 
         if (manualPricing) {
-            POSApp.openModal(`Ajouter ${product.name}`, [
+            const label = product?.name || productId;
+            POSApp.openModal(`Ajouter ${label}`, [
                 {
                     id: 'manual-price',
                     label: 'Prix unitaire appliqué',
                     type: 'number',
-                    value: product.price,
+                    value: product?.price || 0,
                     min: 0,
                     step: 1,
                     required: true,
@@ -109,9 +200,11 @@
                     type: 'number',
                     value: 1,
                     min: 1,
-                    max: product.stock,
+                    max: availableStock,
                     required: true,
-                    helpText: `Stock disponible : ${product.stock}`
+                    helpText: seller
+                        ? `Stock confié disponible : ${availableStock}`
+                        : `Stock disponible : ${availableStock}`
                 }
             ], (data, close) => {
                 const priceValue = Number(data['manual-price']);
@@ -124,7 +217,7 @@
                     POSApp.notify('Quantité invalide', 'error');
                     return;
                 }
-                if (quantityValue > product.stock) {
+                if (quantityValue > availableStock) {
                     POSApp.notify('Stock insuffisant pour cette quantité', 'error');
                     return;
                 }
@@ -134,7 +227,7 @@
             return;
         }
 
-        commitAddition(product.price, 1);
+        commitAddition(product?.price || 0, 1);
     }
 
     function removeFromCart(productId) {
@@ -145,8 +238,17 @@
     function changeQuantity(productId, delta) {
         const item = cart.find(i => i.id === productId);
         if (!item) return;
-        const product = POSApp.state.products.find(p => p.id === productId);
-        const newQty = Math.min(Math.max(1, item.quantity + delta), product.stock);
+        const available = getAvailableStock(productId);
+        if (available <= 0) {
+            const seller = getActiveSeller();
+            const message = seller
+                ? 'Stock confié indisponible pour cette vendeuse.'
+                : 'Stock indisponible pour cet article.';
+            POSApp.notify(message, 'error');
+            removeFromCart(productId);
+            return;
+        }
+        const newQty = Math.min(Math.max(1, item.quantity + delta), available);
         item.quantity = newQty;
         renderCart();
     }
@@ -253,6 +355,10 @@
         document.getElementById('sales-search')?.addEventListener('input', e => {
             renderProductList(e.target.value);
         });
+        sellerSelectField()?.addEventListener('change', () => {
+            resetCartIfNeeded();
+            renderProductList(document.getElementById('sales-search')?.value || '');
+        });
         document.getElementById('checkout-btn')?.addEventListener('click', completeSale);
         document.getElementById('print-receipt')?.addEventListener('click', printReceipt);
     }
@@ -271,7 +377,25 @@
         const sellers = Array.isArray(POSApp.state.sellers) ? POSApp.state.sellers : [];
         const sellerRecord = sellers.find(s => s.id === sellerId);
         const sellerName = sellerRecord?.name || 'Boutique';
+        if (sellerRecord) {
+            const missingStock = cart.find(item => getAvailableStock(item.id) < item.quantity);
+            if (missingStock) {
+                POSApp.notify('Stock confié insuffisant pour finaliser cette vente.', 'error');
+                return;
+            }
+        } else {
+            const lackingInventory = cart.find(item => {
+                const product = getProductById(item.id);
+                return product && product.stock < item.quantity;
+            });
+            if (lackingInventory) {
+                POSApp.notify('Stock boutique insuffisant pour finaliser cette vente.', 'error');
+                return;
+            }
+        }
         const payment = document.getElementById('payment-method').value;
+        const customerInput = document.getElementById('sale-customer');
+        const customerName = customerInput?.value.trim();
         const total = updateCartTotal();
         const taxRate = Number(POSApp.state.settings.tax || 0) / 100;
         const taxAmount = Math.round(total * taxRate);
@@ -295,16 +419,21 @@
             date: saleDateIso,
             seller: sellerName,
             sellerId: sellerRecord?.id || null,
+            customer: customerName || null,
             payment,
             taxAmount,
             total: grandTotal,
             items: cart.map(({ id, name, price, quantity }) => ({ id, name, price, quantity }))
         };
         POSApp.state.sales.push(sale);
-        cart.forEach(item => {
-            const product = POSApp.state.products.find(p => p.id === item.id);
-            if (product) product.stock -= item.quantity;
-        });
+        if (!sellerRecord) {
+            cart.forEach(item => {
+                const product = POSApp.state.products.find(p => p.id === item.id);
+                if (product) {
+                    product.stock -= item.quantity;
+                }
+            });
+        }
         if (sellerRecord) {
             sellerRecord.assignments = sellerRecord.assignments || [];
             sellerRecord.history = sellerRecord.history || [];
@@ -327,7 +456,7 @@
             amount: grandTotal,
             category: 'Vente',
             date: sale.date,
-            notes: `${payment} - ${sellerName}`
+            notes: [payment, sellerName, customerName].filter(Boolean).join(' - ')
         });
         persistState();
         appendActivity(`Vente ${sale.id} ${POSApp.formatCurrency(grandTotal)} (${sellerName})`);
@@ -336,6 +465,9 @@
         renderCart();
         if (dateInput) {
             dateInput.value = currentLocalDateTimeValue();
+        }
+        if (customerInput) {
+            customerInput.value = '';
         }
         renderProductList(document.getElementById('sales-search').value || '');
         populateSelectors();
