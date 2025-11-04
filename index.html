@@ -30,6 +30,7 @@
                 <button class="nav-link active" data-section="dashboard">Dashboard</button>
                 <button class="nav-link" data-section="inventory">Inventaire</button>
                 <button class="nav-link" data-section="sales">Ventes</button>
+                <button class="nav-link" data-section="documents">Documents</button>
                 <button class="nav-link" data-section="sellers">Vendeuses</button>
                 <button class="nav-link" data-section="finances">Finances</button>
                 <button class="nav-link" data-section="settings">Paramètres</button>
@@ -107,10 +108,6 @@
                     </article>
                 </div>
                 <div class="dashboard-layout">
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 9eb6e5d548e5b7bbda55b17b4a6df4b1acff81e9
                     <article class="card insights-card" id="insights-card">
                         <header>
                             <div>
@@ -124,11 +121,6 @@
                             <li>Les indicateurs apparaîtront ici après le chargement de l'application.</li>
                         </ul>
                     </article>
-<<<<<<< HEAD
-=======
->>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
-=======
->>>>>>> 9eb6e5d548e5b7bbda55b17b4a6df4b1acff81e9
                     <div class="chart-card">
                         <header>
                             <h3>Évolution des ventes (7 jours)</h3>
@@ -201,6 +193,7 @@
                         <select id="sales-seller">
                             <option value="">Vente boutique</option>
                         </select>
+                        <input type="text" id="sale-customer" placeholder="Client (optionnel)">
                         <input type="datetime-local" id="sale-date" aria-label="Date de la vente">
                         <select id="payment-method">
                             <option value="cash">Espèces</option>
@@ -225,6 +218,41 @@
                         <div class="sales-history">
                             <h4>Historique des ventes</h4>
                             <ul id="sales-history"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="documents" class="section">
+                <header class="section-header">
+                    <div>
+                        <h2>Documents</h2>
+                        <p>Factures et étiquettes de livraison prêtes à imprimer.</p>
+                    </div>
+                    <div class="section-actions">
+                        <input type="search" id="documents-search" placeholder="Rechercher une vente...">
+                    </div>
+                </header>
+                <div class="documents-layout">
+                    <div class="card document-list-card">
+                        <h3>Ventes enregistrées</h3>
+                        <ul id="documents-sales" class="document-sales"></ul>
+                    </div>
+                    <div class="card document-preview-card">
+                        <div class="document-tabs" role="tablist">
+                            <button class="tab-button active" type="button" data-document="invoice">Facture</button>
+                            <button class="tab-button" type="button" data-document="delivery">Étiquette de livraison</button>
+                        </div>
+                        <div id="document-preview" class="document-preview">
+                            <div class="empty-state mini">
+                                <span class="empty-icon" aria-hidden="true">🧾</span>
+                                <div>
+                                    <span class="empty-title">Sélectionnez une vente pour générer un document.</span>
+                                    <span class="empty-subtitle">Choisissez ensuite le type de document à imprimer.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button id="print-document" class="secondary" type="button" disabled>Imprimer</button>
                         </div>
                     </div>
                 </div>
@@ -326,26 +354,6 @@
                 </div>
             </section>
         </main>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-        <div id="ai-assistant" class="ai-widget">
-            <button id="ai-toggle" class="ai-toggle">🤖</button>
-            <div class="ai-panel hidden">
-                <header>
-                    <h3>Assistant IA</h3>
-                    <button id="ai-close">×</button>
-                </header>
-                <div class="ai-messages" id="ai-messages"></div>
-                <form id="ai-form">
-                    <input type="text" id="ai-input" placeholder="Posez votre question..." required>
-                    <button type="submit">Envoyer</button>
-                </form>
-            </div>
-        </div>
->>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
-=======
->>>>>>> 9eb6e5d548e5b7bbda55b17b4a6df4b1acff81e9
     </div>
 
     <dialog id="modal" class="modal">
@@ -355,17 +363,10 @@
     <script src="js/app.js"></script>
     <script src="js/inventory.js"></script>
     <script src="js/sales.js"></script>
+    <script src="js/documents.js"></script>
     <script src="js/sellers.js"></script>
     <script src="js/finances.js"></script>
     <script src="js/settings.js"></script>
-<<<<<<< HEAD
-<<<<<<< HEAD
     <script src="js/insights.js"></script>
-=======
-    <script src="js/ai.js"></script>
->>>>>>> 0b0f04eea0e84e2726d5acc50d55fc930cf9bb85
-=======
-    <script src="js/insights.js"></script>
->>>>>>> 9eb6e5d548e5b7bbda55b17b4a6df4b1acff81e9
 </body>
 </html>
