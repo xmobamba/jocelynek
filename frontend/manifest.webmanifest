@@ -1,0 +1,9 @@
+{
+  "name": "POS Jocelyne K",
+  "short_name": "JPOS",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#0A7A5C",
+  "theme_color": "#0A7A5C",
+  "icons": []
+}
