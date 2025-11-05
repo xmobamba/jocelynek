@@ -30,19 +30,22 @@ export const usePosStore = defineStore('pos', () => {
     }
   };
 
-  const addItem = (product) => {
+  const addItem = (product, quantity = 1) => {
+    const parsedQuantity = Number(quantity);
+    const normalizedQuantity = Math.max(1, Number.isFinite(parsedQuantity) ? parsedQuantity : 1);
     const existing = cartItems.value.find((item) => item.product_id === product.id);
     if (existing) {
-      existing.quantity += 1;
+      existing.quantity += normalizedQuantity;
     } else {
+      const taxRate = Number.isFinite(product.tax_rate) ? product.tax_rate : 0;
       cartItems.value.push({
         product_id: product.id,
         name: product.name,
         sku: product.sku,
-        quantity: 1,
+        quantity: normalizedQuantity,
         unit_price: product.sale_price,
         discount_amount: 0,
-        tax_amount: (product.tax_rate / 100) * product.sale_price
+        tax_amount: (taxRate / 100) * product.sale_price
       });
     }
   };

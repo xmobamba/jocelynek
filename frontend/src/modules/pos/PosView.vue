@@ -70,6 +70,12 @@
       @close="showPayment = false"
       @submit="handlePayment"
     />
+    <QuantitySelectorModal
+      v-if="productToAdd"
+      :product="productToAdd"
+      @close="closeQuantityModal"
+      @confirm="confirmAddItem"
+    />
   </div>
 </template>
 
@@ -79,9 +85,11 @@ import { usePosStore } from '../../stores/pos.js';
 import ProductSearch from './components/ProductSearch.vue';
 import CartSummary from './components/CartSummary.vue';
 import PaymentModal from './components/PaymentModal.vue';
+import QuantitySelectorModal from './components/QuantitySelectorModal.vue';
 
 const store = usePosStore();
 const showPayment = ref(false);
+const productToAdd = ref(null);
 
 const currency = (value) => new Intl.NumberFormat('fr-FR', {
   style: 'currency',
@@ -89,12 +97,21 @@ const currency = (value) => new Intl.NumberFormat('fr-FR', {
 }).format(value);
 
 const handleProductSelect = (product) => {
-  store.addItem(product);
+  productToAdd.value = product;
 };
 
 const openPayment = () => {
   if (!store.cartItems.length) return;
   showPayment.value = true;
+};
+
+const confirmAddItem = ({ product, quantity }) => {
+  store.addItem(product, quantity);
+  productToAdd.value = null;
+};
+
+const closeQuantityModal = () => {
+  productToAdd.value = null;
 };
 
 const handlePayment = async ({ payments, method }) => {
