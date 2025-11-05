@@ -10,6 +10,8 @@ export const usePosStore = defineStore('pos', () => {
   const products = ref([]);
   const isLoading = ref(false);
   const error = ref(null);
+  const searchTerm = ref('');
+  const activeCategory = ref('all');
 
   const subtotal = computed(() => cartItems.value.reduce((sum, item) => sum + item.quantity * item.unit_price, 0));
   const discount = computed(() => cartItems.value.reduce((sum, item) => sum + (item.discount_amount || 0), 0));
@@ -18,16 +20,57 @@ export const usePosStore = defineStore('pos', () => {
   const paidAmount = computed(() => payments.value.reduce((sum, payment) => sum + payment.amount, 0));
   const balance = computed(() => total.value - paidAmount.value);
 
+  const categories = computed(() => {
+    const groups = new Map();
+    products.value.forEach((product) => {
+      const id = product.category_id ?? 'uncategorized';
+      const name = product.category_name || product.category || 'Non classé';
+      if (!groups.has(id)) {
+        groups.set(id, { id: String(id), name, count: 0 });
+      }
+      groups.get(id).count += 1;
+    });
+
+    const sorted = Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return [
+      { id: 'all', name: 'Tous les produits', count: products.value.length },
+      ...sorted
+    ];
+  });
+
+  const filteredProducts = computed(() => {
+    const term = searchTerm.value.trim().toLowerCase();
+    return products.value.filter((product) => {
+      const categoryId = String(product.category_id ?? 'uncategorized');
+      const matchesCategory = activeCategory.value === 'all' || activeCategory.value === categoryId;
+      if (!matchesCategory) return false;
+
+      if (!term) return true;
+      const fields = [product.name, product.sku, product.barcode];
+      return fields.some((field) => field && String(field).toLowerCase().includes(term));
+    });
+  });
+
   const loadProducts = async (search = '') => {
     isLoading.value = true;
+    searchTerm.value = search;
     try {
-      const { data } = await api.get('/products', { params: { search } });
+      const params = search ? { search } : {};
+      const { data } = await api.get('/products', { params });
       products.value = data;
     } catch (e) {
       error.value = e;
     } finally {
       isLoading.value = false;
     }
+  };
+
+  const setActiveCategory = (categoryId) => {
+    activeCategory.value = categoryId;
+  };
+
+  const setSearchTerm = (value) => {
+    searchTerm.value = value;
   };
 
   const addItem = (product, quantity = 1) => {
@@ -84,6 +127,7 @@ export const usePosStore = defineStore('pos', () => {
   return {
     cartItems,
     products,
+    filteredProducts,
     customer,
     payments,
     subtotal,
@@ -94,7 +138,12 @@ export const usePosStore = defineStore('pos', () => {
     balance,
     isLoading,
     error,
+    categories,
+    activeCategory,
+    searchTerm,
     loadProducts,
+    setActiveCategory,
+    setSearchTerm,
     addItem,
     updateQuantity,
     removeItem,
